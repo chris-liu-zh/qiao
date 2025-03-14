@@ -1,0 +1,110 @@
+/*
+ * @Author: Strong
+ * @Date: 2025-03-09 16:24:53
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-14 10:53:04
+ * @Description: 请填写简介
+ */
+package qiao
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/chris-liu-zh/qiao/Http"
+)
+
+const (
+	ATExp = 1 * time.Hour
+	RTExp = 72 * time.Hour
+)
+
+type key string
+
+var newAuth = Http.DefaultAuth(ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
+
+func Test_Http(t *testing.T) {
+	if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
+		log.Println(err)
+	}
+
+	r := Http.NewRouter()
+	r.SetOnEvicted(onEvicted)
+	r.SetTimeout(10 * time.Second)
+	r.SetHeader(Http.DefaultHeader)
+	r.SetContextSetter(setContest)
+	r.SetSign("/api/", sign)
+	r.SetAuth("/api/user/", auth)
+	r.Get("/version", GetVersion)
+	r.Get("/users/{id}", GetUserByID)
+	r.Get("/", home)
+	r.FileServer("/static/", "./template")
+	Http.NewHttpServer(":8080", r).Start()
+}
+
+func home(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Public string
+	}
+	data.Public = "public"
+	Http.Html(w, "template/index", data)
+}
+
+func onEvicted(w http.ResponseWriter, r *http.Request) {
+	h := Http.GetHeader(r)
+	if r.URL.Path == "/logout" {
+		if token, ok := h["Authorization"]; ok {
+			newAuth.SetInvalidToken(token)
+		}
+	}
+}
+
+func setContest(r *http.Request) *http.Request {
+	c := context.WithValue(r.Context(), key("user"), "admin")
+	return r.WithContext(c)
+}
+
+func GetUserByID(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(key("user")).(string)
+	if ok {
+		log.Printf("获取到的用户值: %s", user)
+	} else {
+		log.Println("未获取到用户值")
+	}
+
+	id := r.PathValue("id")
+	response := map[string]string{
+		"id":   id,
+		"name": user,
+	}
+	Http.Success(response).Json(w)
+}
+
+func GetVersion(w http.ResponseWriter, r *http.Request) {
+	var ver struct {
+		Version string `json:"version"`
+		Ip      string `json:"ip"`
+	}
+	ver.Version = "1.0.0"
+	ver.Ip = strings.Split(r.RemoteAddr, ":")[0]
+	Http.Html(w, "template/version/index", ver)
+}
+
+func sign(header map[string]string) error {
+	const (
+		key    = "ALYDDNS"
+		secret = "1D4JWUEGWWFK94JB74W1YGP9OF4L205F"
+	)
+	return Http.DefaultSign(header, key, secret)
+}
+
+func auth(header map[string]string) (contextKey string, data any, err error) {
+	if data, err = newAuth.CheckToken(header); err != nil {
+		return "", nil, err
+	}
+	return "userinfo", data, nil
+}
