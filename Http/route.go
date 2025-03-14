@@ -2,7 +2,7 @@
  * @Author: Strong
  * @Date: 2024-05-31 14:03:31
  * @LastEditors: Strong
- * @LastEditTime: 2025-03-13 23:32:42
+ * @LastEditTime: 2025-03-14 16:52:48
  * @Description: 请填写简介
  */
 package Http
@@ -24,7 +24,7 @@ type RouterHandle struct {
 	onEvicted func(http.ResponseWriter, *http.Request)
 }
 
-type DefaultCtxKey string
+type CtxKey string
 
 var RouterList = make(map[string][]string)
 
@@ -86,7 +86,7 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if userinfo != nil && key != "" {
 		// 将用户信息存储在请求上下文中
-		ctx := context.WithValue(r.Context(), DefaultCtxKey(key), userinfo)
+		ctx := context.WithValue(r.Context(), key, userinfo)
 		r = r.WithContext(ctx)
 	}
 

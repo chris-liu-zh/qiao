@@ -2,7 +2,7 @@
  * @Author: Strong
  * @Date: 2025-03-09 16:24:53
  * @LastEditors: Strong
- * @LastEditTime: 2025-03-14 10:53:04
+ * @LastEditTime: 2025-03-14 16:56:24
  * @Description: 请填写简介
  */
 package qiao
@@ -22,8 +22,6 @@ const (
 	ATExp = 1 * time.Hour
 	RTExp = 72 * time.Hour
 )
-
-type key string
 
 var newAuth = Http.DefaultAuth(ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
 
@@ -64,12 +62,12 @@ func onEvicted(w http.ResponseWriter, r *http.Request) {
 }
 
 func setContest(r *http.Request) *http.Request {
-	c := context.WithValue(r.Context(), key("user"), "admin")
+	c := context.WithValue(r.Context(), Http.CtxKey("user"), "admin")
 	return r.WithContext(c)
 }
 
 func GetUserByID(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(key("user")).(string)
+	user, ok := r.Context().Value(Http.CtxKey("user")).(string)
 	if ok {
 		log.Printf("获取到的用户值: %s", user)
 	} else {
@@ -102,7 +100,7 @@ func sign(header map[string]string) error {
 	return Http.DefaultSign(header, key, secret)
 }
 
-func auth(header map[string]string) (contextKey string, data any, err error) {
+func auth(header map[string]string) (contextKey Http.CtxKey, data any, err error) {
 	if data, err = newAuth.CheckToken(header); err != nil {
 		return "", nil, err
 	}

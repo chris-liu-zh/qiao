@@ -2,7 +2,7 @@
  * @Author: Strong
  * @Date: 2024-06-12 13:24:32
  * @LastEditors: Strong
- * @LastEditTime: 2025-03-13 01:22:31
+ * @LastEditTime: 2025-03-14 16:53:09
  * @Description: 请填写简介
  */
 package Http
@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type auth func(map[string]string) (string, any, error)
+type auth func(map[string]string) (CtxKey, any, error)
 type sign func(map[string]string) error
 
 type middleware struct {
@@ -56,7 +56,7 @@ func (m *middleware) sign(url string, header map[string]string) (err error) {
 	return
 }
 
-func (m *middleware) auth(url string, header map[string]string) (userInfoKey string, authInfo any, err error) {
+func (m *middleware) auth(url string, header map[string]string) (userInfoKey CtxKey, authInfo any, err error) {
 	for p, f := range m.Auth {
 		if strings.HasPrefix(url, p) {
 			return f(header)
