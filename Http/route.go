@@ -1,8 +1,8 @@
 /*
- * @Author: Strong
+ * @Author: Chris
  * @Date: 2024-05-31 14:03:31
- * @LastEditors: Strong
- * @LastEditTime: 2025-03-14 16:52:48
+ * @LastEditors: Chris
+ * @LastEditTime: 2025-03-15 00:06:21
  * @Description: 请填写简介
  */
 package Http
@@ -130,6 +130,15 @@ func (router *RouterHandle) FileServer(path, dir string) {
 
 func (router *RouterHandle) SetOnEvicted(f func(http.ResponseWriter, *http.Request)) {
 	router.onEvicted = f
+}
+
+func SetContext(r *http.Request, key string, value any) *http.Request {
+	ctx := context.WithValue(r.Context(), CtxKey(key), value)
+	return r.WithContext(ctx)
+}
+
+func GetContext(r *http.Request, key string) any {
+	return r.Context().Value(CtxKey(key))
 }
 
 func NewRouter() *RouterHandle {

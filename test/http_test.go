@@ -1,14 +1,13 @@
 /*
- * @Author: Strong
+ * @Author: Chris
  * @Date: 2025-03-09 16:24:53
- * @LastEditors: Strong
- * @LastEditTime: 2025-03-14 16:56:24
+ * @LastEditors: Chris
+ * @LastEditTime: 2025-03-15 00:08:06
  * @Description: 请填写简介
  */
 package qiao
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"strings"
@@ -62,12 +61,11 @@ func onEvicted(w http.ResponseWriter, r *http.Request) {
 }
 
 func setContest(r *http.Request) *http.Request {
-	c := context.WithValue(r.Context(), Http.CtxKey("user"), "admin")
-	return r.WithContext(c)
+	return Http.SetContext(r, "user", "admin")
 }
 
 func GetUserByID(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(Http.CtxKey("user")).(string)
+	user, ok := Http.GetContext(r, "user").(string)
 	if ok {
 		log.Printf("获取到的用户值: %s", user)
 	} else {
