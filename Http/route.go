@@ -2,7 +2,7 @@
  * @Author: Chris
  * @Date: 2024-05-31 14:03:31
  * @LastEditors: Chris
- * @LastEditTime: 2025-03-15 00:06:21
+ * @LastEditTime: 2025-03-17 00:40:57
  * @Description: 请填写简介
  */
 package Http
@@ -94,10 +94,22 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		r = router.m.contextSetter(r)
 	}
 
-	if router.timeout > 0 {
-		router.requestTimeout(lw, r)
+	// 检查是否有匹配的路由
+	var matched bool
+	router.mux.Handler(r)
+	if _, pattern := router.mux.Handler(r); pattern != "" {
+		matched = true
+	}
+
+	if matched {
+		if router.timeout > 0 {
+			router.requestTimeout(lw, r)
+		} else {
+			router.mux.ServeHTTP(lw, r)
+		}
 	} else {
-		router.mux.ServeHTTP(lw, r)
+		// 未匹配到路由，返回错误
+		Fail("route not found").Json(lw)
 	}
 
 	if lw.status >= http.StatusBadRequest {
