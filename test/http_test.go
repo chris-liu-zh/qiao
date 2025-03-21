@@ -2,12 +2,13 @@
  * @Author: Chris
  * @Date: 2025-03-09 16:24:53
  * @LastEditors: Chris
- * @LastEditTime: 2025-03-15 00:08:06
+ * @LastEditTime: 2025-03-21 14:34:59
  * @Description: 请填写简介
  */
 package qiao
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -22,9 +23,10 @@ const (
 	RTExp = 72 * time.Hour
 )
 
-var newAuth = Http.DefaultAuth(ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
+var defaultAuth = Http.DefaultAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
 
 func Test_Http(t *testing.T) {
+
 	if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
 		log.Println(err)
 	}
@@ -55,7 +57,7 @@ func onEvicted(w http.ResponseWriter, r *http.Request) {
 	h := Http.GetHeader(r)
 	if r.URL.Path == "/logout" {
 		if token, ok := h["Authorization"]; ok {
-			newAuth.SetInvalidToken(token)
+			Http.SetInvalidToken(token)
 		}
 	}
 }
@@ -95,11 +97,15 @@ func sign(header map[string]string) error {
 		key    = "ALYDDNS"
 		secret = "1D4JWUEGWWFK94JB74W1YGP9OF4L205F"
 	)
-	return Http.DefaultSign(header, key, secret)
+	return Http.DefaultSign(header, key, secret, 5*time.Minute)
 }
 
 func auth(header map[string]string) (contextKey Http.CtxKey, data any, err error) {
-	if data, err = newAuth.CheckToken(header); err != nil {
+	token, ok := header["Authorization"]
+	if !ok {
+		return "", nil, errors.New("token not found")
+	}
+	if data, err = defaultAuth.CheckToken(token); err != nil {
 		return "", nil, err
 	}
 	return "userinfo", data, nil

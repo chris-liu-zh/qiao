@@ -4,7 +4,7 @@ package Http
  * @Author: Chris
  * @Date: 2023-06-13 14:17:57
  * @LastEditors: Chris
- * @LastEditTime: 2025-03-14 12:09:22
+ * @LastEditTime: 2025-03-21 14:31:10
  * @Description: 请填写简介
  */
 
@@ -14,22 +14,30 @@ import (
 	"time"
 
 	"github.com/chris-liu-zh/qiao"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-type Auth struct {
-	token   string
-	refresh string
-	t       *Token
+type authOpt struct {
+	key           []byte
+	accessClaims  jwt.RegisteredClaims
+	refreshClaims jwt.RegisteredClaims
 }
 
-func DefaultAuth(AccessTokenExp, RefreshTokenExp time.Duration, secretKey string) *Auth {
-	return &Auth{
-		t: NewToken(AccessTokenExp, RefreshTokenExp, secretKey),
+var revokedTokens = make(map[string]time.Time)
+
+func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) *authOpt {
+	return &authOpt{
+		key:           []byte(key),
+		accessClaims:  CreateClaims(issuer, aExp),
+		refreshClaims: CreateClaims(issuer, rExp),
 	}
 }
 
-func (a *Auth) SetInvalidToken(token string) error {
-	return a.t.SetInvalidToken(token)
+func NewAuth(issuer string, aExp time.Duration, key string) *authOpt {
+	return &authOpt{
+		key:          []byte(key),
+		accessClaims: CreateClaims(issuer, aExp),
+	}
 }
 
 /**
@@ -39,17 +47,56 @@ func (a *Auth) SetInvalidToken(token string) error {
  * @param {string} timestamp
  * @return {*}
  */
-func DefaultSign(header map[string]string, key, secret string) error {
+func DefaultSign(header map[string]string, appKey, secret string, timeDiff time.Duration) error {
 	appkey := header["Appkey"]
 	sign := strings.ToUpper(header["Sign"])
-	timestamp := header["Timestamp"]
+	timestampStr := header["Timestamp"]
 
-	localSign := strings.ToUpper(qiao.MD5(timestamp + secret))
+	// 将时间戳字符串转换为时间类型
+	timestamp, err := time.Parse(time.RFC3339, timestampStr)
+	if err != nil {
+		return errors.New("timestamp 解析错误")
+	}
 
-	if appkey != key || localSign != sign {
+	now := time.Now()
+
+	// 检查时间戳是否在有效时间范围内
+	if timestamp.Before(now.Add(-timeDiff)) || timestamp.After(now.Add(timeDiff)) {
+		return errors.New("timestamp 超出有效时间范围，请检查系统时间")
+	}
+
+	localSign := strings.ToUpper(qiao.MD5(appkey + timestampStr + secret))
+
+	if localSign != sign {
 		return errors.New("sign error")
 	}
 	return nil
+}
+
+// 创建 JWT 注册声明
+func CreateClaims(issuer string, exp time.Duration) jwt.RegisteredClaims {
+	return jwt.RegisteredClaims{
+		Issuer:    issuer,
+		ExpiresAt: getJWTTime(exp),
+	}
+}
+
+/**
+ * @description: 获取 access token 和 refresh token
+ * @param {http.ResponseWriter} w
+ * @param {*http.Request} r
+ * @return {*}
+ */
+func (a *authOpt) NewDefaultToken(data any) (aToken, rToken string, err error) {
+	aToken, err = CreateToken(data, a.accessClaims, a.key)
+	if err != nil {
+		return
+	}
+	rToken, err = CreateToken(nil, a.refreshClaims, a.key)
+	if err != nil {
+		return
+	}
+	return
 }
 
 /**
@@ -58,11 +105,8 @@ func DefaultSign(header map[string]string, key, secret string) error {
  * @param {*http.Request} r
  * @return {*}
  */
-func (a *Auth) GetToken(u any) (string, string, error) {
-	if a == nil {
-		return "", "", errors.New("非法访问")
-	}
-	return a.t.CreateToken(u)
+func (a *authOpt) NewToken(data any) (string, error) {
+	return CreateToken(data, a.accessClaims, a.key)
 }
 
 /**
@@ -70,23 +114,51 @@ func (a *Auth) GetToken(u any) (string, string, error) {
  * @param {*http.Request} r
  * @return {*}
  */
-func (a *Auth) CheckToken(header map[string]string) (any, error) {
-	a.token = header["Authorization"]
-	if a.token == "" {
-		return nil, errors.New("拒绝访问")
-	}
-	claims, err := a.t.VerifyToken(a.token)
+func (a *authOpt) CheckToken(token string) (any, error) {
+	claims, err := VerifyToken(token, a.key)
 	if err != nil {
 		return nil, err
 	}
 	return claims.UserInfo, nil
 }
 
-func (a *Auth) RefreshToken(header map[string]string) (string, string, error) {
-	a.token = header["Authorization"]
-	a.refresh = header["Refresh-Token"]
-	if a.refresh == "" || a.token == "" {
-		return "", "", errors.New("拒绝访问")
+// 刷新Token
+func (a *authOpt) RefreshToken(accessToken, refreshToken string) (string, string, error) {
+	if _, err := a.CheckToken(refreshToken); err != nil {
+		return "", "", err
 	}
-	return a.t.RefreshToken(a.token, a.refresh)
+
+	if userinfo, err := a.CheckToken(accessToken); err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return a.NewDefaultToken(userinfo)
+		}
+		return "", "", err
+	}
+	return accessToken, refreshToken, nil
+}
+
+func init() {
+	ticker := time.NewTicker(60 * time.Second)
+	go func() {
+		for range ticker.C {
+			now := time.Now()
+			for token, expiresIn := range revokedTokens {
+				if now.After(expiresIn) {
+					delete(revokedTokens, token)
+				}
+			}
+		}
+	}()
+}
+
+func SetInvalidToken(token string) error {
+	claims := &claims{}
+	_, _, err := jwt.NewParser().ParseUnverified(token, claims)
+	if err != nil {
+		return err
+	}
+	if claims.ExpiresAt != nil {
+		revokedTokens[token] = claims.ExpiresAt.Time
+	}
+	return nil
 }
