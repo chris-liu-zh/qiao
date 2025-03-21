@@ -3,13 +3,14 @@ package Http
 /*
  * @Author: Chris
  * @Date: 2023-06-13 14:17:57
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-21 14:31:10
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-21 16:08:01
  * @Description: 请填写简介
  */
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,15 +49,16 @@ func NewAuth(issuer string, aExp time.Duration, key string) *authOpt {
  * @return {*}
  */
 func DefaultSign(header map[string]string, appKey, secret string, timeDiff time.Duration) error {
-	appkey := header["Appkey"]
 	sign := strings.ToUpper(header["Sign"])
 	timestampStr := header["Timestamp"]
 
 	// 将时间戳字符串转换为时间类型
-	timestamp, err := time.Parse(time.RFC3339, timestampStr)
+	timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
 	if err != nil {
 		return errors.New("timestamp 解析错误")
 	}
+	// 使用 time.Unix 函数将时间戳转换为 time.Time 类型
+	timestamp := time.Unix(timestampInt, 0)
 
 	now := time.Now()
 
@@ -65,7 +67,7 @@ func DefaultSign(header map[string]string, appKey, secret string, timeDiff time.
 		return errors.New("timestamp 超出有效时间范围，请检查系统时间")
 	}
 
-	localSign := strings.ToUpper(qiao.MD5(appkey + timestampStr + secret))
+	localSign := strings.ToUpper(qiao.MD5(appKey + timestampStr + secret))
 
 	if localSign != sign {
 		return errors.New("sign error")

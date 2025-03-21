@@ -1,8 +1,8 @@
 /*
  * @Author: Chris
  * @Date: 2024-05-31 14:03:31
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-17 00:40:57
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-21 15:55:30
  * @Description: 请填写简介
  */
 package Http
@@ -72,7 +72,7 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	header := GetHeader(r)
 	if err := router.m.sign(r.URL.Path, header); err != nil {
-		SignFail().Json(lw)
+		SignFail(err.Error()).Json(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}

@@ -1,14 +1,15 @@
 /*
  * @Author: Chris
  * @Date: 2023-03-29 11:04:12
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-13 01:29:31
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-21 15:54:08
  * @Description: 请填写简介
  */
 package Http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -35,8 +36,8 @@ func AuthFail() *Return {
 	return &Return{Code: http.StatusUnauthorized, Message: "Unauthorized"}
 }
 
-func SignFail() *Return {
-	return &Return{Code: http.StatusBadRequest, Message: "Sign error"}
+func SignFail(message string) *Return {
+	return &Return{Code: http.StatusBadRequest, Message: fmt.Sprintf("Sign error:%s", message)}
 }
 
 func TokenExpire() *Return {
