@@ -1,8 +1,8 @@
 /*
  * @Author: Chris
  * @Date: 2025-03-09 16:24:53
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-21 14:34:59
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-22 16:18:14
  * @Description: 请填写简介
  */
 package qiao
@@ -11,6 +11,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -97,7 +98,18 @@ func sign(header map[string]string) error {
 		key    = "ALYDDNS"
 		secret = "1D4JWUEGWWFK94JB74W1YGP9OF4L205F"
 	)
-	return Http.DefaultSign(header, key, secret, 5*time.Minute)
+	sign := strings.ToUpper(header["Sign"])
+	timestampStr := header["Timestamp"]
+
+	// 将时间戳字符串转换为时间类型
+	timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
+	if err != nil {
+		return errors.New("timestamp 解析错误")
+	}
+	// 使用 time.Unix 函数将时间戳转换为 time.Time 类型
+	timestamp := time.Unix(timestampInt, 0)
+
+	return Http.DefaultSign(sign, key, secret, timestamp, 5*time.Minute)
 }
 
 func auth(header map[string]string) (contextKey Http.CtxKey, data any, err error) {

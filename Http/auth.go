@@ -3,14 +3,14 @@ package Http
 /*
  * @Author: Chris
  * @Date: 2023-06-13 14:17:57
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-22 12:35:52
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-22 16:17:39
  * @Description: 请填写简介
  */
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"strings"
 	"time"
 
@@ -48,26 +48,14 @@ func NewAuth(issuer string, aExp time.Duration, key string) *Auth {
  * @param {string} timestamp
  * @return {*}
  */
-func DefaultSign(header map[string]string, appKey, secret string, timeDiff time.Duration) error {
-	sign := strings.ToUpper(header["Sign"])
-	timestampStr := header["Timestamp"]
-
-	// 将时间戳字符串转换为时间类型
-	timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
-	if err != nil {
-		return errors.New("timestamp 解析错误")
-	}
-	// 使用 time.Unix 函数将时间戳转换为 time.Time 类型
-	timestamp := time.Unix(timestampInt, 0)
-
+func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Duration) error {
 	now := time.Now()
-
 	// 检查时间戳是否在有效时间范围内
-	if timestamp.Before(now.Add(-timeDiff)) || timestamp.After(now.Add(timeDiff)) {
+	if ts.Before(now.Add(-timeDiff)) || ts.After(now.Add(timeDiff)) {
 		return errors.New("timestamp 超出有效时间范围，请检查系统时间")
 	}
-
-	localSign := strings.ToUpper(qiao.MD5(appKey + timestampStr + secret))
+	s := fmt.Sprintf("%s%s%d", appKey, secret, ts.Unix())
+	localSign := strings.ToUpper(qiao.MD5(s))
 
 	if localSign != sign {
 		return errors.New("sign error")
