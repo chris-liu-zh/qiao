@@ -3,8 +3,8 @@ package Http
 /*
  * @Author: Chris
  * @Date: 2023-06-13 14:17:57
- * @LastEditors: Strong
- * @LastEditTime: 2025-03-21 16:08:01
+ * @LastEditors: Chris
+ * @LastEditTime: 2025-03-22 12:35:52
  * @Description: 请填写简介
  */
 
@@ -18,7 +18,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type authOpt struct {
+type Auth struct {
 	key           []byte
 	accessClaims  jwt.RegisteredClaims
 	refreshClaims jwt.RegisteredClaims
@@ -26,16 +26,16 @@ type authOpt struct {
 
 var revokedTokens = make(map[string]time.Time)
 
-func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) *authOpt {
-	return &authOpt{
+func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) *Auth {
+	return &Auth{
 		key:           []byte(key),
 		accessClaims:  CreateClaims(issuer, aExp),
 		refreshClaims: CreateClaims(issuer, rExp),
 	}
 }
 
-func NewAuth(issuer string, aExp time.Duration, key string) *authOpt {
-	return &authOpt{
+func NewAuth(issuer string, aExp time.Duration, key string) *Auth {
+	return &Auth{
 		key:          []byte(key),
 		accessClaims: CreateClaims(issuer, aExp),
 	}
@@ -89,7 +89,7 @@ func CreateClaims(issuer string, exp time.Duration) jwt.RegisteredClaims {
  * @param {*http.Request} r
  * @return {*}
  */
-func (a *authOpt) NewDefaultToken(data any) (aToken, rToken string, err error) {
+func (a *Auth) NewDefaultToken(data any) (aToken, rToken string, err error) {
 	aToken, err = CreateToken(data, a.accessClaims, a.key)
 	if err != nil {
 		return
@@ -107,7 +107,7 @@ func (a *authOpt) NewDefaultToken(data any) (aToken, rToken string, err error) {
  * @param {*http.Request} r
  * @return {*}
  */
-func (a *authOpt) NewToken(data any) (string, error) {
+func (a *Auth) NewToken(data any) (string, error) {
 	return CreateToken(data, a.accessClaims, a.key)
 }
 
@@ -116,7 +116,7 @@ func (a *authOpt) NewToken(data any) (string, error) {
  * @param {*http.Request} r
  * @return {*}
  */
-func (a *authOpt) CheckToken(token string) (any, error) {
+func (a *Auth) CheckToken(token string) (any, error) {
 	claims, err := VerifyToken(token, a.key)
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func (a *authOpt) CheckToken(token string) (any, error) {
 }
 
 // 刷新Token
-func (a *authOpt) RefreshToken(accessToken, refreshToken string) (string, string, error) {
+func (a *Auth) RefreshToken(accessToken, refreshToken string) (string, string, error) {
 	if _, err := a.CheckToken(refreshToken); err != nil {
 		return "", "", err
 	}
