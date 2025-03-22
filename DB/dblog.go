@@ -143,7 +143,7 @@ func SetDBLog(path string, maxSize int, maxBackups int, maxAge int, compress boo
 
 func (info *sqlLog) logDEBUG() {
 	if loggerPre["DEBUG"] == nil {
-		log.Output(3, info.formatLog())
+		info.formatLog("DEBUG")
 		return
 	}
 	loggerPre["DEBUG"].Debug(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
@@ -151,7 +151,7 @@ func (info *sqlLog) logDEBUG() {
 
 func (info *sqlLog) logINFO() {
 	if loggerPre["INFO"] == nil {
-		log.Output(3, info.formatLog())
+		info.formatLog("INFO")
 		return
 	}
 	loggerPre["INFO"].Info(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
@@ -159,7 +159,7 @@ func (info *sqlLog) logINFO() {
 
 func (info *sqlLog) logWARNING() {
 	if loggerPre["WARNING"] == nil {
-		log.Output(3, info.formatLog())
+		info.formatLog("WARNING")
 		return
 	}
 	loggerPre["WARNING"].Warn(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
@@ -167,20 +167,20 @@ func (info *sqlLog) logWARNING() {
 
 func (info *sqlLog) logERROR() {
 	if loggerPre["ERROR"] == nil {
-		log.Output(3, info.formatLog())
+		info.formatLog("ERROR")
 		return
 	}
 	loggerPre["ERROR"].Error(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
 }
 
-func (info *sqlLog) formatLog() string {
-	return fmt.Sprintf(`%s sql="%s" args="%v" DBTitle="%s"`, info.Message, info.Sqlstr, info.Args, info.Title)
+func (info *sqlLog) formatLog(types string) {
+	log.Println("["+types+"] ", info.Message, " sql=", info.Sqlstr, " args=", info.Args, " DBTitle=", info.Title)
 }
 
 func (mapper *Mapper) debug(msg string) {
 	if mapper.Complete.Debug {
 		if loggerPre["CUSTOM"] == nil {
-			log.Output(3, fmt.Sprintf("%s sql=%s args=%v", msg, mapper.Complete.Sql, mapper.Complete.Args))
+			log.Println("[CUSTOM]", msg, " sql=", mapper.Complete.Sql, " args=", mapper.Complete.Args)
 			return
 		}
 		loggerPre["CUSTOM"].Debug(msg, "Sqlstr", mapper.Complete.Sql, "Args", mapper.Complete.Args)
