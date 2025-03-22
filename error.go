@@ -1,8 +1,8 @@
 /*
  * @Author: Chris
  * @Date: 2023-06-14 22:27:14
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-09 00:23:28
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-22 17:26:58
  * @Description: 请填写简介
  */
 package qiao
@@ -16,6 +16,7 @@ import (
 )
 
 type qiaoError struct {
+	Msg      string `json:"msg"`
 	Err      error  `json:"err"`
 	File     string `json:"file"`
 	Line     int    `json:"line"`
@@ -25,13 +26,14 @@ type qiaoError struct {
 
 var errid string
 
-func Err(err error, other ...any) error {
+func Err(msg string, err error, other ...any) error {
 	if id := extractID(err.Error()); id != "" && id == errid {
 		return err
 	}
 	if err != nil {
 		if funcName, file, line, ok := runtime.Caller(1); ok {
 			return &qiaoError{
+				Msg:      msg,
 				Err:      err,
 				File:     file,
 				Line:     line,
@@ -68,5 +70,5 @@ func generateID() string {
 
 func (e *qiaoError) Error() string {
 	errid = generateID()
-	return fmt.Sprintf(`file=%s:%d func=%s err=%s id=%s`, e.File, e.Line, e.FuncName, e.Err, errid)
+	return fmt.Sprintf(`file=%s:%d func=%s msg=%s err=%s id=%s`, e.File, e.Line, e.FuncName, e.Msg, e.Err, errid)
 }

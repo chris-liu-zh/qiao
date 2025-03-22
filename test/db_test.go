@@ -1,8 +1,8 @@
 /*
  * @Author: Chris
  * @Date: 2025-03-05 13:24:30
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-14 12:08:59
+ * @LastEditors: Strong
+ * @LastEditTime: 2025-03-22 17:27:32
  * @Description: 请填写简介
  */
 package qiao
@@ -24,7 +24,7 @@ func initdb() error {
 		Dsn:   "sqlserver://api:CF18.COM@192.168.1.217:1433?database=cf2024a&encrypt=disable&parseTime=true",
 	}
 	if err := db.NewDB(); err != nil {
-		return qiao.Err(err)
+		return qiao.Err("数据库设置错误", err)
 	}
 	return nil
 }
@@ -32,7 +32,7 @@ func initdb() error {
 func initlog() (err error) {
 	logger, err := qiao.SetLog("./log/run.log", 10, 10, 180, true, -4, true, true)
 	if err != nil {
-		return qiao.Err(err)
+		return qiao.Err("设置运行日志错误", err)
 	}
 	qiao.SetDefaultSlog(logger)
 	return
@@ -40,10 +40,10 @@ func initlog() (err error) {
 
 func initialize() (err error) {
 	if err = initlog(); err != nil {
-		return qiao.Err(err)
+		return qiao.Err("", err)
 	}
 	if err = initdb(); err != nil {
-		return qiao.Err(err)
+		return qiao.Err("", err)
 	}
 
 	return
