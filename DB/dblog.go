@@ -26,13 +26,9 @@ type sqlLog struct {
 }
 
 var (
-	loggerPre  = make(map[string]logOpt)
+	loggerPre  = make(map[string]*slog.Logger)
 	loggerList = []string{"DEBUG", "INFO", "WARNING", "ERROR", "CUSTOM"}
 )
-
-type logOpt struct {
-	Slog *slog.Logger
-}
 
 // LogEntry 定义 JSON 日志结构
 type LogEntry struct {
@@ -139,31 +135,49 @@ func SetDBLog(path string, maxSize int, maxBackups int, maxAge int, compress boo
 		if err != nil {
 			return err
 		}
-		loggerPre[logType] = logOpt{
-			Slog: newSlog,
-		}
+		loggerPre[logType] = newSlog
 	}
 	return nil
 }
 
 func (info *sqlLog) logDEBUG() {
-	loggerPre["DEBUG"].Slog.Debug(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+	if loggerPre["DEBUG"] == nil {
+		slog.Debug(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+		return
+	}
+	loggerPre["DEBUG"].Debug(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
 }
 
 func (info *sqlLog) logINFO() {
-	loggerPre["INFO"].Slog.Info(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+	if loggerPre["INFO"] == nil {
+		slog.Debug(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+		return
+	}
+	loggerPre["INFO"].Info(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
 }
 
 func (info *sqlLog) logWARNING() {
-	loggerPre["WARNING"].Slog.Warn(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+	if loggerPre["WARNING"] == nil {
+		slog.Debug(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+		return
+	}
+	loggerPre["WARNING"].Warn(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
 }
 
 func (info *sqlLog) logERROR() {
-	loggerPre["ERROR"].Slog.Error(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+	if loggerPre["ERROR"] == nil {
+		slog.Debug(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+		return
+	}
+	loggerPre["ERROR"].Error(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
 }
 
 func (mapper *Mapper) debug(msg string) {
 	if mapper.Complete.Debug {
-		loggerPre["CUSTOM"].Slog.Debug(msg, "Sqlstr", mapper.Complete.Sql, "Args", mapper.Complete.Args)
+		if loggerPre["CUSTOM"] == nil {
+			slog.Debug(msg, "Sqlstr", mapper.Complete.Sql, "Args", mapper.Complete.Args)
+			return
+		}
+		loggerPre["CUSTOM"].Debug(msg, "Sqlstr", mapper.Complete.Sql, "Args", mapper.Complete.Args)
 	}
 }
