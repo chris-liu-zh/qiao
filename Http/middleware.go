@@ -96,6 +96,7 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	case <-done:
 		tw.mu.Lock()
 		defer tw.mu.Unlock()
+		w.WriteHeader(tw.code)
 		w.Write(tw.wbuf.Bytes())
 	case <-ctx.Done():
 		tw.mu.Lock()

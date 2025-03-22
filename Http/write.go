@@ -9,7 +9,6 @@ package Http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -36,8 +35,8 @@ func AuthFail() *Return {
 	return &Return{Code: http.StatusUnauthorized, Message: "Unauthorized"}
 }
 
-func SignFail(message string) *Return {
-	return &Return{Code: http.StatusBadRequest, Message: fmt.Sprintf("Sign error:%s", message)}
+func SignFail() *Return {
+	return &Return{Code: http.StatusBadRequest, Message: "Sign fail"}
 }
 
 func TokenExpire() *Return {

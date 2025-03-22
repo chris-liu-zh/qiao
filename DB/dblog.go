@@ -174,13 +174,13 @@ func (info *sqlLog) logERROR() {
 }
 
 func (info *sqlLog) formatLog(types string) {
-	log.Println("["+types+"] ", info.Message, " sql=", info.Sqlstr, " args=", info.Args, " DBTitle=", info.Title)
+	log.Println("["+types+"]", info.Message, "sql=", info.Sqlstr, "args=", info.Args, "DBTitle=", info.Title)
 }
 
 func (mapper *Mapper) debug(msg string) {
 	if mapper.Complete.Debug {
 		if loggerPre["CUSTOM"] == nil {
-			log.Println("[CUSTOM]", msg, " sql=", mapper.Complete.Sql, " args=", mapper.Complete.Args)
+			log.Println("[CUSTOM]", msg, "sql=", mapper.Complete.Sql, "args=", mapper.Complete.Args)
 			return
 		}
 		loggerPre["CUSTOM"].Debug(msg, "Sqlstr", mapper.Complete.Sql, "Args", mapper.Complete.Args)

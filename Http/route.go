@@ -72,7 +72,7 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	header := GetHeader(r)
 	if err := router.m.sign(r.URL.Path, header); err != nil {
-		SignFail(err.Error()).Json(lw)
+		SignFail().Json(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}
@@ -96,7 +96,6 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// 检查是否有匹配的路由
 	var matched bool
-	router.mux.Handler(r)
 	if _, pattern := router.mux.Handler(r); pattern != "" {
 		matched = true
 	}
