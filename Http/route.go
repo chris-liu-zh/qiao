@@ -108,7 +108,7 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 未匹配到路由，返回错误
-		Fail("route not found").Json(lw)
+		Fail(nil, "route not found").Json(lw)
 	}
 
 	if lw.status >= http.StatusBadRequest {

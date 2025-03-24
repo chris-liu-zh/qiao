@@ -9,6 +9,7 @@ package Http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -23,8 +24,8 @@ func Success(data any) *Return {
 	return &Return{Code: http.StatusOK, Message: "ok", Data: data, Success: true}
 }
 
-func Fail(message string) *Return {
-	return &Return{Code: http.StatusNotFound, Message: message}
+func Fail(err error, message ...string) *Return {
+	return &Return{Code: http.StatusNotFound, Message: fmt.Sprintf("%v:%s", err, message)}
 }
 
 func TimeoutFail() *Return {
@@ -54,7 +55,7 @@ func TokenExpire() *Return {
 func (r *Return) Json(w http.ResponseWriter) {
 	dataByte, err := json.Marshal(r)
 	if err != nil {
-		Fail(err.Error()).Json(w)
+		Fail(err).Json(w)
 	}
 	// if r.Code != 200 {
 	// 	HttpWrite(w, dataByte, r.Code, r.Msg)

@@ -51,7 +51,7 @@ func NewTemplates(templateDir ...string) (err error) {
 func Html(w http.ResponseWriter, templateName string, data any) {
 	t := t.template.Lookup(templateName)
 	if err := t.Execute(w, data); err != nil {
-		Fail(err.Error()).Json(w)
+		Fail(err).Json(w)
 	}
 }
 

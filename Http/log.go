@@ -57,7 +57,7 @@ func LogError(r *http.Request, status int, bytesWritten int, msg string) {
 	if errorLog == nil {
 		errorLog = log.New(os.Stderr, "[ERROR] ", log.Ldate|log.Ltime|log.Lshortfile)
 	}
-	errorLog.Output(2, fmt.Sprintf("%s - - \"%s %s %s\" %d %d \"%s\" \"%s\" %s",
+	errorLog.Output(3, fmt.Sprintf("%s - - \"%s %s %s\" %d %d \"%s\" \"%s\" %s",
 		r.RemoteAddr,
 		r.Method,
 		r.URL.Path,
