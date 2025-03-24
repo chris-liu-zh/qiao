@@ -56,6 +56,7 @@ func (r *Return) Json(w http.ResponseWriter) {
 	dataByte, err := json.Marshal(r)
 	if err != nil {
 		Fail(err).Json(w)
+		return
 	}
 	// if r.Code != 200 {
 	// 	HttpWrite(w, dataByte, r.Code, r.Msg)
