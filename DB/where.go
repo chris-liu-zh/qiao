@@ -78,7 +78,7 @@ func (mapper *Mapper) whereStruct(elem reflect.Value) *Mapper {
 	var next string
 	for i := range elem.NumField() {
 		find := elem.Type().Field(i).Tag.Get("find")
-		exclude := elem.Type().Field(i).Tag.Get("exclude")
+		exclude := elem.Type().Field(i).Tag.Get("ignore")
 		if exclude == fmt.Sprintf("%v", elem.Field(i).Interface()) {
 			continue
 		}
@@ -157,14 +157,14 @@ func getfind(column, find string, val any) (where string, args []any) {
 		for i := range l {
 			args = append(args, s.Index(i).Interface())
 		}
-		where = fmt.Sprintf("%s %s  ? and ?  ", column, find)
+		where = fmt.Sprintf("%s between  ? and ?  ", column)
 		return
 	case strings.Contains(find, "like"):
 		if val == "%" || val == "" || val == "%%" {
 			return
 		}
 		args = append(args, val)
-		where = fmt.Sprintf("%s %s ? ", column, find)
+		where = fmt.Sprintf("%s like ? ", column)
 		return
 	default:
 		args = append(args, val)

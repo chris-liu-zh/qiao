@@ -36,7 +36,7 @@ import (
 const SelectJoin = "select ${field} from (select ${joinfield} from ${table} ${join} ${where} ${order} ${group}) temp"
 
 func (mapper *Mapper) Join(join, joinField, on string) *Mapper {
-	mapper.Debris.joinfield = joinField
+	mapper.Debris.joinField = joinField
 	mapper.Debris.join = fmt.Sprintf("%s on %s", join, on)
 	mapper.SqlTpl = SelectJoin
 	return mapper

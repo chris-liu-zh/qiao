@@ -9,10 +9,13 @@ package Http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type RouterHandle struct {
@@ -70,6 +73,10 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		return
 	}
+	if _, pattern := router.mux.Handler(r); pattern == "" {
+		Fail("404 Not Found", nil).Json(lw)
+		return
+	}
 	header := GetHeader(r)
 	if err := router.m.sign(r.URL.Path, header); err != nil {
 		SignFail().Json(lw)
@@ -79,6 +86,11 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	key, userinfo, err := router.m.auth(r.URL.Path, header)
 	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			TokenExpire().Json(lw)
+			LogError(r, lw.status, lw.bytesWritten, lw.msg)
+			return
+		}
 		AuthFail().Json(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
@@ -94,21 +106,10 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		r = router.m.contextSetter(r)
 	}
 
-	// 检查是否有匹配的路由
-	var matched bool
-	if _, pattern := router.mux.Handler(r); pattern != "" {
-		matched = true
-	}
-
-	if matched {
-		if router.timeout > 0 {
-			router.requestTimeout(lw, r)
-		} else {
-			router.mux.ServeHTTP(lw, r)
-		}
+	if router.timeout > 0 {
+		router.requestTimeout(lw, r)
 	} else {
-		// 未匹配到路由，返回错误
-		Fail(nil, "route not found").Json(lw)
+		router.mux.ServeHTTP(lw, r)
 	}
 
 	if lw.status >= http.StatusBadRequest {

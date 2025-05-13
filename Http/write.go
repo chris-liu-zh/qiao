@@ -8,9 +8,12 @@
 package Http
 
 import (
+	"blog/qiao"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"runtime"
 )
 
 type Return struct {
@@ -24,8 +27,11 @@ func Success(data any) *Return {
 	return &Return{Code: http.StatusOK, Message: "ok", Data: data, Success: true}
 }
 
-func Fail(err error, message ...string) *Return {
-	return &Return{Code: http.StatusNotFound, Message: fmt.Sprintf("%v:%s", err, message)}
+func Fail(message string, err error) *Return {
+	if err == nil {
+		return &Return{Code: http.StatusNotFound, Message: message}
+	}
+	return &Return{Code: http.StatusNotFound, Message: fmt.Sprintf("%s %s", message, err.Error())}
 }
 
 func TimeoutFail() *Return {
@@ -44,24 +50,23 @@ func TokenExpire() *Return {
 	return &Return{Code: http.StatusForbidden, Message: "Token expire"}
 }
 
-// func debug(msg string, skip int) {
-// 	if msg != "" {
-// 		if funcName, file, line, ok := runtime.Caller(skip); ok {
-// 			log.Println(msg, file, line, runtime.FuncForPC(funcName).Name())
-// 		}
-// 	}
-// }
+func debug(msg string, skip int) {
+	if msg != "" {
+		if funcName, file, line, ok := runtime.Caller(skip); ok {
+			log.Println(msg, file, line, runtime.FuncForPC(funcName).Name())
+		}
+	}
+}
 
 func (r *Return) Json(w http.ResponseWriter) {
 	dataByte, err := json.Marshal(r)
 	if err != nil {
-		Fail(err).Json(w)
+		Fail("", qiao.Err("", err)).Json(w)
 		return
 	}
-	// if r.Code != 200 {
-	// 	HttpWrite(w, dataByte, r.Code, r.Msg)
-	// 	return
-	// }
+	if r.Code != 200 {
+		debug(r.Message, 2)
+	}
 	w.Header().Set("content-type", "application/json;charset=UTF-8")
 	HttpWrite(w, dataByte, r.Code, r.Message)
 }

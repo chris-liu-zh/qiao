@@ -19,35 +19,29 @@ import (
 )
 
 type Auth struct {
-	key           []byte
-	accessClaims  jwt.RegisteredClaims
-	refreshClaims jwt.RegisteredClaims
+	issuer string
+	key    []byte
+	aExp   time.Duration
+	rExp   time.Duration
 }
 
 var revokedTokens = make(map[string]time.Time)
 
+var authList = make(map[string]*Auth)
+
 func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) *Auth {
-	return &Auth{
-		key:           []byte(key),
-		accessClaims:  CreateClaims(issuer, aExp),
-		refreshClaims: CreateClaims(issuer, rExp),
+	if authList[issuer] != nil {
+		return authList[issuer]
 	}
+	authList[issuer] = &Auth{
+		key:  []byte(key),
+		aExp: aExp,
+		rExp: rExp,
+	}
+	return authList[issuer]
 }
 
-func NewAuth(issuer string, aExp time.Duration, key string) *Auth {
-	return &Auth{
-		key:          []byte(key),
-		accessClaims: CreateClaims(issuer, aExp),
-	}
-}
-
-/**
- * @description:验证签名
- * @param {*} appkey
- * @param {*} sign
- * @param {string} timestamp
- * @return {*}
- */
+// DefaultSign /**
 func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Duration) error {
 	now := time.Now()
 	// 检查时间戳是否在有效时间范围内
@@ -63,7 +57,7 @@ func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Durati
 	return nil
 }
 
-// 创建 JWT 注册声明
+// CreateClaims 创建 JWT 注册声明
 func CreateClaims(issuer string, exp time.Duration) jwt.RegisteredClaims {
 	return jwt.RegisteredClaims{
 		Issuer:    issuer,
@@ -71,39 +65,25 @@ func CreateClaims(issuer string, exp time.Duration) jwt.RegisteredClaims {
 	}
 }
 
-/**
- * @description: 获取 access token 和 refresh token
- * @param {http.ResponseWriter} w
- * @param {*http.Request} r
- * @return {*}
- */
+// NewDefaultToken /**
 func (a *Auth) NewDefaultToken(data any) (aToken, rToken string, err error) {
-	aToken, err = CreateToken(data, a.accessClaims, a.key)
+	aToken, err = CreateToken(data, CreateClaims(a.issuer, a.aExp), a.key)
 	if err != nil {
 		return
 	}
-	rToken, err = CreateToken(nil, a.refreshClaims, a.key)
+	rToken, err = CreateToken(nil, CreateClaims(a.issuer, a.rExp), a.key)
 	if err != nil {
 		return
 	}
 	return
 }
 
-/**
- * @description: 获取 Token
- * @param {http.ResponseWriter} w
- * @param {*http.Request} r
- * @return {*}
- */
+// NewToken /**
 func (a *Auth) NewToken(data any) (string, error) {
-	return CreateToken(data, a.accessClaims, a.key)
+	return CreateToken(data, CreateClaims(a.issuer, a.aExp), a.key)
 }
 
-/**
- * @description: 验证Token
- * @param {*http.Request} r
- * @return {*}
- */
+// CheckToken /**
 func (a *Auth) CheckToken(token string) (any, error) {
 	claims, err := VerifyToken(token, a.key)
 	if err != nil {
@@ -112,15 +92,14 @@ func (a *Auth) CheckToken(token string) (any, error) {
 	return claims.UserInfo, nil
 }
 
-// 刷新Token
+// RefreshToken 刷新Token
 func (a *Auth) RefreshToken(accessToken, refreshToken string) (string, string, error) {
-	if _, err := a.CheckToken(refreshToken); err != nil {
+	if _, err := VerifyToken(refreshToken, a.key); err != nil {
 		return "", "", err
 	}
-
-	if userinfo, err := a.CheckToken(accessToken); err != nil {
+	if claims, err := VerifyToken(accessToken, a.key); err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return a.NewDefaultToken(userinfo)
+			return a.NewDefaultToken(claims.UserInfo)
 		}
 		return "", "", err
 	}
@@ -142,7 +121,7 @@ func init() {
 }
 
 func SetInvalidToken(token string) error {
-	claims := &claims{}
+	claims := &Claims{}
 	_, _, err := jwt.NewParser().ParseUnverified(token, claims)
 	if err != nil {
 		return err

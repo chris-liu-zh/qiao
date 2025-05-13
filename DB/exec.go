@@ -57,14 +57,14 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 	return
 }
 
-func MyqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, err error) {
+func MysqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, err error) {
 	if db == nil {
 		return 0, ErrNoConn()
 	}
 	args := handleNull(arg...)
 	var result sql.Result
 	query := Replace(sqlStr, "?", db.Sign)
-	db.log("MyqlAddReturnId", query, args...).logDEBUG()
+	db.log("MysqlAddReturnId", query, args...).logDEBUG()
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.LastInsertId()
 	}

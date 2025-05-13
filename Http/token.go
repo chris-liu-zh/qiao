@@ -14,7 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type claims struct {
+type Claims struct {
 	UserInfo any `json:"user_info"`
 	jwt.RegisteredClaims
 }
@@ -24,7 +24,7 @@ func getJWTTime(t time.Duration) *jwt.NumericDate {
 }
 
 func CreateToken(UserInfo any, reg jwt.RegisteredClaims, key []byte) (string, error) {
-	tokenClaims := claims{
+	tokenClaims := Claims{
 		UserInfo,
 		reg,
 	}
@@ -33,16 +33,16 @@ func CreateToken(UserInfo any, reg jwt.RegisteredClaims, key []byte) (string, er
 }
 
 // VerifyToken 验证Token
-func VerifyToken(token string, key []byte) (*claims, error) {
-	claims := &claims{}
+func VerifyToken(token string, key []byte) (claims *Claims, err error) {
+	claims = &Claims{}
 	verifyToken, err := jwt.ParseWithClaims(token, claims, func(*jwt.Token) (any, error) {
 		return key, nil
 	})
 	if err != nil {
-		return nil, err
+		return
 	}
 	if !verifyToken.Valid {
-		return nil, errors.New("verify token failed")
+		return claims, errors.New("verify token failed")
 	}
 	return claims, nil
 }

@@ -79,7 +79,7 @@ func PGpage(mapper *Mapper, size, page int) *Mapper {
 }
 
 func MYpage(mapper *Mapper, size, page int) *Mapper {
-	mapper.SqlTpl = fmt.Sprintf(Select+"LIMIT %d , %d", size, page)
+	mapper.SqlTpl = fmt.Sprintf(Select+"LIMIT %d , %d", page-1, size)
 	return mapper
 }
 
@@ -114,7 +114,7 @@ func (db DBNew) NewDB() (err error) {
 	case "mysql":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
-		conndb.DBFunc.AddReturnId = MyqlAddReturnId
+		conndb.DBFunc.AddReturnId = MysqlAddReturnId
 		drive = "mysql"
 		if db.Dsn == "" {
 			conndb.Dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?timeout=%ds&parseTime=true&loc=Local", db.User, db.Pwd, db.Host, db.Port, db.DBName, db.TimeOut)
@@ -122,7 +122,7 @@ func (db DBNew) NewDB() (err error) {
 	case "sqlite":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
-		conndb.DBFunc.AddReturnId = MyqlAddReturnId
+		conndb.DBFunc.AddReturnId = MysqlAddReturnId
 		drive = "sqlite3"
 		conndb.Dsn = db.Dsn
 	case "mssql":

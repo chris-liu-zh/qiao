@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+type Order string
+
+const (
+	Desc Order = "desc"
+	Asc  Order = "asc"
+)
+
 type Mapper struct {
 	SqlTpl   string
 	Debris   SqlDebris
@@ -21,7 +28,7 @@ type SqlComplete struct {
 type SqlDebris struct {
 	table     string `tpl:"table"`
 	field     string `tpl:"field"`
-	joinfield string `tpl:"joinfield"`
+	joinField string `tpl:"join_field"`
 	where     string `tpl:"where"`
 	set       string `tpl:"set"`
 	group     string `tpl:"group"`
@@ -108,10 +115,11 @@ func (mapper *Mapper) Table(tableName string) *Mapper {
 
 /*
 Order	设置排序
-
-	*order string;-- “id asc”
 */
 func (mapper *Mapper) Order(order string) *Mapper {
+	if order == "" {
+		return mapper
+	}
 	mapper.Debris.order = "order by " + order
 	return mapper
 }

@@ -16,7 +16,7 @@ const DateTime = "2006-01-02 15:04:05"
 const DateDay = "2006-01-02"
 
 func NowDateTime() string {
-	return time.Now().Format("2006-01-02 15:04:05")
+	return time.Now().Format(DateTime)
 }
 
 // 时间戳（秒）

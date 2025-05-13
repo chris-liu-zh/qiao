@@ -45,8 +45,8 @@ func (mapper *Mapper) getSql() (sql string, err error) {
 	if mapper.Debris.field == "" {
 		mapper.Debris.field = "*"
 	}
-	if mapper.Debris.joinfield == "" {
-		mapper.Debris.joinfield = mapper.Debris.field
+	if mapper.Debris.joinField == "" {
+		mapper.Debris.joinField = mapper.Debris.field
 	}
 	sqlMap, err := Struct2Map(&mapper.Debris)
 	if err != nil {

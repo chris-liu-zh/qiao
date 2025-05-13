@@ -166,6 +166,9 @@ func (mapper *Mapper) Count(_struct any, index string) (count int, err error) {
 	if mapper, err = mapper.getMapper(elem); err != nil {
 		return 0, err
 	}
+	if index == "" {
+		index = "*"
+	}
 	mapper.Complete.Sql = fmt.Sprintf("select count(%s) from(%s) a", index, mapper.Complete.Sql)
 	mapper.debug("Count")
 	if count, err = Read().Count(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
