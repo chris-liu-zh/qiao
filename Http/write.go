@@ -8,18 +8,15 @@
 package Http
 
 import (
-	"blog/qiao"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
-	"runtime"
 )
 
 type Return struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
+	Debug   error  `json:"debug"`
 	Success bool   `json:"success"`
 }
 
@@ -27,11 +24,15 @@ func Success(data any) *Return {
 	return &Return{Code: http.StatusOK, Message: "ok", Data: data, Success: true}
 }
 
+func LoginFail(message string, err error) *Return {
+	return &Return{Code: http.StatusUnauthorized, Message: message, Debug: err}
+}
+
 func Fail(message string, err error) *Return {
 	if err == nil {
 		return &Return{Code: http.StatusNotFound, Message: message}
 	}
-	return &Return{Code: http.StatusNotFound, Message: fmt.Sprintf("%s %s", message, err.Error())}
+	return &Return{Code: http.StatusNotFound, Message: message, Debug: err}
 }
 
 func TimeoutFail() *Return {
@@ -47,27 +48,15 @@ func SignFail() *Return {
 }
 
 func TokenExpire() *Return {
-	return &Return{Code: http.StatusForbidden, Message: "Token expire"}
-}
-
-func debug(msg string, skip int) {
-	if msg != "" {
-		if funcName, file, line, ok := runtime.Caller(skip); ok {
-			log.Println(msg, file, line, runtime.FuncForPC(funcName).Name())
-		}
-	}
+	return &Return{Code: 498, Message: "Token expire"}
 }
 
 func (r *Return) Json(w http.ResponseWriter) {
-	dataByte, err := json.Marshal(r)
-	if err != nil {
-		Fail("", qiao.Err("", err)).Json(w)
-		return
-	}
 	if r.Code != 200 {
-		debug(r.Message, 2)
+		LogDebug(r.Message, 2)
 	}
 	w.Header().Set("content-type", "application/json;charset=UTF-8")
+	dataByte, _ := json.Marshal(r)
 	HttpWrite(w, dataByte, r.Code, r.Message)
 }
 

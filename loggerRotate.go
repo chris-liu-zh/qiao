@@ -21,7 +21,7 @@ type QiaoLogger struct {
 	mu         sync.Mutex // 互斥锁，确保并发安全
 }
 
-// 创建一个新的 QiaoLogger 实例
+// NewLoggerRotate 创建一个新的 QiaoLogger 实例
 func NewLoggerRotate(filename string, maxSize, maxBackups, maxAge int, compress bool) (*QiaoLogger, error) {
 	dir := filepath.Dir(filename)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -45,7 +45,10 @@ func (l *QiaoLogger) Write(p []byte) (n int, err error) {
 	// 检查当前日志文件大小
 	fileInfo, err := os.Stat(l.filename)
 	if err == nil && fileInfo.Size() > int64(l.maxSize*1024*1024) {
-		l.rotate() // 触发日志切割
+		// 触发日志切割
+		if err = l.rotate(); err != nil {
+			return 0, err
+		}
 	}
 
 	// 打开日志文件（如果未打开）
@@ -88,7 +91,7 @@ func (l *QiaoLogger) rotate() error {
 
 	// 如果需要压缩，压缩旧日志文件
 	if l.compress {
-		if err := l.compressFile(backupFilename); err != nil {
+		if err := compressFile(backupFilename); err != nil {
 			return err
 		}
 		backupFilename += ".gz" // 压缩后的文件名
@@ -135,7 +138,7 @@ func (l *QiaoLogger) cleanupOldLogs() {
 }
 
 // compressFile 压缩日志文件
-func (l *QiaoLogger) compressFile(filename string) error {
+func compressFile(filename string) error {
 	// 打开原始日志文件
 	file, err := os.Open(filename)
 	if err != nil {
@@ -161,14 +164,4 @@ func (l *QiaoLogger) compressFile(filename string) error {
 
 	// 删除原始日志文件
 	return os.Remove(filename)
-}
-
-// Close 关闭日志文件
-func (l *QiaoLogger) Close() error {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	if l.file != nil {
-		return l.file.Close()
-	}
-	return nil
 }

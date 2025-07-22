@@ -14,6 +14,7 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"os"
 	"runtime"
 
 	"github.com/chris-liu-zh/qiao"
@@ -108,7 +109,7 @@ func (h *CustomHandler) WithGroup(name string) slog.Handler {
 	return h
 }
 
-func getLog(filename string, maxSize int, maxBackups int, maxAge int, compress bool, Level slog.Level, is_json bool) (*slog.Logger, error) {
+func getLog(filename string, maxSize int, maxBackups int, maxAge int, compress bool, Level slog.Level, isJson bool) (*slog.Logger, error) {
 	loggerRotate, err := qiao.NewLoggerRotate(filename, maxSize, maxBackups, maxAge, compress)
 	if err != nil {
 		return nil, err
@@ -116,7 +117,7 @@ func getLog(filename string, maxSize int, maxBackups int, maxAge int, compress b
 	customHandler := &CustomHandler{
 		output: loggerRotate,
 		level:  Level,
-		IsJson: is_json,
+		IsJson: isJson,
 	}
 	return slog.New(customHandler), nil
 }
@@ -174,13 +175,15 @@ func (info *sqlLog) logERROR() {
 }
 
 func (info *sqlLog) formatLog(types string) {
-	log.Println("["+types+"]", info.Message, "sql=", info.Sqlstr, "args=", info.Args, "DBTitle=", info.Title)
+	logf := log.New(os.Stdout, "[DB]["+types+"]", log.Ldate|log.Ltime)
+	logf.Printf("Messag=%s; sql=%s; args=%v; DBTitle=%s \n", info.Message, info.Sqlstr, info.Args, info.Title)
 }
 
 func (mapper *Mapper) debug(msg string) {
 	if mapper.Complete.Debug {
 		if loggerPre["CUSTOM"] == nil {
-			log.Println("[CUSTOM]", msg, "sql=", mapper.Complete.Sql, "args=", mapper.Complete.Args)
+			logf := log.New(os.Stdout, "[DB][CUSTOM]", log.Ldate|log.Ltime)
+			logf.Printf("Messag=%s; sql=%s; args=%v;\n", msg, mapper.Complete.Sql, mapper.Complete.Args)
 			return
 		}
 		loggerPre["CUSTOM"].Debug(msg, "Sqlstr", mapper.Complete.Sql, "Args", mapper.Complete.Args)

@@ -9,6 +9,7 @@ package Http
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -75,9 +76,10 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	r = r.WithContext(ctx)
 	done := make(chan struct{})
 	tw := &timeoutWriter{
-		w:   w,
-		h:   make(http.Header),
-		req: r,
+		w:    w,
+		h:    make(http.Header),
+		req:  r,
+		code: http.StatusOK,
 	}
 	panicChan := make(chan any, 1)
 	go func() {
@@ -101,8 +103,8 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	case <-ctx.Done():
 		tw.mu.Lock()
 		defer tw.mu.Unlock()
-		switch err := ctx.Err(); err {
-		case context.DeadlineExceeded:
+		switch err := ctx.Err(); {
+		case errors.Is(err, context.DeadlineExceeded):
 			TimeoutFail().Json(w)
 			tw.err = http.ErrHandlerTimeout
 		default:

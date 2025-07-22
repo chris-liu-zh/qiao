@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/chris-liu-zh/qiao"
 )
@@ -55,9 +56,9 @@ func LogAccess(r *http.Request, status int, bytesWritten int) {
 // LogError 记录错误日志
 func LogError(r *http.Request, status int, bytesWritten int, msg string) {
 	if errorLog == nil {
-		errorLog = log.New(os.Stderr, "[ERROR] ", log.Ldate|log.Ltime|log.Lshortfile)
+		errorLog = log.New(os.Stderr, "[ERROR] ", log.Ldate|log.Ltime)
 	}
-	errorLog.Output(3, fmt.Sprintf("%s - - \"%s %s %s\" %d %d \"%s\" \"%s\" %s",
+	errorLog.Printf("%s - - \"%s %s %s\" %d %d \"%s\" \"%s\" %s",
 		r.RemoteAddr,
 		r.Method,
 		r.URL.Path,
@@ -67,6 +68,14 @@ func LogError(r *http.Request, status int, bytesWritten int, msg string) {
 		r.Referer(),
 		r.UserAgent(),
 		msg,
-	))
+	)
 
+}
+
+func LogDebug(msg string, skip int) {
+	if msg != "" {
+		if funcName, file, line, ok := runtime.Caller(skip); ok {
+			log.Printf("%s - - \"%s\" %d %s", msg, file, line, runtime.FuncForPC(funcName).Name())
+		}
+	}
 }

@@ -23,9 +23,9 @@ type httpClient struct {
 }
 
 func NewHttpClient(url string) *httpClient {
-	http := &httpClient{}
-	http.Url = url
-	return http
+	return &httpClient{
+		Url: url,
+	}
 }
 
 func (client *httpClient) Cookie(cookies []*http.Cookie) *httpClient {

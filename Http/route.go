@@ -128,14 +128,14 @@ func (router *RouterHandle) Post(path string, handler http.HandlerFunc) {
 }
 
 // 文件服务路由
-func (router *RouterHandle) FileServer(path, dir string) {
+func (router *RouterHandle) FilesServer(path, dir string) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	fs := http.StripPrefix(path, http.FileServer(http.Dir(dir)))
-	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+	router.mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	})
 }

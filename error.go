@@ -8,10 +8,12 @@
 package qiao
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"runtime"
-	"strings"
+	"strconv"
 	"time"
 )
 
@@ -20,55 +22,46 @@ type qiaoError struct {
 	Err      error  `json:"err"`
 	File     string `json:"file"`
 	Line     int    `json:"line"`
+	Id       int64  `json:"id"`
 	FuncName string `json:"funcName"`
 	Other    any    `json:"other"`
 }
 
-var errid string
+var errId int64 = 1
 
 func Err(msg string, err error, other ...any) error {
-	if id := extractID(err.Error()); id != "" && id == errid {
+	var qe *qiaoError
+	if ok := errors.As(err, &qe); ok && qe.Id == errId {
 		return err
 	}
-	if err != nil {
-		if funcName, file, line, ok := runtime.Caller(1); ok {
-			return &qiaoError{
-				Msg:      msg,
-				Err:      err,
-				File:     file,
-				Line:     line,
-				Other:    other,
-				FuncName: runtime.FuncForPC(funcName).Name(),
-			}
+	if funcName, file, line, ok := runtime.Caller(1); ok {
+		errId = newID()
+		return &qiaoError{
+			Msg:      msg,
+			Err:      err,
+			File:     file,
+			Line:     line,
+			Other:    other,
+			Id:       errId,
+			FuncName: runtime.FuncForPC(funcName).Name(),
 		}
 	}
 	return nil
 }
 
-func extractID(input string) string {
-	startIndex := strings.Index(input, "id=")
-	if startIndex == -1 {
-		return ""
-	}
-	startIndex += len("id=")
-	endIndex := strings.Index(input[startIndex:], "  ")
-	if endIndex == -1 {
-		return input[startIndex:]
-	}
-	endIndex += startIndex
-
-	return input[startIndex:endIndex]
-}
-
-func generateID() string {
+func newID() int64 {
 	timestamp := time.Now().UnixMilli()
 	rand.New(rand.NewSource(timestamp))
 	randomNum := rand.Intn(9000) + 1000
-	id := fmt.Sprintf("%d%d", timestamp, randomNum)
+	id, _ := strconv.ParseInt(fmt.Sprintf("%d%d", timestamp, randomNum), 10, 64)
 	return id
 }
 
 func (e *qiaoError) Error() string {
-	errid = generateID()
-	return fmt.Sprintf(`file=%s:%d func=%s msg=%s err=%s id=%s`, e.File, e.Line, e.FuncName, e.Msg, e.Err, errid)
+	jsonErr, _ := json.Marshal(e)
+	return string(jsonErr)
+}
+
+func (e *qiaoError) Unwrap() error {
+	return e.Err
 }

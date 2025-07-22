@@ -21,20 +21,32 @@ type H struct {
 	Status bool
 }
 
-/**
- * @description:
- * @param {string} address
- * @param {*Router} router
- * @return {*}
- */
 func NewHttpServer(address string, router *RouterHandle) *H {
 	return &H{Addr: address, Router: router}
 }
 
-/**
- * @description:
- * @return {*}
- */
+func (h *H) StartAutoTLS(domain string, cacheDir string, mail string) {
+	h.Server = &http.Server{
+		Addr:      h.Addr,
+		Handler:   h.Router,
+		TLSConfig: GetTlsCert(domain, cacheDir, mail),
+	}
+	h.Status = true
+	if err := h.Server.ListenAndServeTLS("", ""); err != nil {
+		h.Status = false
+		h.Err = err
+	}
+}
+
+func (h *H) StartTLS(certFile string, keyFile string) {
+	h.Server = &http.Server{Addr: h.Addr, Handler: h.Router}
+	h.Status = true
+	if err := h.Server.ListenAndServeTLS(certFile, keyFile); err != nil {
+		h.Status = false
+		h.Err = err
+	}
+}
+
 func (h *H) Start() {
 	h.Server = &http.Server{Addr: h.Addr, Handler: h.Router}
 	h.Status = true

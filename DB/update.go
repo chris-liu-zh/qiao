@@ -29,8 +29,9 @@ func (mapper *Mapper) UpdateAffected(set any, args ...any) (affected int64, err 
 }
 
 // 更新数据并返回sql.Result
-func (mapper *Mapper) Update(set any, args ...any) (r sql.Result, err error) {
-	mapper = mapper.Set(set, args...)
+func (mapper *Mapper) Update(data, params any, args ...any) (r sql.Result, err error) {
+	mapper = mapper.Set(data)
+	mapper = mapper.Find(params, args...)
 	mapper.SqlTpl = Update
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
 		mapper.log(err.Error()).logERROR()
