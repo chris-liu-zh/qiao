@@ -14,7 +14,7 @@ import (
 
 type Return struct {
 	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Message string `json:"msg"`
 	Data    any    `json:"data"`
 	Debug   error  `json:"debug"`
 	Success bool   `json:"success"`
