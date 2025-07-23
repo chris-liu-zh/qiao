@@ -12,8 +12,8 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/chris-liu-zh/qiao"
-	"github.com/chris-liu-zh/qiao/DB"
+	"qiao"
+	"qiao/DB"
 )
 
 func initdb() error {
@@ -29,19 +29,7 @@ func initdb() error {
 	return nil
 }
 
-func initlog() (err error) {
-	logger, err := qiao.SetLog("./log/run.log", 10, 10, 180, true, -4, true, true)
-	if err != nil {
-		return qiao.Err("设置运行日志错误", err)
-	}
-	qiao.SetDefaultSlog(logger)
-	return
-}
-
 func initialize() (err error) {
-	if err = initlog(); err != nil {
-		return qiao.Err("", err)
-	}
 	if err = initdb(); err != nil {
 		return qiao.Err("", err)
 	}
@@ -100,7 +88,7 @@ func Test_Update(t *testing.T) {
 		UserCode: "001",
 		FullName: "张三",
 	}
-	if _, err := DB.QiaoDB().Find("typeid=?", "00000").Update(&ptype); err != nil {
+	if _, err := DB.QiaoDB().Update(&ptype, "typeid=?", "00000"); err != nil {
 		t.Fatalf("%v", err)
 	}
 	Test_List(t)

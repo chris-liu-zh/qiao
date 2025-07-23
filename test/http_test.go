@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chris-liu-zh/qiao/Http"
+	"qiao/Http"
 )
 
 const (
@@ -31,6 +31,9 @@ func Test_Http(t *testing.T) {
 	if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
 		log.Println(err)
 	}
+	if err := Http.NewLog("log", 10, 5, 30, true); err != nil {
+		log.Println(err)
+	}
 
 	r := Http.NewRouter()
 	r.SetOnEvicted(onEvicted)
@@ -42,7 +45,6 @@ func Test_Http(t *testing.T) {
 	r.Get("/version", GetVersion)
 	r.Get("/users/{id}", GetUserByID)
 	r.Get("/", home)
-	r.FileServer("/static/", "./template")
 	Http.NewHttpServer(":8080", r).Start()
 }
 

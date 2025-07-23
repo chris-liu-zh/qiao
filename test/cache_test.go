@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chris-liu-zh/qiao/cache"
+	"qiao/cache"
 )
 
 func Test_CacheSet(t *testing.T) {

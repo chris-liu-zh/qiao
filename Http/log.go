@@ -14,13 +14,13 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/chris-liu-zh/qiao"
+	"qiao"
 )
 
 var accessLog *log.Logger
 var errorLog *log.Logger
 
-func NewHttpLog(logPath string, maxSize int, maxBackups int, maxAge int, compress bool) error {
+func NewLog(logPath string, maxSize int, maxBackups int, maxAge int, compress bool) error {
 	accessFile := fmt.Sprintf("%s/access_log", logPath)
 	errorFile := fmt.Sprintf("%s/error_log", logPath)
 	accessIo, err := qiao.NewLoggerRotate(accessFile, maxSize, maxBackups, maxAge, compress)
