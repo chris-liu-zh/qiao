@@ -8,6 +8,7 @@
 package qiao
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -28,16 +29,16 @@ var defaultAuth = Http.DefaultAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP
 
 func Test_Http(t *testing.T) {
 
-	if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
-		log.Println(err)
-	}
+	// if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
+	// 	log.Println(err)
+	// }
 	if err := Http.NewLog("log", 10, 5, 30, true); err != nil {
 		log.Println(err)
 	}
 
 	r := Http.NewRouter()
 	r.SetOnEvicted(onEvicted)
-	r.SetTimeout(10 * time.Second)
+	r.SetTimeout(2 * time.Second)
 	r.SetHeader(Http.DefaultHeader)
 	r.SetContextSetter(setContest)
 	r.SetSign("/api/", sign)
@@ -50,10 +51,12 @@ func Test_Http(t *testing.T) {
 
 func home(w http.ResponseWriter, r *http.Request) {
 	var data struct {
-		Public string
+		Public string `json:"public"`
 	}
 	data.Public = "public"
-	Http.Html(w, "template/index", data)
+	// Http.Success(data).Json(w)
+	json.NewEncoder(w).Encode(data)
+	// Http.Html(w, "template/index", data)
 }
 
 func onEvicted(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +95,10 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	}
 	ver.Version = "1.0.0"
 	ver.Ip = strings.Split(r.RemoteAddr, ":")[0]
-	Http.Html(w, "template/version/index", ver)
+	time.Sleep(3 * time.Second)
+	w.Header().Set("content-type", "application/json;charset=UTF-8")
+	Http.Success(ver).Json(w)
+	// Http.Html(w, "template/version/index", ver)
 }
 
 func sign(header map[string]string) error {

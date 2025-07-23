@@ -77,39 +77,25 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	done := make(chan struct{})
 	tw := &timeoutWriter{
 		w:    w,
-		h:    make(http.Header),
+		h:    w.Header(),
 		req:  r,
 		code: http.StatusOK,
 	}
-	panicChan := make(chan any, 1)
 	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				panicChan <- p
-			}
-		}()
 		router.mux.ServeHTTP(tw, r)
 		close(done)
 	}()
 
 	select {
-	case p := <-panicChan:
-		log.Println(p)
 	case <-done:
-		tw.mu.Lock()
-		defer tw.mu.Unlock()
-		w.WriteHeader(tw.code)
-		w.Write(tw.wbuf.Bytes())
+		log.Println("request completed")
 	case <-ctx.Done():
-		tw.mu.Lock()
-		defer tw.mu.Unlock()
 		switch err := ctx.Err(); {
 		case errors.Is(err, context.DeadlineExceeded):
-			TimeoutFail().Json(w)
-			tw.err = http.ErrHandlerTimeout
+			TimeoutFail().Json(tw)
+			tw.closed = true
 		default:
-			w.WriteHeader(http.StatusServiceUnavailable)
-			tw.err = err
+			tw.WriteHeader(http.StatusServiceUnavailable)
 		}
 	}
 }
