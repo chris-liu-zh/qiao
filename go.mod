@@ -1,4 +1,4 @@
-module qiao
+module github.com/chris-liu-zh/qiao
 
 go 1.24.2
 

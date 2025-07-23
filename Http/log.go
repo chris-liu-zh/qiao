@@ -14,7 +14,7 @@ import (
 	"os"
 	"runtime"
 
-	"qiao"
+	"github.com/chris-liu-zh/qiao"
 )
 
 var accessLog *log.Logger

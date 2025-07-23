@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"qiao/Http"
+	"github.com/chris-liu-zh/qiao/Http"
 )
 
 const (

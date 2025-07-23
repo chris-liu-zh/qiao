@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"qiao"
+	"github.com/chris-liu-zh/qiao"
 
 	"github.com/golang-jwt/jwt/v5"
 )

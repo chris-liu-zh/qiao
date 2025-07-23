@@ -12,8 +12,8 @@ import (
 	"log/slog"
 	"testing"
 
-	"qiao"
-	"qiao/DB"
+	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/DB"
 )
 
 func initdb() error {

@@ -17,7 +17,7 @@ import (
 	"os"
 	"runtime"
 
-	"qiao"
+	"github.com/chris-liu-zh/qiao"
 )
 
 type sqlLog struct {
