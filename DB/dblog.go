@@ -114,8 +114,9 @@ func getLog(filename string, maxSize int, maxBackups int, maxAge int, compress b
 	if err != nil {
 		return nil, err
 	}
+	multiWriter := io.MultiWriter(os.Stdout, loggerRotate)
 	customHandler := &CustomHandler{
-		output: loggerRotate,
+		output: multiWriter,
 		level:  Level,
 		IsJson: isJson,
 	}
