@@ -25,7 +25,7 @@ func Success(data any) *Return {
 }
 
 func LoginFail(message string, err error) *Return {
-	return &Return{Code: http.StatusUnauthorized, Message: message, Debug: err}
+	return &Return{Code: http.StatusOK, Message: message, Debug: err}
 }
 
 func Fail(message string, err error) *Return {
@@ -57,7 +57,17 @@ func (r *Return) Json(w http.ResponseWriter) {
 	}
 	w.Header().Set("content-type", "application/json;charset=UTF-8")
 	dataByte, _ := json.Marshal(r)
-	HttpWrite(w, dataByte, r.Code, r.Message)
+	json.NewEncoder(w).Encode(dataByte)
+	// HttpWrite(w, dataByte, r.Code, r.Message)
+}
+
+func (r *Return) WriteJson(w http.ResponseWriter) {
+	if r.Code != 200 {
+		LogDebug(r.Message, 2)
+	}
+	w.Header().Set("content-type", "application/json;charset=UTF-8")
+	dataByte, _ := json.Marshal(r)
+	json.NewEncoder(w).Encode(dataByte)
 }
 
 func HttpWrite(w http.ResponseWriter, data []byte, code int, msg string) {
