@@ -62,12 +62,12 @@ func (r *Return) SetData(data any) *Return {
 	return r
 }
 
-func (r *Return) Write(w http.ResponseWriter, headerCode int) {
+func (r *Return) Write(w http.ResponseWriter, statusCode int) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	if headerCode != 0 {
-		headerCode = r.Code
+	if statusCode != 0 {
+		statusCode = r.Code
 	}
-	w.WriteHeader(headerCode)
+	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(r)
 }
 
