@@ -24,10 +24,6 @@ func Success(data any) *Return {
 	return &Return{Code: http.StatusOK, Message: "ok", Data: data, Success: true}
 }
 
-func LoginFail(message string, err error) *Return {
-	return &Return{Code: http.StatusUnauthorized, Message: message, Debug: err}
-}
-
 func Fail(message string, err error) *Return {
 	if err == nil {
 		return &Return{Code: http.StatusNotFound, Message: message}
@@ -51,13 +47,18 @@ func TokenExpire() *Return {
 	return &Return{Code: 498, Message: "Token expire"}
 }
 
+func (r *Return) SetCode(code int) *Return {
+	r.Code = code
+	return r
+}
+
 func (r *Return) Json(w http.ResponseWriter) {
 	if r.Code != 200 {
 		LogDebug(r.Message, 2)
 	}
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	dataByte, _ := json.Marshal(r)
-	HttpWrite(w, dataByte, r.Code, r.Message)
+	Write(w, dataByte, r.Code)
 }
 
 func SuccessJson(w http.ResponseWriter, data any) {
@@ -65,15 +66,7 @@ func SuccessJson(w http.ResponseWriter, data any) {
 	json.NewEncoder(w).Encode(Success(data))
 }
 
-// func (r *Return) WriteJson(w http.ResponseWriter) {
-// 	if r.Code != 200 {
-// 		LogDebug(r.Message, 2)
-// 	}
-// 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-// 	json.NewEncoder(w).Encode(r)
-// }
-
-func HttpWrite(w http.ResponseWriter, data []byte, code int, msg string) {
+func Write(w http.ResponseWriter, data []byte, code int) {
 	w.WriteHeader(code)
 	w.Write(data)
 }
