@@ -53,17 +53,13 @@ func (r *Return) SetCode(code int) *Return {
 }
 
 func (r *Return) Json(w http.ResponseWriter) {
-	if r.Code != 200 {
-		LogDebug(r.Message, 2)
-	}
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	dataByte, _ := json.Marshal(r)
 	Write(w, dataByte, r.Code)
 }
 
 func SuccessJson(w http.ResponseWriter, data any) {
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	json.NewEncoder(w).Encode(Success(data))
+	Success(data).Json(w)
 }
 
 func Write(w http.ResponseWriter, data []byte, code int) {

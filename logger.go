@@ -22,7 +22,7 @@ LevelError  = 8
 */
 
 type LogOption struct {
-	filename   string     // 日志文件路径
+	path       string     // 日志文件路径
 	maxSize    int        // 每个日志文件的最大大小（MB）
 	maxBackups int        // 保留的最大备份文件数
 	maxAge     int        // 保留的最大天数
@@ -30,23 +30,25 @@ type LogOption struct {
 	level      slog.Level // 日志级别
 	outJson    bool       // 是否输出为 JSON 格式
 	viewSource bool       // 是否显示调用者信息
+	viewOut    bool       // 是否显示输出
 }
 
 func NewLog() *LogOption {
 	return &LogOption{
-		filename:   "./log/run.log",
+		path:       "./log/run.log",
 		maxSize:    10,
-		maxBackups: 10,
+		maxBackups: 180,
 		maxAge:     180,
 		compress:   false,
 		level:      slog.LevelInfo,
-		outJson:    false,
+		outJson:    true,
 		viewSource: false,
+		viewOut:    false,
 	}
 }
 
-func (opt *LogOption) SetFileName(filename string) *LogOption {
-	opt.filename = filename
+func (opt *LogOption) SetFilePath(dirPath string) *LogOption {
+	opt.path = dirPath + "/run.log"
 	return opt
 }
 func (opt *LogOption) SetMaxSize(maxSize int) *LogOption {
@@ -79,21 +81,29 @@ func (opt *LogOption) SetViewSource(viewSource bool) *LogOption {
 	return opt
 }
 
-func (opt *LogOption) SetLog() error {
+func (opt *LogOption) SetViewOut(viewOut bool) *LogOption {
+	opt.viewOut = viewOut
+	return opt
+}
+
+func (opt *LogOption) SetDefault() error {
+	var output io.Writer
 	// 创建 NewLoggerRotate 实例
-	logger, err := NewLoggerRotate(opt.filename, opt.maxSize, opt.maxBackups, opt.maxAge, opt.compress)
+	output, err := NewLoggerRotate(opt.path, opt.maxSize, opt.maxBackups, opt.maxAge, opt.compress)
 	if err != nil {
 		return err
 	}
+	if opt.viewOut {
+		// 将 slog 的输出重定向到 NewLoggerRotate 和控制台
+		output = io.MultiWriter(os.Stdout, output)
+	}
 
-	// 将 slog 的输出重定向到 NewLoggerRotate 和控制台
-	multiWriter := io.MultiWriter(os.Stdout, logger)
 	logOpt := &slog.HandlerOptions{AddSource: opt.viewSource, Level: opt.level}
 	var handler slog.Handler
 	if opt.outJson {
-		handler = slog.NewJSONHandler(multiWriter, logOpt)
+		handler = slog.NewJSONHandler(output, logOpt)
 	} else {
-		handler = slog.NewTextHandler(multiWriter, logOpt)
+		handler = slog.NewTextHandler(output, logOpt)
 	}
 	// 设置默认日志记录器
 	slog.SetDefault(slog.New(handler))

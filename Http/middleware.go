@@ -10,7 +10,6 @@ package Http
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -88,7 +87,7 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 
 	select {
 	case <-done:
-		log.Println("request completed")
+		//log.Println("request completed")
 	case <-ctx.Done():
 		switch err := ctx.Err(); {
 		case errors.Is(err, context.DeadlineExceeded):

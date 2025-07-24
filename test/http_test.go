@@ -10,7 +10,9 @@ package qiao
 import (
 	"encoding/json"
 	"errors"
+	"github.com/chris-liu-zh/qiao"
 	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,8 +34,12 @@ func Test_Http(t *testing.T) {
 	// if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
 	// 	log.Println(err)
 	// }
-	if err := Http.NewLog("log", 10, 5, 30, true); err != nil {
+
+	if err := Http.NewLog("log", 10, 5, 30, true, true); err != nil {
 		log.Println(err)
+	}
+	if err := qiao.NewLog().SetDefault(); err != nil {
+		slog.Error("init logger error", "error", err)
 	}
 
 	r := Http.NewRouter()

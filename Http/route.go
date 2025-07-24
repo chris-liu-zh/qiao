@@ -28,9 +28,6 @@ type RouterHandle struct {
 }
 
 type CtxKey string
-
-var RouterList = make(map[string][]string)
-
 type logResponseWriter struct {
 	http.ResponseWriter
 	status       int //用于记录响应状态码

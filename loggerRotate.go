@@ -83,8 +83,8 @@ func (l *QiaoLogger) rotate() error {
 	}
 
 	// 重命名当前日志文件
-	timestamp := time.Now().Format("2006-01-02T15-04-05")
-	backupFilename := fmt.Sprintf("%s.%s", l.filename, timestamp)
+	timestamp := time.Now().Format("20060102150405")
+	backupFilename := fmt.Sprintf("%s-%s.backup", getFileName(l.filename), timestamp)
 	if err := os.Rename(l.filename, backupFilename); err != nil {
 		return err
 	}
@@ -107,9 +107,16 @@ func (l *QiaoLogger) rotate() error {
 	return nil
 }
 
+func getFileName(filename string) string {
+	filenameWithExt := filepath.Base(filename)
+	ext := filepath.Ext(filename)
+	return filenameWithExt[:len(filenameWithExt)-len(ext)]
+}
+
 // 清理过期的旧日志文件
 func (l *QiaoLogger) cleanupOldLogs() {
-	files, err := os.ReadDir(filepath.Dir(l.filename))
+	dirPath := filepath.Dir(l.filename)
+	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		return
 	}
@@ -120,8 +127,8 @@ func (l *QiaoLogger) cleanupOldLogs() {
 		if file.IsDir() {
 			continue
 		}
-		// 匹配文件名格式：<filename>.<timestamp>.gz
-		if matched, _ := filepath.Match(l.filename+".*.gz", file.Name()); matched {
+		// 匹配文件名格式
+		if matched, _ := filepath.Match("*.backup*", file.Name()); matched {
 			backups = append(backups, file.Name())
 		}
 	}
@@ -132,9 +139,26 @@ func (l *QiaoLogger) cleanupOldLogs() {
 	// 使用 range 遍历并删除超出数量的旧日志文件
 	if len(backups) > l.maxBackups {
 		for _, file := range backups[:len(backups)-l.maxBackups] {
-			os.Remove(file)
+			if err = deleteOldLogs(dirPath+"/"+file, l.maxAge); err != nil {
+				continue
+			}
 		}
 	}
+}
+
+func deleteOldLogs(filePath string, maxAge int) error {
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+	daysSinceMod := time.Since(fileInfo.ModTime()).Hours() / 24
+	if daysSinceMod > float64(maxAge) && maxAge >= 0 {
+		// 删除超过 maxAge 天的文件
+		if err := os.Remove(filePath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // compressFile 压缩日志文件

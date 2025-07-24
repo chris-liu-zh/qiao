@@ -61,9 +61,9 @@ func (h *CustomHandler) Handle(_ context.Context, r slog.Record) (err error) {
 		file = "unknown"
 		line = 0
 	}
-	var logbyte []byte
+	var logByte []byte
 	if h.IsJson {
-		logmsg := LogEntry{
+		logMsg := LogEntry{
 			Message: r.Message,
 			Level:   r.Level.String(),
 			Time:    r.Time.Format("2006-01-02 15:04:05"),
@@ -73,13 +73,13 @@ func (h *CustomHandler) Handle(_ context.Context, r slog.Record) (err error) {
 		}
 		// 添加属性（key 和 value）
 		r.Attrs(func(attr slog.Attr) bool {
-			logmsg.Attrs[attr.Key] = attr.Value.Any()
+			logMsg.Attrs[attr.Key] = attr.Value.Any()
 			return true // 继续遍历
 		})
-		if logbyte, err = json.Marshal(logmsg); err != nil {
+		if logByte, err = json.Marshal(logMsg); err != nil {
 			return err
 		}
-		_, err = h.output.Write(append(logbyte, '\n'))
+		_, err = h.output.Write(append(logByte, '\n'))
 		return
 	}
 
@@ -92,8 +92,8 @@ func (h *CustomHandler) Handle(_ context.Context, r slog.Record) (err error) {
 		logString += fmt.Sprintf(` %s="%v"`, attr.Key, attr.Value)
 		return true // 继续遍历
 	})
-	logbyte = fmt.Appendf(nil, `[%s] time="%s" Source="%s:%d" msg="%s" %s`, level, timeStr, file, line, msg, logString)
-	_, err = h.output.Write(append(logbyte, '\n'))
+	logByte = fmt.Appendf(nil, `[%s] time="%s" Source="%s:%d" msg="%s" %s`, level, timeStr, file, line, msg, logString)
+	_, err = h.output.Write(append(logByte, '\n'))
 	return
 }
 
@@ -109,18 +109,80 @@ func (h *CustomHandler) WithGroup(name string) slog.Handler {
 	return h
 }
 
-func getLog(filename string, maxSize int, maxBackups int, maxAge int, compress bool, Level slog.Level, isJson bool) (*slog.Logger, error) {
-	loggerRotate, err := qiao.NewLoggerRotate(filename, maxSize, maxBackups, maxAge, compress)
+func (opt *LogOption) newSlog(filename string) (*slog.Logger, error) {
+	var output io.Writer
+	output, err := qiao.NewLoggerRotate(filename, opt.maxSize, opt.maxBackups, opt.maxAge, opt.compress)
 	if err != nil {
 		return nil, err
 	}
-	multiWriter := io.MultiWriter(os.Stdout, loggerRotate)
+	if opt.viewOut {
+		output = io.MultiWriter(os.Stdout, output)
+	}
+
 	customHandler := &CustomHandler{
-		output: multiWriter,
-		level:  Level,
-		IsJson: isJson,
+		output: output,
+		level:  opt.level,
+		IsJson: opt.outJson,
 	}
 	return slog.New(customHandler), nil
+}
+
+type LogOption struct {
+	path       string     // 日志文件路径
+	maxSize    int        // 每个日志文件的最大大小（MB）
+	maxBackups int        // 保留的最大备份文件数
+	maxAge     int        // 保留的最大天数
+	compress   bool       // 是否压缩日志文件
+	level      slog.Level // 日志级别
+	outJson    bool       // 是否输出为 JSON 格式
+	viewOut    bool       // 是否显示调用者信息
+}
+
+func NewLogOption() *LogOption {
+	return &LogOption{
+		path:       "./log/db",
+		maxSize:    10,
+		maxBackups: 180,
+		maxAge:     180,
+		compress:   false,
+		level:      slog.LevelInfo,
+		outJson:    true,
+		viewOut:    false,
+	}
+}
+
+func (opt *LogOption) SetFilePath(dirPath string) *LogOption {
+	opt.path = dirPath
+	return opt
+}
+func (opt *LogOption) SetMaxSize(maxSize int) *LogOption {
+	opt.maxSize = maxSize
+	return opt
+}
+
+func (opt *LogOption) SetMaxBackups(maxBackups int) *LogOption {
+	opt.maxBackups = maxBackups
+	return opt
+}
+func (opt *LogOption) SetMaxAge(maxAge int) *LogOption {
+	opt.maxAge = maxAge
+	return opt
+}
+func (opt *LogOption) SetCompress(compress bool) *LogOption {
+	opt.compress = compress
+	return opt
+}
+func (opt *LogOption) SetLevel(level slog.Level) *LogOption {
+	opt.level = level
+	return opt
+}
+func (opt *LogOption) SetOutJson(outJson bool) *LogOption {
+	opt.outJson = outJson
+	return opt
+}
+func (opt *LogOption) SetViewOut(viewOut bool) *LogOption {
+	opt.viewOut = viewOut
+	return opt
 }
 
 // SetDBLog 设置日志记录器
@@ -128,13 +190,13 @@ func getLog(filename string, maxSize int, maxBackups int, maxAge int, compress b
 // LevelInfo   = 0
 // LevelWarn   = 4
 // LevelError  = 8
-func SetDBLog(path string, maxSize int, maxBackups int, maxAge int, compress bool, level slog.Level) error {
+func (opt *LogOption) SetDBLog() error {
 	for _, logType := range loggerList {
-		filename := fmt.Sprintf("%s/%s.log", path, logType)
+		filename := fmt.Sprintf("%s/%s.log", opt.path, logType)
 		if logType == "CUSTOM" {
-			level = slog.LevelDebug
+			opt.level = slog.LevelDebug
 		}
-		newSlog, err := getLog(filename, maxSize, maxBackups, maxAge, compress, level, false)
+		newSlog, err := opt.newSlog(filename)
 		if err != nil {
 			return err
 		}
