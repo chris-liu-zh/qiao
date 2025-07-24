@@ -52,17 +52,40 @@ func (r *Return) SetCode(code int) *Return {
 	return r
 }
 
+func (r *Return) SetMsg(msg string) *Return {
+	r.Message = msg
+	return r
+}
+
+func (r *Return) SetData(data any) *Return {
+	r.Data = data
+	return r
+}
+
+func (r *Return) Write(w http.ResponseWriter, headerCode int) {
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	if headerCode != 0 {
+		headerCode = r.Code
+	}
+	w.WriteHeader(headerCode)
+	json.NewEncoder(w).Encode(r)
+}
+
 func (r *Return) Json(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	dataByte, _ := json.Marshal(r)
-	Write(w, dataByte, r.Code)
+	write(w, dataByte, r.Code)
 }
 
 func SuccessJson(w http.ResponseWriter, data any) {
 	Success(data).Json(w)
 }
 
-func Write(w http.ResponseWriter, data []byte, code int) {
+func FailJson(w http.ResponseWriter, message string, err error) {
+	Fail(message, err).Json(w)
+}
+
+func write(w http.ResponseWriter, data []byte, code int) {
 	w.WriteHeader(code)
 	w.Write(data)
 }
