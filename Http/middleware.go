@@ -91,7 +91,7 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	case <-ctx.Done():
 		switch err := ctx.Err(); {
 		case errors.Is(err, context.DeadlineExceeded):
-			TimeoutFail().Json(tw)
+			TimeoutFail().WriteJson(tw)
 			tw.closed = true
 		default:
 			tw.WriteHeader(http.StatusServiceUnavailable)

@@ -71,12 +71,12 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, pattern := router.mux.Handler(r); pattern == "" {
-		Fail("404 Not Found", nil).Json(lw)
+		Fail("404 Not Found", nil).WriteJson(lw)
 		return
 	}
 	header := GetHeader(r)
 	if err := router.m.sign(r.URL.Path, header); err != nil {
-		SignFail().Json(lw)
+		SignFail().WriteJson(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}
@@ -84,11 +84,11 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	key, userinfo, err := router.m.auth(r.URL.Path, header)
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			TokenExpire().Json(lw)
+			TokenExpire().WriteJson(lw)
 			LogError(r, lw.status, lw.bytesWritten, lw.msg)
 			return
 		}
-		AuthFail().Json(lw)
+		AuthFail().WriteJson(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}
