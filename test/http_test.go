@@ -91,7 +91,7 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 		"id":   id,
 		"name": user,
 	}
-	Http.Success(response).Json(w)
+	Http.SuccessJson(w, response)
 }
 
 func GetVersion(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +103,7 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	ver.Ip = strings.Split(r.RemoteAddr, ":")[0]
 	time.Sleep(3 * time.Second)
 	w.Header().Set("content-type", "application/json;charset=UTF-8")
-	Http.Success(ver).Json(w)
+	Http.SuccessJson(w, ver)
 	// Http.Html(w, "template/version/index", ver)
 }
 

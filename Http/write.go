@@ -1,10 +1,11 @@
 /*
- * @Author: Chris
- * @Date: 2023-03-29 11:04:12
- * @LastEditors: Strong
- * @LastEditTime: 2025-03-21 15:54:08
- * @Description: 请填写简介
- */
+		package Http
+	 * @Author: Chris
+	 * @Date: 2023-03-29 11:04:12
+	 * @LastEditors: Strong
+	 * @LastEditTime: 2025-03-21 15:54:08
+	 * @Description: 请填写简介
+*/
 package Http
 
 import (
@@ -12,7 +13,7 @@ import (
 	"net/http"
 )
 
-type Return struct {
+type Response struct {
 	Code    int    `json:"code"`
 	Message string `json:"msg"`
 	Data    any    `json:"data"`
@@ -20,72 +21,58 @@ type Return struct {
 	Success bool   `json:"success"`
 }
 
-func Success(data any) *Return {
-	return &Return{Code: http.StatusOK, Message: "ok", Data: data, Success: true}
+func Success(data any) *Response {
+	return &Response{Code: http.StatusOK, Message: "ok", Data: data, Success: true}
 }
 
-func Fail(message string, err error) *Return {
+func Fail(message string, err error) *Response {
 	if err == nil {
-		return &Return{Code: http.StatusNotFound, Message: message}
+		return &Response{Code: http.StatusNotFound, Message: message}
 	}
-	return &Return{Code: http.StatusNotFound, Message: message, Debug: err}
+	return &Response{Code: http.StatusNotFound, Message: message, Debug: err}
 }
 
-func TimeoutFail() *Return {
-	return &Return{Code: http.StatusRequestTimeout, Message: "Request timeout"}
+func TimeoutFail() *Response {
+	return &Response{Code: http.StatusRequestTimeout, Message: "Request timeout"}
 }
 
-func AuthFail() *Return {
-	return &Return{Code: http.StatusUnauthorized, Message: "Unauthorized"}
+func AuthFail() *Response {
+	return &Response{Code: http.StatusUnauthorized, Message: "Unauthorized"}
 }
 
-func SignFail() *Return {
-	return &Return{Code: http.StatusBadRequest, Message: "Sign fail"}
+func SignFail() *Response {
+	return &Response{Code: http.StatusBadRequest, Message: "Sign fail"}
 }
 
-func TokenExpire() *Return {
-	return &Return{Code: 498, Message: "Token expire"}
+func TokenExpire() *Response {
+	return &Response{Code: 498, Message: "Token expire"}
 }
 
-func (r *Return) SetCode(code int) *Return {
+func (r *Response) SetCode(code int) *Response {
 	r.Code = code
 	return r
 }
 
-func (r *Return) SetMsg(msg string) *Return {
+func (r *Response) SetMsg(msg string) *Response {
 	r.Message = msg
 	return r
 }
 
-func (r *Return) SetData(data any) *Return {
+func (r *Response) SetData(data any) *Response {
 	r.Data = data
 	return r
 }
 
-func (r *Return) Write(w http.ResponseWriter, statusCode int) {
+func (r *Response) WriteJson(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	if statusCode != 0 {
-		statusCode = r.Code
-	}
-	w.WriteHeader(statusCode)
+	w.WriteHeader(r.Code)
 	json.NewEncoder(w).Encode(r)
 }
 
-func (r *Return) Json(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	dataByte, _ := json.Marshal(r)
-	write(w, dataByte, r.Code)
-}
-
 func SuccessJson(w http.ResponseWriter, data any) {
-	Success(data).Json(w)
+	Success(data).WriteJson(w)
 }
 
 func FailJson(w http.ResponseWriter, message string, err error) {
-	Fail(message, err).Json(w)
-}
-
-func write(w http.ResponseWriter, data []byte, code int) {
-	w.WriteHeader(code)
-	w.Write(data)
+	Fail(message, err).WriteJson(w)
 }
