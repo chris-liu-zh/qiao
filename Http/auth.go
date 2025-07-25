@@ -72,7 +72,7 @@ func (a *Auth) NewDefaultToken(data any) (aToken, rToken string, err error) {
 	if err != nil {
 		return
 	}
-	rToken, err = CreateToken(nil, CreateClaims(a.issuer, a.rExp), a.key)
+	rToken, err = CreateToken(data, CreateClaims(a.issuer, a.rExp), a.key)
 	if err != nil {
 		return
 	}
