@@ -76,3 +76,8 @@ func SuccessJson(w http.ResponseWriter, data any) {
 func FailJson(w http.ResponseWriter, message string, err error) {
 	Fail(message, err).WriteJson(w)
 }
+
+func (r *Response) Write(w http.ResponseWriter, data []byte) {
+	w.WriteHeader(r.Code)
+	w.Write(data)
+}
