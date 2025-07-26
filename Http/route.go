@@ -153,5 +153,9 @@ func GetContext(r *http.Request, key string) any {
 func NewRouter() *RouterHandle {
 	return &RouterHandle{
 		mux: http.NewServeMux(),
+		m: middleware{
+			Auth: make(map[string]auth),
+			Sign: make(map[string]sign),
+		},
 	}
 }

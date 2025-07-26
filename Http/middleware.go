@@ -34,15 +34,11 @@ func (router *RouterHandle) SetContextSetter(setter func(*http.Request) *http.Re
 }
 
 func (router *RouterHandle) SetAuth(authPath string, authFunc auth) {
-	path := make(map[string]auth)
-	path[authPath] = authFunc
-	router.m.Auth = path
+	router.m.Auth[authPath] = authFunc
 }
 
 func (router *RouterHandle) SetSign(signPath string, signfunc sign) {
-	path := make(map[string]sign)
-	path[signPath] = signfunc
-	router.m.Sign = path
+	router.m.Sign[signPath] = signfunc
 }
 
 func (m *middleware) sign(url string, header map[string]string) (err error) {

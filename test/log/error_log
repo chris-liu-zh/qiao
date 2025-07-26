@@ -1,1 +1,0 @@
-[ERROR] 2025/07/24 16:21:31 127.0.0.1:55324 -- "GET /version HTTP/1.1" 408 77 "" "IntelliJ HTTP Client/GoLand 2025.1.3" {"code":408,"msg":"Request timeout","data":null,"debug":null,"success":false}
