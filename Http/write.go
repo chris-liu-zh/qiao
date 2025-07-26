@@ -17,7 +17,7 @@ type Response struct {
 	Code    int    `json:"code"`
 	Message string `json:"msg"`
 	Data    any    `json:"data"`
-	Debug   error  `json:"debug"`
+	Debug   error  `json:"debug,omitempty"`
 	Success bool   `json:"success"`
 }
 
