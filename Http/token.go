@@ -15,7 +15,6 @@ import (
 )
 
 type Claims struct {
-	UserInfo any `json:"user_info"`
 	jwt.RegisteredClaims
 }
 
@@ -23,17 +22,14 @@ func getJWTTime(t time.Duration) *jwt.NumericDate {
 	return jwt.NewNumericDate(time.Now().Add(t))
 }
 
-func CreateToken(UserInfo any, reg jwt.RegisteredClaims, key []byte) (string, error) {
-	tokenClaims := Claims{
-		UserInfo,
-		reg,
-	}
-	jt := jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaims)
+// createToken 创建Token
+func (claims *Claims) CreateToken(key []byte) (string, error) {
+	jt := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return jt.SignedString(key)
 }
 
 // VerifyToken 验证Token
-func VerifyToken(token string, key []byte) (claims *Claims, err error) {
+func VerifyToken(token, issuer string, key []byte) (claims *Claims, err error) {
 	claims = &Claims{}
 	verifyToken, err := jwt.ParseWithClaims(token, claims, func(*jwt.Token) (any, error) {
 		return key, nil
@@ -43,6 +39,9 @@ func VerifyToken(token string, key []byte) (claims *Claims, err error) {
 	}
 	if !verifyToken.Valid {
 		return claims, errors.New("verify token failed")
+	}
+	if claims.Issuer != issuer {
+		return nil, errors.New("issuer mismatch")
 	}
 	return claims, nil
 }

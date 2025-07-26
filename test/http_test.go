@@ -10,7 +10,6 @@ package qiao
 import (
 	"encoding/json"
 	"errors"
-	"github.com/chris-liu-zh/qiao"
 	"log"
 	"log/slog"
 	"net/http"
@@ -18,6 +17,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/chris-liu-zh/qiao"
 
 	"github.com/chris-liu-zh/qiao/Http"
 )
@@ -27,10 +28,8 @@ const (
 	RTExp = 72 * time.Hour
 )
 
-var defaultAuth = Http.DefaultAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
-
 func Test_Http(t *testing.T) {
-
+	Http.DefaultAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
 	// if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
 	// 	log.Println(err)
 	// }
@@ -131,7 +130,7 @@ func auth(header map[string]string) (contextKey Http.CtxKey, data any, err error
 	if !ok {
 		return "", nil, errors.New("token not found")
 	}
-	if data, err = defaultAuth.CheckToken(token); err != nil {
+	if data, err = Http.CheckToken("api", token); err != nil {
 		return "", nil, err
 	}
 	return "userinfo", data, nil

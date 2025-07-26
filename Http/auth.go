@@ -26,20 +26,33 @@ type Auth struct {
 	rExp   time.Duration
 }
 
+type Token struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+}
+
 var revokedTokens = make(map[string]time.Time)
 
 var authList = make(map[string]*Auth)
 
-func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) *Auth {
+func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) (*Auth, error) {
 	if authList[issuer] != nil {
-		return authList[issuer]
+		return nil, fmt.Errorf("auth already exists for issuer: %s", issuer)
 	}
 	authList[issuer] = &Auth{
 		key:  []byte(key),
 		aExp: aExp,
 		rExp: rExp,
 	}
-	return authList[issuer]
+	return authList[issuer], nil
+}
+
+func getAuth(issuer string) (*Auth, error) {
+	auth := authList[issuer]
+	if auth == nil {
+		return nil, fmt.Errorf("auth not found for issuer: %s", issuer)
+	}
+	return auth, nil
 }
 
 // DefaultSign /**
@@ -59,54 +72,110 @@ func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Durati
 }
 
 // CreateClaims 创建 JWT 注册声明
-func CreateClaims(issuer string, exp time.Duration) jwt.RegisteredClaims {
-	return jwt.RegisteredClaims{
-		Issuer:    issuer,
-		ExpiresAt: getJWTTime(exp),
+func NewClaims(issuer string) (*Claims, error) {
+	a, err := getAuth(issuer)
+	if err != nil {
+		return nil, err
 	}
+	return &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer: a.issuer,
+		},
+	}, nil
+}
+func (c *Claims) SetExpiresAt(t time.Duration) *Claims {
+	c.ExpiresAt = getJWTTime(t)
+	return c
 }
 
-// NewDefaultToken /**
-func (a *Auth) NewDefaultToken(data any) (aToken, rToken string, err error) {
-	aToken, err = CreateToken(data, CreateClaims(a.issuer, a.aExp), a.key)
+func (c *Claims) SetSubject(subject string) *Claims {
+	c.Subject = subject
+	return c
+}
+
+// SetIssuedAt 设置签发时间
+func (c *Claims) SetIssuedAt() *Claims {
+	c.IssuedAt = jwt.NewNumericDate(time.Now())
+	return c
+}
+
+// SetNotBefore 设置不早于时间
+func (c *Claims) SetNotBefore() *Claims {
+	c.NotBefore = jwt.NewNumericDate(time.Now())
+	return c
+}
+
+// SetAudience 设置受众
+func (c *Claims) SetAudience(audience string) *Claims {
+	if c.Audience == nil {
+		c.Audience = make([]string, 0)
+	}
+	c.Audience = append(c.Audience, audience)
+	return c
+}
+
+// 新建默认的双Token
+func (c *Claims) NewDefaultToken() (t Token, err error) {
+	a, err := getAuth(c.Issuer)
 	if err != nil {
 		return
 	}
-	rToken, err = CreateToken(data, CreateClaims(a.issuer, a.rExp), a.key)
+	if t.AccessToken, err = c.SetExpiresAt(a.aExp).CreateToken(a.key); err != nil {
+		return
+	}
+	if t.RefreshToken, err = c.SetExpiresAt(a.rExp).CreateToken(a.key); err != nil {
+		return
+	}
+	return
+}
+
+// NewToken 创建新的 Token
+func (c *Claims) NewToken() (t Token, err error) {
+	a, err := getAuth(c.Issuer)
+	if err != nil {
+		return
+	}
+	t.AccessToken, err = c.SetExpiresAt(a.aExp).CreateToken(a.key)
 	if err != nil {
 		return
 	}
 	return
 }
 
-// NewToken /**
-func (a *Auth) NewToken(data any) (string, error) {
-	return CreateToken(data, CreateClaims(a.issuer, a.aExp), a.key)
-}
-
-// CheckToken /**
-func (a *Auth) CheckToken(token string) (any, error) {
-	claims, err := VerifyToken(token, a.key)
+// CheckToken 验证Token
+func CheckToken(issuer string, token string) (subject string, err error) {
+	a, err := getAuth(issuer)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return claims.UserInfo, nil
+	claims, err := VerifyToken(token, issuer, a.key)
+	if err != nil {
+		return
+	}
+	return claims.Subject, nil
 }
 
 // RefreshToken 刷新Token
-func (a *Auth) RefreshToken(accessToken, refreshToken string) (string, string, error) {
-	if _, err := VerifyToken(refreshToken, a.key); err != nil {
-		return "", "", err
+func RefreshToken(accessToken, refreshToken, issuer string) (t Token, err error) {
+	a, err := getAuth(issuer)
+	if err != nil {
+		return
 	}
-	if claims, err := VerifyToken(accessToken, a.key); err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			return a.NewDefaultToken(claims.UserInfo)
-		}
-		return "", "", err
+	refreshClaims, err := VerifyToken(refreshToken, issuer, a.key)
+	if err != nil {
+		return
 	}
-	return accessToken, refreshToken, nil
+	claims, err := VerifyToken(accessToken, issuer, a.key)
+	if err != nil && !errors.Is(err, jwt.ErrTokenExpired) {
+		return
+	}
+	if refreshClaims.Subject != claims.Subject {
+		return t, errors.New("subject mismatch")
+	}
+	return refreshClaims.NewDefaultToken()
 }
 
+// RevokeToken 撤销过期无效的Token
 func init() {
 	ticker := time.NewTicker(60 * time.Second)
 	go func() {
@@ -121,6 +190,7 @@ func init() {
 	}()
 }
 
+// SetInvalidToken 将Token设置为无效
 func SetInvalidToken(token string) error {
 	claims := &Claims{}
 	_, _, err := jwt.NewParser().ParseUnverified(token, claims)
