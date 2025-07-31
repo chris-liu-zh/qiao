@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type auth func(map[string]string) (CtxKey, any, error)
+type auth func(map[string]string) (CtxKey, Userinfo, error)
 type sign func(map[string]string) error
 
 type middleware struct {

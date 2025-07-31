@@ -14,8 +14,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type Userinfo struct {
+	Data any `json:"data"`
+}
+
 type Claims struct {
 	jwt.RegisteredClaims
+	Userinfo
 }
 
 func getJWTTime(t time.Duration) *jwt.NumericDate {

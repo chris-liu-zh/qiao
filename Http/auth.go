@@ -35,16 +35,16 @@ var revokedTokens = make(map[string]time.Time)
 
 var authList = make(map[string]*Auth)
 
-func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) (*Auth, error) {
+func DefaultAuth(issuer string, aExp, rExp time.Duration, key string) error {
 	if authList[issuer] != nil {
-		return nil, fmt.Errorf("auth already exists for issuer: %s", issuer)
+		return fmt.Errorf("auth already exists for issuer: %s", issuer)
 	}
 	authList[issuer] = &Auth{
 		key:  []byte(key),
 		aExp: aExp,
 		rExp: rExp,
 	}
-	return authList[issuer], nil
+	return nil
 }
 
 func getAuth(issuer string) (*Auth, error) {
@@ -72,22 +72,23 @@ func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Durati
 }
 
 // CreateClaims 创建 JWT 注册声明
-func NewClaims(issuer string) (*Claims, error) {
+func NewClaims(issuer string) (c *Claims) {
+	c = &Claims{}
 	a, err := getAuth(issuer)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return &Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer: a.issuer,
-		},
-	}, nil
+	c.Issuer = a.issuer
+	return
 }
+
+// SetExpiresAt 设置过期时间
 func (c *Claims) SetExpiresAt(t time.Duration) *Claims {
 	c.ExpiresAt = getJWTTime(t)
 	return c
 }
 
+// SetSubject 设置主题
 func (c *Claims) SetSubject(subject string) *Claims {
 	c.Subject = subject
 	return c
@@ -143,7 +144,7 @@ func (c *Claims) NewToken() (t Token, err error) {
 }
 
 // CheckToken 验证Token
-func CheckToken(issuer string, token string) (subject string, err error) {
+func CheckToken(issuer string, token string) (userinfo Userinfo, err error) {
 	a, err := getAuth(issuer)
 	if err != nil {
 		return
@@ -152,7 +153,7 @@ func CheckToken(issuer string, token string) (subject string, err error) {
 	if err != nil {
 		return
 	}
-	return claims.Subject, nil
+	return claims.Userinfo, nil
 }
 
 // RefreshToken 刷新Token

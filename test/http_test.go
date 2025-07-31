@@ -125,13 +125,13 @@ func sign(header map[string]string) error {
 	return Http.DefaultSign(sign, key, secret, timestamp, 5*time.Minute)
 }
 
-func auth(header map[string]string) (contextKey Http.CtxKey, data any, err error) {
+func auth(header map[string]string) (contextKey Http.CtxKey, data Http.Userinfo, err error) {
 	token, ok := header["Authorization"]
 	if !ok {
-		return "", nil, errors.New("token not found")
+		return "", data, errors.New("token not found")
 	}
 	if data, err = Http.CheckToken("api", token); err != nil {
-		return "", nil, err
+		return
 	}
 	return "userinfo", data, nil
 }
