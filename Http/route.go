@@ -93,7 +93,7 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userinfo.Data != nil && key != "" {
+	if userinfo != nil && key != "" {
 		// 将用户信息存储在请求上下文中
 		ctx := context.WithValue(r.Context(), key, userinfo)
 		r = r.WithContext(ctx)
