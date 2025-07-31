@@ -52,7 +52,7 @@ func (m *middleware) sign(url string, header map[string]string) (err error) {
 	return
 }
 
-func (m *middleware) auth(url string, header map[string]string) (userInfoKey CtxKey, authInfo any, err error) {
+func (m *middleware) auth(url string, header map[string]string) (userInfoKey CtxKey, authInfo Userinfo, err error) {
 	for p, f := range m.Auth {
 		if strings.HasPrefix(url, p) {
 			return f(header)
