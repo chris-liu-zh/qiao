@@ -1,10 +1,14 @@
 package jwt
 
 import (
+	"crypto/subtle"
+	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"strings"
+	"time"
 )
+
+const tokenDelimiter = "."
 
 type Header struct {
 	Typ string `json:"typ"` // 类型
@@ -13,14 +17,14 @@ type Header struct {
 
 type Token struct {
 	method    *SigningMethod
-	header    *Header
+	header    Header
 	Claims    Claims
 	signature []byte
 }
 
 func NewToken(method *SigningMethod, claims Claims) *Token {
 	return &Token{
-		header: &Header{
+		header: Header{
 			Typ: "JWT",           // 默认使用JWT类型
 			Alg: method.GetAlg(), // 默认使用HS256算法
 		},
@@ -30,9 +34,6 @@ func NewToken(method *SigningMethod, claims Claims) *Token {
 }
 
 func (t *Token) signString() (string, error) {
-	if t.Claims == nil {
-		return "", errors.New("header or payload is nil")
-	}
 	h, err := json.Marshal(t.header)
 	if err != nil {
 		return "", err
@@ -53,30 +54,67 @@ func (t *Token) Sign(key []byte) (string, error) {
 	return signingString + "." + Base64Encode(t.signature), nil
 }
 
-func ParseWithClaims(token string, claims Claims, key []byte) (t *Token, err error) {
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return nil, errors.New("invalid token format")
+func VerifyToken(tokenStr string, claims Claims, key []byte) error {
+	t, err := stringToToken(tokenStr, claims, key)
+	if err != nil {
+		return err
 	}
-	headerBase64 := parts[0]
-	payloadBase64 := parts[1]
-	signatureBase64 := parts[2]
+	timeNow := time.Now()
+	if t.Claims.GetExpirationTime() != nil && t.Claims.GetExpirationTime().Time.Before(timeNow) {
+		return ErrTokenExpired
+	}
+	if t.Claims.GetNotBefore() != nil && t.Claims.GetNotBefore().Time.After(timeNow) {
+		return ErrTokenNotValidYet
+	}
+	return nil
+}
+
+func splitToken(token string) ([]string, bool) {
+	parts := make([]string, 3)
+	header, remain, ok := strings.Cut(token, tokenDelimiter)
+	if !ok {
+		return nil, false
+	}
+	parts[0] = header
+	claims, remain, ok := strings.Cut(remain, tokenDelimiter)
+	if !ok {
+		return nil, false
+	}
+	parts[1] = claims
+	signature, _, unexpected := strings.Cut(remain, tokenDelimiter)
+	if unexpected {
+		return nil, false
+	}
+	parts[2] = signature
+
+	return parts, true
+}
+
+func stringToToken(token string, claims Claims, key []byte) (t *Token, err error) {
+	parts, ok := splitToken(token)
+	if !ok {
+		return nil, ErrTokenMalformed
+	}
+	signingString := strings.Join(parts[0:2], ".")
 	t = &Token{}
-	h := &Header{}
-	if err := Base64Decode(headerBase64, h); err != nil {
-		return nil, err
+	if err := Base64Decode(parts[0], &t.header); err != nil {
+		return nil, ErrInvalidHeader
 	}
-	if err := Base64Decode(payloadBase64, &claims); err != nil {
-		return nil, err
+	if err := Base64Decode(parts[1], claims); err != nil {
+		return nil, ErrTokenInvalidClaims
 	}
-	t.header = h
 	t.Claims = claims
 	t.method = GetSigningMethod(t.header.Alg)
 	if t.method == nil {
-		return nil, errors.New("invalid algorithm")
+		return nil, ErrHashUnavailable
 	}
-	if signatureBase64 != Base64Encode(t.method.Sign(headerBase64+"."+payloadBase64, key)) {
-		return nil, errors.New("invalid signature")
+	t.signature, err = base64.RawURLEncoding.DecodeString(parts[2])
+	if err != nil {
+		return nil, ErrTokenSignatureInvalid
+	}
+	signature := t.method.Sign(signingString, key)
+	if subtle.ConstantTimeCompare(t.signature, signature) != 1 {
+		return nil, ErrTokenUnverifiable
 	}
 	return t, nil
 }

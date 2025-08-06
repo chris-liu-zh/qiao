@@ -3,7 +3,6 @@ package jwt
 import (
 	"crypto"
 	"crypto/hmac"
-	"sync"
 )
 
 type Signer interface {
@@ -15,16 +14,15 @@ type SigningMethod struct {
 	Hash crypto.Hash
 }
 
-func (s *SigningMethod) GetAlg() string {
-	return s.Name
+func (m *SigningMethod) GetAlg() string {
+	return m.Name
 }
 
 var (
-	SignMethodHS256   *SigningMethod
-	SignMethodHS384   *SigningMethod
-	SignMethodHS512   *SigningMethod
-	signingMethodLock = new(sync.RWMutex)
-	signingMethods    = map[string]*SigningMethod{}
+	SignMethodHS256 *SigningMethod
+	SignMethodHS384 *SigningMethod
+	SignMethodHS512 *SigningMethod
+	signingMethods  = map[string]*SigningMethod{}
 )
 
 func init() {
