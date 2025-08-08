@@ -10,6 +10,7 @@ package qiao
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -19,17 +20,21 @@ import (
 	"time"
 
 	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/jwt"
 
 	"github.com/chris-liu-zh/qiao/Http"
 )
 
 const (
-	ATExp = 1 * time.Hour
+	ATExp = 5 * time.Second
 	RTExp = 72 * time.Hour
 )
 
 func Test_Http(t *testing.T) {
-	Http.DefaultAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
+	err := jwt.SetAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
+	if err != nil {
+		return
+	}
 	// if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
 	// 	log.Println(err)
 	// }
@@ -68,7 +73,8 @@ func onEvicted(w http.ResponseWriter, r *http.Request) {
 	h := Http.GetHeader(r)
 	if r.URL.Path == "/logout" {
 		if token, ok := h["Authorization"]; ok {
-			Http.SetInvalidToken(token)
+			//Http.SetInvalidToken(token)
+			fmt.Println(token)
 		}
 	}
 }
@@ -122,16 +128,23 @@ func sign(header map[string]string) error {
 	// 使用 time.Unix 函数将时间戳转换为 time.Time 类型
 	timestamp := time.Unix(timestampInt, 0)
 
-	return Http.DefaultSign(sign, key, secret, timestamp, 5*time.Minute)
+	return jwt.DefaultSign(sign, key, secret, timestamp, 5*time.Minute)
 }
 
-func auth(header map[string]string) (contextKey Http.CtxKey, data Http.Userinfo, err error) {
+type Userinfo struct {
+	Uid      int64  `json:"uid"`
+	Username string `json:"username"`
+}
+
+func auth(header map[string]string) (Http.CtxKey, any, error) {
 	token, ok := header["Authorization"]
+	data := Userinfo{}
 	if !ok {
 		return "", data, errors.New("token not found")
 	}
-	if data, err = Http.CheckToken("api", token); err != nil {
-		return
+
+	if err := jwt.CheckToken("api", token, &data); err != nil {
+		return "", data, err
 	}
 	return "userinfo", data, nil
 }

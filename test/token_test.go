@@ -3,6 +3,7 @@ package qiao
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/chris-liu-zh/qiao/jwt"
 )
@@ -43,10 +44,46 @@ func Test_Token(t *testing.T) {
 	fmt.Println(tokenStr)
 
 	pmyClaims := newClaims(&Userdata{})
-	fmt.Println(pmyClaims.UserInfo)
 	if err := jwt.VerifyToken(tokenStr, &pmyClaims, []byte(SecretKey)); err != nil {
 		t.Error(err)
 		return
 	}
-	fmt.Println(pmyClaims.UserInfo.(*Userdata).Name)
+	fmt.Println(pmyClaims.GetExpirationTime())
+}
+
+func Test_TokenAuth(t *testing.T) {
+
+	err := jwt.SetAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	data := Userdata{
+		ID:   1,
+		Name: "123",
+	}
+
+	token, err := jwt.CreateToken("api", jwt.WithUserInfo(data), jwt.WithSubject("123"))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(token.AccessToken)
+	fmt.Println(token.RefreshToken)
+
+	time.Sleep(ATExp)
+	//at := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkiLCJleHAiOiIyMDI1LTA4LTA3VDIzOjQwOjA4KzA4OjAwIiwidXNlcl9pbmZvIjp7InVpZCI6MSwidXNlcm5hbWUiOiIxMjMifX0.k7etCPO8ZdItPMK-_gkX0ooJGjfyEh770LCuhrcmDWk"
+	token, err = jwt.RefreshToken("api", token.AccessToken, token.RefreshToken)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(token.AccessToken)
+	fmt.Println(token.RefreshToken)
+	getData := Userdata{}
+	if err = jwt.CheckToken("api", token.AccessToken, &getData); err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(getData)
 }

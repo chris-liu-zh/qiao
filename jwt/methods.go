@@ -37,7 +37,10 @@ func init() {
 }
 
 func GetSigningMethod(name string) *SigningMethod {
-	return signingMethods[name]
+	if m, ok := signingMethods[name]; ok {
+		return m
+	}
+	return nil
 }
 
 func (m *SigningMethod) Sign(signingString string, key []byte) []byte {

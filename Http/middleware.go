@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type auth func(map[string]string) (CtxKey, Userinfo, error)
+type auth func(map[string]string) (CtxKey, any, error)
 type sign func(map[string]string) error
 
 type middleware struct {
@@ -52,7 +52,7 @@ func (m *middleware) sign(url string, header map[string]string) (err error) {
 	return
 }
 
-func (m *middleware) auth(url string, header map[string]string) (userInfoKey CtxKey, authInfo Userinfo, err error) {
+func (m *middleware) auth(url string, header map[string]string) (userInfoKey CtxKey, authInfo any, err error) {
 	for p, f := range m.Auth {
 		if strings.HasPrefix(url, p) {
 			return f(header)
