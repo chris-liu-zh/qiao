@@ -15,7 +15,8 @@ var (
 	ErrTokenInvalidSubject       = errors.New("token has invalid subject")                  //令牌主题无效
 	ErrTokenNotValidYet          = errors.New("token is not valid yet")                     //令牌未生效
 	ErrTokenInvalidId            = errors.New("token has invalid id")                       //令牌ID无效
-	ErrTokenInvalidClaims        = errors.New("token has invalid claims")                   //令牌声明无效
-	ErrInvalidType               = errors.New("invalid type for claim")                     //声明类型无效
-	ErrInvalidHeader             = errors.New("invalid header")                             //无效标头
+	ErrTokenNotMatch             = errors.New("access token does not match refresh token")  //访问令牌与刷新令牌不匹配
+	ErrTokenInvalidHeader        = errors.New("token has invalid header")                   //令牌头信息无效
+	ErrTokenInvalidClaims        = errors.New("token has invalid claims")                   //令牌声明信息无效
+	ErrTokenRevoked              = errors.New("token is revoked")                           //令牌已撤销
 )

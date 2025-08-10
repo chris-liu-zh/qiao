@@ -97,10 +97,10 @@ func stringToToken(token string, claims Claims, key []byte) (t *Token, err error
 	}
 	signingString := strings.Join(parts[0:2], ".")
 	t = &Token{}
-	if err := Base64Decode(parts[0], &t.header); err != nil {
-		return nil, ErrInvalidHeader
+	if err = Base64Decode(parts[0], &t.header); err != nil {
+		return nil, ErrTokenInvalidHeader
 	}
-	if err := Base64Decode(parts[1], claims); err != nil {
+	if err = Base64Decode(parts[1], claims); err != nil {
 		return nil, ErrTokenInvalidClaims
 	}
 	t.Claims = claims
@@ -108,13 +108,11 @@ func stringToToken(token string, claims Claims, key []byte) (t *Token, err error
 	if t.method == nil {
 		return nil, ErrHashUnavailable
 	}
-	t.signature, err = base64.RawURLEncoding.DecodeString(parts[2])
-	if err != nil {
+	if t.signature, err = base64.RawURLEncoding.DecodeString(parts[2]); err != nil {
 		return nil, ErrTokenSignatureInvalid
 	}
-	signature := t.method.Sign(signingString, key)
-	if subtle.ConstantTimeCompare(t.signature, signature) != 1 {
+	if subtle.ConstantTimeCompare(t.signature, t.method.Sign(signingString, key)) != 1 {
 		return nil, ErrTokenUnverifiable
 	}
-	return t, nil
+	return
 }
