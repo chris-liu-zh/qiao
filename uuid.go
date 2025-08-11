@@ -31,46 +31,36 @@ var (
 // UUIDV7 生成一个新的UUID v7
 func UUIDV7() UUID {
 	var u UUID
-
 	// 获取当前时间戳（Unix纪元以来的毫秒数）
 	now := time.Now()
 	unixMilli := now.UnixNano() / int64(time.Millisecond)
-
 	// 设置版本号(7)和变体(RFC4122)
 	// rand_a(12位) + 版本号(4位，值为7)
 	versionAndRandA := 0x7000 | (uint16(randUint32()>>20) & 0x0FFF)
-
 	// rand_b(16位)
 	randB := uint16(randUint32() >> 16)
 	// rand_c(62位)
 	randC := [8]byte{}
 	_, _ = rand.Read(randC[:])
-
 	// 设置时间字段(48位)
 	binary.BigEndian.PutUint32(u[0:4], uint32(unixMilli>>16)) // 时间戳高32位
 	binary.BigEndian.PutUint16(u[4:6], uint16(unixMilli))     // 时间戳低16位
-
 	// 设置rand_a(12位) + 版本号(4位)
 	binary.BigEndian.PutUint16(u[6:8], versionAndRandA)
-
 	// 设置rand_b(16位) + 变体(2位，值为10)
 	binary.BigEndian.PutUint16(u[8:10], randB&0x3FFF|0x8000)
-
 	// 设置rand_c(62位)
 	copy(u[10:], randC[:])
-
 	return u
 }
 
 // Parse 将UUID字符串解析为UUID对象
 func Parse(s string) (UUID, error) {
 	var u UUID
-
 	// 检查长度和分隔符
 	if len(s) != 36 || s[8] != '-' || s[13] != '-' || s[18] != '-' || s[23] != '-' {
 		return u, ErrInvalidUUID
 	}
-
 	// 解析时间字段
 	timeLow, err := parseHex(s[0:8]) // 时间戳高32位
 	if err != nil {
@@ -82,21 +72,18 @@ func Parse(s string) (UUID, error) {
 	}
 	binary.BigEndian.PutUint32(u[0:4], timeLow)
 	binary.BigEndian.PutUint16(u[4:6], uint16(timeMid))
-
 	// 解析版本号和rand_a
 	versionAndRandA, err := parseHex(s[14:18])
 	if err != nil {
 		return u, err
 	}
 	binary.BigEndian.PutUint16(u[6:8], uint16(versionAndRandA))
-
 	// 解析变体和rand_b
 	variantAndRandB, err := parseHex(s[19:23])
 	if err != nil {
 		return u, err
 	}
 	binary.BigEndian.PutUint16(u[8:10], uint16(variantAndRandB))
-
 	// 解析rand_c
 	for i := 0; i < 6; i++ {
 		byteVal, err := parseHex(s[24+2*i : 26+2*i])
@@ -105,7 +92,6 @@ func Parse(s string) (UUID, error) {
 		}
 		u[10+i] = byte(byteVal)
 	}
-
 	return u, nil
 }
 
