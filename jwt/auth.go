@@ -87,15 +87,14 @@ func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Durati
 // CreateToken 创建新的 DefaultToken
 func CreateToken(issuer string, claimsOption ...ClaimsOption) (t DefaultToken, err error) {
 	if auth, ok := authList[issuer]; ok {
-
+		uuid := qiao.UUIDV7()
 		ac := DefaultClaims{
 			RegisteredClaims: RegisteredClaims{
 				ExpiresAt: getNumericDate(auth.accessExp),
 				Issuer:    auth.issuer,
-				ID:        qiao.UUIDV7(),
+				ID:        uuid.String(),
 			},
 		}
-		fmt.Println(ac.ID)
 		for _, option := range claimsOption {
 			option(&ac)
 		}
