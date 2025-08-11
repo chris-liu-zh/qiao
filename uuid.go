@@ -163,25 +163,6 @@ func (u *UUID) SetVariant(v UUIDVariant) {
 	}
 }
 
-//
-//func (u *UUID) SetVariant(variant UUIDVariant) error {
-//	if variant > VariantFuture {
-//		return fmt.Errorf("invalid variant: %d", variant)
-//	}
-//	// 设置新变体
-//	switch variant {
-//	case VariantNCS:
-//		u[8] = (u[8] & 0x80) | 0x00 // 00xxxxxx
-//	case VariantRFC4122:
-//		u[8] = (u[8] & 0xC0) | 0x80 // 10xxxxxx
-//	case VariantMicrosoft:
-//		u[8] = (u[8] & 0xE0) | 0xC0 // 11xxxxxx
-//	case VariantFuture:
-//		u[8] = (u[8] & 0x1F) | 0xE0 // 111xxxxx
-//	}
-//	return nil
-//}
-
 // randUint32 生成一个随机的uint32
 func randUint32() uint32 {
 	b := [4]byte{}
