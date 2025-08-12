@@ -115,7 +115,7 @@ func (u *UUID) String() string {
 		binary.BigEndian.Uint16(u[4:6]),  // 时间戳低16位
 		binary.BigEndian.Uint16(u[6:8]),  // rand_a + 版本号
 		binary.BigEndian.Uint16(u[8:10]), // rand_b + 变体
-		u[10:16]) // rand_c
+		u[10:16])                         // rand_c
 }
 
 // Variant 返回UUID的变体类型

@@ -56,13 +56,13 @@ func Test_CacheGet(t *testing.T) {
 }
 
 func Test_cacheFromfile(t *testing.T) {
-	s := cache.CustomSave("cache", 1*time.Second, 0)
+	s := cache.CustomSave("cache", 3*time.Second, 10)
 	c := cache.NewFromFile(3600*time.Second, 10*time.Second, s)
-	for i := range 10 {
+	for i := range 1000 {
 		c.Set(fmt.Sprintf("test%d", i), i, cache.DefaultExpiration)
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 }
 
 func Test_ViewCache(t *testing.T) {

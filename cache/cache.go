@@ -6,9 +6,11 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"reflect"
 	"runtime"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -44,6 +46,7 @@ type cache struct {
 	janitor           *janitor
 }
 
+// 清理过期项目的后台 goroutine
 type janitor struct {
 	interval time.Duration
 	stop     chan bool
@@ -51,8 +54,8 @@ type janitor struct {
 
 type save struct {
 	cachefile     string
-	saveInterval  time.Duration
-	writeInterval int
+	saveInterval  time.Duration // 缓存文件保存间隔
+	writeInterval int           // 缓存文件写入间隔
 }
 
 type Numeric interface {
@@ -76,7 +79,7 @@ func (c *cache) Set(k string, x any, d time.Duration) {
 	c.writeSum++
 }
 
-// 将项目添加到缓存，替换现有值，使用默到期时间。
+// SetDefault 将项目添加到缓存，替换现有值，使用默到期时间。
 func (c *cache) SetDefault(k string, x any) {
 	c.Set(k, x, DefaultExpiration)
 }
@@ -96,7 +99,7 @@ func (c *cache) Get(k string) (any, bool) {
 	return item.Object, true
 }
 
-// 获取数据和过期时间
+// GetWithExpiration 获取数据和过期时间
 func (c *cache) GetWithExpiration(k string) (any, time.Time, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -114,6 +117,7 @@ func (c *cache) GetWithExpiration(k string) (any, time.Time, bool) {
 	return item.Object, time.Time{}, true
 }
 
+// anyToNumber 将 any 类型转换为 Numeric 类型
 func anyToNumber[T Numeric](k string, value any) (T, error) {
 	rv := reflect.ValueOf(value)
 	if rv.IsValid() && rv.Type().ConvertibleTo(reflect.TypeOf(*new(T))) {
@@ -122,12 +126,13 @@ func anyToNumber[T Numeric](k string, value any) (T, error) {
 	return 0, fmt.Errorf("the value for %v does not have type Numeric", k)
 }
 
+// Increment 将缓存中存储的数字增加 n。如果键不存在或值不是数字，则返回错误。
 func Increment[T Numeric](c *Cache, k string, n T) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	v, found := c.items[k]
 	if !found || v.Expired() {
-		return n, fmt.Errorf("Item %s not found", k)
+		return n, fmt.Errorf("item %s not found", k)
 	}
 	num, err := anyToNumber[T](k, v.Object)
 	if err != nil {
@@ -140,12 +145,13 @@ func Increment[T Numeric](c *Cache, k string, n T) (T, error) {
 	return v.Object.(T), nil
 }
 
+// Decrement 将缓存中存储的数字减少 n。如果键不存在或值不是数字，则返回错误。
 func Decrement[T Numeric](c *Cache, k string, n T) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	v, found := c.items[k]
 	if !found || v.Expired() {
-		return 0, fmt.Errorf("Item %s not found", k)
+		return 0, fmt.Errorf("item %s not found", k)
 	}
 	num, err := anyToNumber[T](k, v.Object)
 	if err != nil {
@@ -158,7 +164,7 @@ func Decrement[T Numeric](c *Cache, k string, n T) (T, error) {
 	return v.Object.(T), nil
 }
 
-// 从缓存中删除一个项目。如果键不在缓存中，则不执行任何操作。
+// Del 从缓存中删除一个项目。如果键不在缓存中，则不执行任何操作。
 func (c *cache) Del(k string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -182,7 +188,7 @@ func (c *cache) delete(k string) (any, bool) {
 	return nil, false
 }
 
-// 从缓存中删除所有过期的项目。
+// DeleteExpired 从缓存中删除所有过期的项目。
 func (c *cache) DeleteExpired() {
 	now := time.Now().UnixNano()
 	c.mu.Lock()
@@ -196,7 +202,7 @@ func (c *cache) DeleteExpired() {
 	}
 }
 
-// 设置一个回调函数，当缓存项被逐出时执行
+// OnEvicted 设置一个回调函数，当缓存项被逐出时执行
 func (c *cache) OnEvicted(f func(string, any)) {
 	c.mu.Lock()
 	c.onEvicted = f
@@ -205,16 +211,8 @@ func (c *cache) OnEvicted(f func(string, any)) {
 
 func (c *cache) Save(w io.Writer) (err error) {
 	enc := gob.NewEncoder(w)
-	defer func() {
-		if x := recover(); x != nil {
-			err = fmt.Errorf("error registering item types with Gob library")
-		}
-	}()
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	for _, v := range c.items {
-		gob.Register(v.Object)
-	}
 	return enc.Encode(&c.items)
 }
 
@@ -288,7 +286,7 @@ func (c *cache) LoadFile(fname string) error {
 	return nil
 }
 
-// 将缓存中所有未过期的项目复制到新映射中并返回
+// Items 将缓存中所有未过期的项目复制到新映射中并返回
 func (c *cache) Items() map[string]Item {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -305,7 +303,7 @@ func (c *cache) Items() map[string]Item {
 	return m
 }
 
-// 返回缓存中的项目数量。这个数量可能包括已经过期但尚未被清理的项目
+// Count 返回缓存中的项目数量。这个数量可能包括已经过期但尚未被清理的项目
 func (c *cache) Count() int {
 	c.mu.RLock()
 	count := len(c.items)
@@ -313,7 +311,7 @@ func (c *cache) Count() int {
 	return count
 }
 
-// 清除缓存中的所有项目
+// Flush 清除缓存中的所有项目
 func (c *cache) Flush() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -339,10 +337,12 @@ func (j *janitor) Run(c *cache) {
 	}
 }
 
+// stopJanitor 停止清理器 goroutine
 func stopJanitor(c *Cache) {
 	c.janitor.stop <- true
 }
 
+// runJanitor 运行一个清理器 goroutine，定期删除过期的缓存项
 func runJanitor(c *cache, ci time.Duration) {
 	j := &janitor{
 		interval: ci,
@@ -352,6 +352,7 @@ func runJanitor(c *cache, ci time.Duration) {
 	go j.Run(c)
 }
 
+// newCache 创建一个新的缓存实例
 func newCache(de time.Duration, m map[string]Item) *cache {
 	if de == 0 {
 		de = -1
@@ -363,6 +364,7 @@ func newCache(de time.Duration, m map[string]Item) *cache {
 	return c
 }
 
+// newCacheWithJanitor 创建一个新的缓存实例，同时运行一个清理器 goroutine
 func newCacheWithJanitor(de, ci time.Duration, m map[string]Item, s *save) *Cache {
 	c := newCache(de, m)
 	C := &Cache{c}
@@ -374,6 +376,19 @@ func newCacheWithJanitor(de, ci time.Duration, m map[string]Item, s *save) *Cach
 		c.cachefile = s.cachefile
 		c.LoadFile(s.cachefile)
 		c.startSaving(s)
+		// 添加退出信号处理
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+		go func() {
+			<-sigChan
+			log.Println("Received exit signal, saving cache to file...")
+			if err := c.SaveFile(s.cachefile); err != nil {
+				log.Printf("Error saving cache on exit: %v\n", err)
+			} else {
+				log.Println("Cache saved successfully on exit")
+			}
+			os.Exit(0)
+		}()
 	}
 	return C
 }
@@ -386,6 +401,7 @@ func DefaultSave() *save {
 	}
 }
 
+// CustomSave 创建一个自定义的保存配置
 func CustomSave(cachefile string, saveInterval time.Duration, writeInterval int) *save {
 	return &save{
 		cachefile:     cachefile,
@@ -394,6 +410,7 @@ func CustomSave(cachefile string, saveInterval time.Duration, writeInterval int)
 	}
 }
 
+// NewFromFile 创建一个新的缓存实例，从指定的文件加载缓存数据
 func NewFromFile(defaultExpiration, cleanupInterval time.Duration, s *save) *Cache {
 	if s == nil {
 		return New(defaultExpiration, cleanupInterval)
@@ -403,15 +420,18 @@ func NewFromFile(defaultExpiration, cleanupInterval time.Duration, s *save) *Cac
 	return c
 }
 
+// New 创建一个新的缓存实例
 func New(defaultExpiration, cleanupInterval time.Duration) *Cache {
 	items := make(map[string]Item)
 	return newCacheWithJanitor(defaultExpiration, cleanupInterval, items, nil)
 }
 
+// NewFrom 创建一个新的缓存实例，从指定的映射加载缓存数据
 func NewFrom(defaultExpiration, cleanupInterval time.Duration, items map[string]Item) *Cache {
 	return newCacheWithJanitor(defaultExpiration, cleanupInterval, items, nil)
 }
 
+// PrintCache 打印缓存中的所有项目
 func PrintCache(filepath string) {
 	file, err := os.Open(filepath)
 	if err != nil {
