@@ -1,4 +1,4 @@
-package ignore
+package cache
 
 import "C"
 import (
@@ -17,19 +17,13 @@ type Item struct {
 }
 
 const (
-	opInsert = iota + 1
-	opUpdate
-	opDelete
-)
-
-const (
-	NoExpiration time.Duration = -1 // 不过期
+	NoExpiration time.Duration = 0 // 不过期
 )
 
 type cache struct {
 	writeTotal      int             // 写入总数
 	expiration      time.Duration   // 默认过期时间
-	datas           map[string]Item // 缓存数据
+	items           map[string]Item // 缓存数据
 	mu              sync.RWMutex
 	onEvicted       func(string, any) // 项目被删除时调用的回调函数
 	janitor         *janitor          // 清理过期项目的后台 goroutine
@@ -90,7 +84,7 @@ func WithSave(path string, interval time.Duration, writeNum int) Options {
 // WithDatas 设置缓存数据
 func WithDatas(items map[string]Item) Options {
 	return func(c *cache) {
-		c.datas = items
+		c.items = items
 	}
 }
 
@@ -104,14 +98,14 @@ func WithCleanupInterval(interval time.Duration) Options {
 // New 创建一个新的缓存实例
 func New(opts ...Options) (*cache, error) {
 	c := &cache{
-		expiration:      3600,
-		cleanupInterval: 10 * time.Second,
+		expiration:      5 * time.Minute,
+		cleanupInterval: 5 * time.Second,
 	}
 	for _, opt := range opts {
 		opt(c)
 	}
-	if c.datas == nil {
-		c.datas = make(map[string]Item)
+	if c.items == nil {
+		c.items = make(map[string]Item)
 	}
 	if err := c.newCacheWithJanitor(); err != nil {
 		return nil, err

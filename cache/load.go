@@ -1,4 +1,4 @@
-package ignore
+package cache
 
 import (
 	"encoding/binary"
@@ -19,9 +19,9 @@ func (c *cache) Load(r io.Reader) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for k, v := range items {
-		ov, found := c.datas[k]
+		ov, found := c.items[k]
 		if !found || ov.Expired() {
-			c.datas[k] = v
+			c.items[k] = v
 		}
 	}
 	return nil
@@ -59,7 +59,7 @@ func (c *cache) LoadFile() error {
 		if _, err := io.ReadFull(c.dataFile, value); err != nil {
 			return err
 		}
-		c.datas[string(key)] = Item{
+		c.items[string(key)] = Item{
 			Object:     value,
 			Expiration: int64(timestamp),
 		}
