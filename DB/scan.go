@@ -9,8 +9,6 @@ import (
 )
 
 var (
-	columns      []string
-	pointer      []any
 	rlock        sync.RWMutex
 	ErrNotPtr    = errors.New("type is not reflect.Ptr")
 	ErrNotStruct = errors.New("type is not reflect.Struct")
@@ -21,11 +19,12 @@ func ScanRowMap(Rows *sql.Rows) (row map[string]any, err error) {
 	rlock.Lock()
 	defer rlock.Unlock()
 	defer Rows.Close()
-	if columns, err = Rows.Columns(); err != nil {
+	columns, err := Rows.Columns()
+	if err != nil {
 		return
 	}
 	length := len(columns)
-	pointer = make([]any, length)
+	pointer := make([]any, length)
 	for i := range length {
 		pointer[i] = new(any)
 	}
@@ -51,11 +50,12 @@ func ScanRowStruct(Rows *sql.Rows, _struct any) (err error) {
 	rlock.Lock()
 	defer rlock.Unlock()
 	defer Rows.Close()
-	if columns, err = Rows.Columns(); err != nil {
+	columns, err := Rows.Columns()
+	if err != nil {
 		return
 	}
 	length := len(columns)
-	pointer = make([]any, length)
+	pointer := make([]any, length)
 
 	ReflectV := reflect.ValueOf(_struct)
 	if ReflectV.Kind() != reflect.Ptr {
@@ -91,14 +91,14 @@ func ScanListMap(Rows *sql.Rows) (list []map[string]any, err error) {
 	rlock.Lock()
 	defer rlock.Unlock()
 	defer Rows.Close()
-	if columns, err = Rows.Columns(); err != nil {
+	columns, err := Rows.Columns()
+	if err != nil {
 		return
 	}
 	length := len(columns)
-	pointer = make([]any, length)
+	pointer := make([]any, length)
 	for i := range length {
-		var val any
-		pointer[i] = &val
+		pointer[i] = new(any)
 	}
 	for Rows.Next() {
 		row := make(map[string]any)
@@ -129,7 +129,7 @@ func ScanListStruct(Rows *sql.Rows, _struct any) (err error) {
 	}
 	length := len(columns)
 	for Rows.Next() {
-		pointer = make([]any, 0, length)
+		pointer := make([]any, 0, length)
 		for i := range reflectT.Elem().Elem().NumField() {
 			columns := strings.Split(reflectT.Elem().Elem().Field(i).Tag.Get("db"), ";")
 			if ReadOnlyField(columns) {
