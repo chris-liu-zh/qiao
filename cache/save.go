@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"log/slog"
 	"slices"
 	"time"
@@ -13,9 +14,12 @@ func (c *cache) startSaving() {
 		for range ticker.C {
 			if c.DirtyTotal >= c.writeInterval {
 				slog.Info("start sync cache")
+				startT := time.Now()
 				if err := c.Sync(); err != nil {
 					slog.Error("failed to sync cache", "err", err)
 				}
+				tc := time.Since(startT) // 计算耗时
+				fmt.Printf("time cost = %v\n", tc)
 				c.flushDirty()
 			}
 		}
