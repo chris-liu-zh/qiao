@@ -15,7 +15,7 @@ func (item Item) Expired() bool {
 }
 
 // SetInvalid 将项目设置为无效状态，并设置错误信息。
-func (item Item) setInvalid(err error) Item {
+func (item Item) SetInvalid(err error) Item {
 	item.invalid = true
 	item.err = err
 	return item

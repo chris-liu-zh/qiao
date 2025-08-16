@@ -5,8 +5,11 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
+	"os"
+	"os/signal"
 	"runtime"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -17,20 +20,24 @@ type Item struct {
 	err        error // 错误信息
 }
 
+type kvStore func(path string) (Store, error)
+
 const (
 	NoExpiration time.Duration = 0 // 不过期
 )
 
 type cache struct {
-	writeTotal      int             // 写入总数
+	DirtyTotal      int             // 脏数据总数
 	expiration      time.Duration   // 默认过期时间
 	items           map[string]Item // 缓存数据
 	mu              sync.RWMutex
-	janitor         *janitor      // 清理过期项目的后台 goroutine
-	store           Store         // 缓存文件路径
-	saveInterval    time.Duration // 缓存文件保存间隔
-	writeInterval   int           // 缓存文件写入间隔
-	cleanupInterval time.Duration // 清理过期项目的间隔时间
+	store           Store               // 缓存存储
+	saveInterval    time.Duration       // 缓存文件保存间隔
+	writeInterval   int                 // 缓存文件写入间隔
+	cleanupInterval time.Duration       // 清理过期项目的间隔时间
+	janitor         *janitor            // 清理过期项目的后台 goroutine
+	sortDirtyKeys   []int64             // 脏数据排序键
+	dirtyItems      map[int64]DirtyItem // 脏数据
 }
 
 // newCacheWithJanitor 创建一个新的缓存实例，同时运行一个清理器 goroutine
@@ -47,13 +54,19 @@ func (c *cache) newCacheWithJanitor() (err error) {
 			c.startSaving()
 		}
 		// 添加退出信号处理
-		// sigChan := make(chan os.Signal, 1)
-		// signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-		// go func() {
-		// 	<-sigChan
-		// 	log.Println("Received exit signal, saving cache to file...")
-		// 	os.Exit(0)
-		// }()
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+		go func() {
+			<-sigChan
+			log.Println("收到退出信号，正在将缓存保存到文件...")
+			log.Printf("缓存数据总数：%d", len(c.items))
+			log.Printf("脏数据总数：%d, 脏数据缓存数：%d, 脏数据排序键数：%d\n", c.DirtyTotal, len(c.dirtyItems), len(c.sortDirtyKeys))
+			if err = c.Sync(); err != nil {
+				log.Println("缓存保存失败", err)
+			}
+			log.Println("缓存保存完成")
+			os.Exit(1)
+		}()
 	}
 	return
 }
@@ -71,16 +84,15 @@ func WithDefaultExpiration(d time.Duration) Options {
 }
 
 // WithSave 设置缓存保存间隔
-func WithSave(path string, interval time.Duration, writeNum int) Options {
-	kv, err := NewKVStore(path)
-	if err != nil {
-		log.Fatalf("Error opening cache file: %v\n", err)
+func WithSave(f Store, interval time.Duration, writeNum int) Options {
+	if f == nil {
 		return func(c *cache) {}
 	}
 	return func(c *cache) {
-		c.store = kv
+		c.store = f
 		c.saveInterval = interval
 		c.writeInterval = writeNum
+		c.makeDirty()
 	}
 }
 
