@@ -17,4 +17,8 @@ func Redisinit() {
 		MaxRetries:  3,                // 最大重试次数
 		IdleTimeout: 10 * time.Second, // 空闲链接超时时间
 	})
+	_, err := Redis.Ping().Result()
+	if err != nil {
+		panic(err)
+	}
 }

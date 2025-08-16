@@ -59,7 +59,7 @@ func Test_List(t *testing.T) {
 	if err := initialize(); err != nil {
 		t.Fatalf("%v", err)
 	}
-	ptypes := Ptype{}
+	var ptypes []Ptype
 	if err := DB.QiaoDB().Find("typeid=?", "00000").GetList(&ptypes); err != nil {
 		t.Fatalf("%v", err)
 	}

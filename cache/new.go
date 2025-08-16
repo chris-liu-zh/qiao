@@ -2,18 +2,19 @@ package cache
 
 import "C"
 import (
+	"bytes"
+	"encoding/gob"
 	"log"
-	"os"
-	"os/signal"
 	"runtime"
 	"sync"
-	"syscall"
 	"time"
 )
 
 type Item struct {
-	Object     any
+	Object     []byte
 	Expiration int64
+	invalid    bool  // 是否有效
+	err        error // 错误信息
 }
 
 const (
@@ -25,12 +26,11 @@ type cache struct {
 	expiration      time.Duration   // 默认过期时间
 	items           map[string]Item // 缓存数据
 	mu              sync.RWMutex
-	onEvicted       func(string, any) // 项目被删除时调用的回调函数
-	janitor         *janitor          // 清理过期项目的后台 goroutine
-	dataFile        *os.File          // 缓存文件路径
-	saveInterval    time.Duration     // 缓存文件保存间隔
-	writeInterval   int               // 缓存文件写入间隔
-	cleanupInterval time.Duration     // 清理过期项目的间隔时间
+	janitor         *janitor      // 清理过期项目的后台 goroutine
+	store           Store         // 缓存文件路径
+	saveInterval    time.Duration // 缓存文件保存间隔
+	writeInterval   int           // 缓存文件写入间隔
+	cleanupInterval time.Duration // 清理过期项目的间隔时间
 }
 
 // newCacheWithJanitor 创建一个新的缓存实例，同时运行一个清理器 goroutine
@@ -39,19 +39,21 @@ func (c *cache) newCacheWithJanitor() (err error) {
 		c.runJanitor()                                // 运行清理器 goroutine
 		runtime.SetFinalizer(c, (*cache).stopJanitor) // 设置清理器 goroutine 的最终izer
 	}
-	if c.dataFile != nil {
-		if err = c.LoadFile(); err != nil {
+	if c.store != nil {
+		if c.items, err = c.store.load(); err != nil {
 			return
 		}
-		c.startSaving()
+		if c.saveInterval > 0 {
+			c.startSaving()
+		}
 		// 添加退出信号处理
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-		go func() {
-			<-sigChan
-			log.Println("Received exit signal, saving cache to file...")
-			os.Exit(0)
-		}()
+		// sigChan := make(chan os.Signal, 1)
+		// signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+		// go func() {
+		// 	<-sigChan
+		// 	log.Println("Received exit signal, saving cache to file...")
+		// 	os.Exit(0)
+		// }()
 	}
 	return
 }
@@ -70,12 +72,13 @@ func WithDefaultExpiration(d time.Duration) Options {
 
 // WithSave 设置缓存保存间隔
 func WithSave(path string, interval time.Duration, writeNum int) Options {
-	dataFile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	kv, err := NewKVStore(path)
 	if err != nil {
 		log.Fatalf("Error opening cache file: %v\n", err)
+		return func(c *cache) {}
 	}
 	return func(c *cache) {
-		c.dataFile = dataFile
+		c.store = kv
 		c.saveInterval = interval
 		c.writeInterval = writeNum
 	}
@@ -99,7 +102,7 @@ func WithCleanupInterval(interval time.Duration) Options {
 func New(opts ...Options) (*cache, error) {
 	c := &cache{
 		expiration:      5 * time.Minute,
-		cleanupInterval: 5 * time.Second,
+		cleanupInterval: 5 * time.Minute,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -107,8 +110,22 @@ func New(opts ...Options) (*cache, error) {
 	if c.items == nil {
 		c.items = make(map[string]Item)
 	}
+
 	if err := c.newCacheWithJanitor(); err != nil {
 		return nil, err
 	}
 	return c, nil
+}
+
+func gobDecode(data []byte, valType any) error {
+	return gob.NewDecoder(bytes.NewBuffer(data)).Decode(valType)
+}
+
+func gobEncode(data any) ([]byte, error) {
+	var buf bytes.Buffer
+	err := gob.NewEncoder(&buf).Encode(data)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
