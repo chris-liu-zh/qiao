@@ -21,7 +21,6 @@ func Test_Cache(t *testing.T) {
 		return
 	}
 	kv.Flush()
-	return
 	for i := range 10000 {
 		kv.Set("key"+strconv.Itoa(i), i)
 		v, _ := kv.Get("key" + strconv.Itoa(i)).Int()
