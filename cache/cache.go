@@ -89,8 +89,6 @@ func Increment[T Numeric](c *cache, k string, n T) (T, error) {
 // Decrement 将缓存中存储的数字减少 n。如果键不存在或值不是数字，则返回错误。
 func Decrement[T Numeric](c *cache, k string, n T) (T, error) {
 	item := c.Get(k)
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	var val T
 	if err := item.Scan(&val); err != nil {
 		return 0, err
