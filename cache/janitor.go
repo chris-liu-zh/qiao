@@ -1,6 +1,9 @@
 package cache
 
-import "time"
+import (
+	"log/slog"
+	"time"
+)
 
 type janitor struct {
 	interval time.Duration
@@ -14,6 +17,11 @@ func (j *janitor) run(c *cache) {
 		select {
 		case <-ticker.C:
 			c.DeleteExpired()
+			go func() {
+				if err := c.store.deleteExpire(); err != nil {
+					slog.Error("delete expire error", "err", err)
+				}
+			}()
 		case <-j.stop:
 			ticker.Stop()
 			return

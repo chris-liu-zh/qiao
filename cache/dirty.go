@@ -1,56 +1,49 @@
 package cache
 
-import "time"
-
-type DirtyOpt int
-
-const (
-	DirtyOpPut DirtyOpt = iota + 1
-	DirtyOpDel
+import (
+	"log/slog"
+	"time"
 )
 
-type DirtyItem struct {
-	Key    string
-	Value  []byte
-	Expire int64
-	Opt    DirtyOpt
-}
+type DirtyOpt bool
 
-func (c *cache) makeDirty() {
-	c.dirtyItems = make(map[int64]DirtyItem)
-	c.sortDirtyKeys = make([]int64, 0)
-}
+const (
+	DirtyOpPut DirtyOpt = true
+	DirtyOpDel DirtyOpt = false
+)
 
-func (c *cache) dirtyPut(key string, value []byte, expire int64, opt DirtyOpt) {
-	id := time.Now().UnixNano()
-	if opt == DirtyOpDel {
-		c.dirtyItems[id] = DirtyItem{
-			Key: key,
-			Opt: opt,
-		}
-		c.setDirtyKey(id)
-		return
-	}
-	if expire <= time.Now().Unix() {
-		return
-	}
-
-	c.dirtyItems[id] = DirtyItem{
-		Key:    key,
-		Value:  value,
-		Expire: expire,
-		Opt:    opt,
-	}
-	c.setDirtyKey(id)
+type DirtyKey struct {
+	Key   []string
+	Total uint
 }
 
 func (c *cache) flushDirty() {
-	c.dirtyItems = make(map[int64]DirtyItem)
-	c.sortDirtyKeys = make([]int64, 0)
+	c.DirtyKey = make(map[DirtyOpt][]string)
 	c.DirtyTotal = 0
 }
 
-func (c *cache) setDirtyKey(id int64) {
-	c.sortDirtyKeys = append(c.sortDirtyKeys, id)
+func (c *cache) setDirtyKey(key string, opt DirtyOpt) {
+	if c.store == nil {
+		return
+	}
+	var err error
+	defer func() {
+		if err != nil {
+			slog.Error("setDirtyKey recover", "err", err)
+		}
+	}()
+	// 实时保存
+	if c.saveInterval < 1*time.Second && c.writeInterval == 0 {
+		if opt {
+			err = c.store.put(key, c.items[key].Object, c.items[key].Expiration)
+			return
+		}
+		err = c.store.delete(key)
+		return
+	}
+	c.DirtyKey[opt] = append(c.DirtyKey[opt], key)
 	c.DirtyTotal++
+	if c.DirtyTotal > c.writeInterval && c.saveInterval < 1*time.Second {
+		go c.Sync()
+	}
 }

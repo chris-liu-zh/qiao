@@ -21,7 +21,7 @@ func initdb() error {
 		Title: "test",
 		Part:  "master",
 		Type:  "mssql",
-		Dsn:   "sqlserver://sa:123456@192.168.1.217:1433?database=cf2024a&encrypt=disable&parseTime=true",
+		Dsn:   "sqlserver://api:CF18.COM@192.168.1.217:1433?database=cf2024a&encrypt=disable&parseTime=true",
 	}
 	if err := db.NewDB(); err != nil {
 		return qiao.Err("数据库设置错误", err)

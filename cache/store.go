@@ -3,23 +3,30 @@ package cache
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
+	"sync"
 	"time"
 )
 
-const maxBatchSize = 1000 // 最大批量大小
+const (
+	maxBatchSize = 10000 // 最大批量大小
+	delSql       = "DELETE FROM kv WHERE key = ?"
+	putSql       = "INSERT OR REPLACE INTO kv (key,value,expire) VALUES (?,?,?)"
+)
 
 type Store interface {
 	createTable() error
 	load() (map[string]Item, error)
-	insert(key string, value []byte, expire int64) error
-	delete(key string) error
 	flush() error
 	deleteExpire() error
-	batchSet(items map[string]Item) error
+	put(key string, value []byte, expire int64) error
+	delete(key string) error
+	sync(cache *cache, opKeys []string, keyLen int, sql string) error
 }
 
 type KVStore struct {
-	db *sql.DB
+	db  *sql.DB
+	kvU sync.RWMutex
 }
 
 func NewKVStore(dataSourceName string) (Store, error) {
@@ -50,6 +57,8 @@ func (s *KVStore) createTable() error {
 }
 
 func (s *KVStore) load() (items map[string]Item, err error) {
+	s.kvU.Lock()
+	defer s.kvU.Unlock()
 	rows, err := s.db.Query(`SELECT key,value,expire FROM kv where expire > ?`, time.Now().UnixNano())
 	if err != nil {
 		return
@@ -60,31 +69,35 @@ func (s *KVStore) load() (items map[string]Item, err error) {
 	var expire int64
 	items = make(map[string]Item)
 	for rows.Next() {
-		if err = rows.Scan(&key, &value, &expire); err == nil {
-			items[key] = Item{
-				Object:     value,
-				Expiration: expire,
-			}
+		if err = rows.Scan(&key, &value, &expire); err != nil {
+			slog.Error("failed to scan row", "err", err)
 		}
+		items[key] = Item{
+			Object:     value,
+			Expiration: expire,
+		}
+		continue
 	}
 	return
 }
 
-func (s *KVStore) insert(key string, value []byte, expire int64) error {
-	if _, err := s.db.Exec(`INSERT OR REPLACE INTO kv (key, value, expire) VALUES (?, ?, ?)`, key, value, expire); err != nil {
-		return fmt.Errorf("failed to insert: %v", err)
-	}
-	return nil
+func (s *KVStore) put(key string, value []byte, expire int64) error {
+	s.kvU.Lock()
+	defer s.kvU.Unlock()
+	_, err := s.db.Exec(`INSERT OR REPLACE INTO kv (key, value, expire) VALUES (?, ?, ?)`, key, value, expire)
+	return err
 }
 
 func (s *KVStore) delete(key string) error {
-	if _, err := s.db.Exec(`DELETE FROM kv WHERE key = ?`, key); err != nil {
-		return fmt.Errorf("failed to delete: %v", err)
-	}
-	return nil
+	s.kvU.Lock()
+	defer s.kvU.Unlock()
+	_, err := s.db.Exec(`DELETE FROM kv WHERE key = ?`, key)
+	return err
 }
 
 func (s *KVStore) deleteExpire() error {
+	s.kvU.Lock()
+	defer s.kvU.Unlock()
 	if _, err := s.db.Exec(`DELETE FROM kv WHERE expire > 0 AND expire < ?`, time.Now().UnixNano()); err != nil {
 		return fmt.Errorf("failed to delete expire: %v", err)
 	}
@@ -95,6 +108,8 @@ func (s *KVStore) deleteExpire() error {
 }
 
 func (s *KVStore) flush() error {
+	s.kvU.Lock()
+	defer s.kvU.Unlock()
 	if _, err := s.db.Exec(`DELETE FROM kv`); err != nil {
 		return fmt.Errorf("failed to flush: %v", err)
 	}
@@ -104,56 +119,59 @@ func (s *KVStore) flush() error {
 	return nil
 }
 
-// batchSet 批量设置缓存项
-func (s *KVStore) batchSet(items map[string]Item) error {
+func (s *KVStore) sync(c *cache, opKeys []string, keyLen int, sql string) (err error) {
 	// 超过最大批量大小，分块处理
-	if len(items) > maxBatchSize {
-		return s.batchSetInChunks(items, maxBatchSize)
+	if keyLen > maxBatchSize {
+		return s.batchSetInChunks(c, opKeys, keyLen, sql)
 	}
+	s.kvU.Lock()
+	defer s.kvU.Unlock()
 	// 开始事务
 	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %v", err)
 	}
-	stmt, err := tx.Prepare(`INSERT OR REPLACE INTO kv (key, value, expire) VALUES (?, ?, ?)`)
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+		// 提交事务
+		if err = tx.Commit(); err != nil {
+			slog.Error("failed to commit transaction:", "err", err)
+		}
+	}()
+
+	stmt, err := tx.Prepare(sql)
 	if err != nil {
-		tx.Rollback()
 		return fmt.Errorf("failed to prepare statement: %v", err)
 	}
 	defer stmt.Close()
-
 	// 执行批量插入
-	for key, value := range items {
-		if _, err := stmt.Exec(key, value.Object, value.Expiration); err != nil {
-			tx.Rollback()
+	for _, key := range opKeys {
+		if sql == delSql {
+			_, err = stmt.Exec(key)
+		}
+		if sql == putSql {
+			item := c.items[key]
+			_, err = stmt.Exec(key, item.Object, item.Expiration)
+		}
+		if err != nil {
 			return fmt.Errorf("failed to execute statement for key %s: %v", key, err)
 		}
 	}
-
-	// 提交事务
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
-	}
-
 	return nil
 }
 
-func (s *KVStore) batchSetInChunks(items map[string]Item, chunkSize int) error {
-	chunk := make(map[string]Item, chunkSize)
-	i := 0
-	for k, v := range items {
-		chunk[k] = v
-		i++
-		if i%chunkSize == 0 {
-			if err := s.batchSet(chunk); err != nil {
-				return err
-			}
-			chunk = make(map[string]Item, chunkSize)
+func (s *KVStore) batchSetInChunks(c *cache, opkey []string, length int, sql string) error {
+	// 超过最大批量大小，分块处理
+	for i := 0; i < length; i += maxBatchSize {
+		// 计算当前分组的结束索引
+		end := min(i+maxBatchSize, length)
+		// 执行批量插入
+		if err := s.sync(c, opkey[i:end], end-i, sql); err != nil {
+			return err
 		}
-	}
-	// 处理剩余部分
-	if len(chunk) > 0 {
-		return s.batchSet(chunk)
 	}
 	return nil
 }

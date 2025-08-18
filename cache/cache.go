@@ -37,7 +37,7 @@ func (c *cache) Set(k string, v any, exps ...time.Duration) error {
 		Object:     data,
 		Expiration: exp,
 	}
-	c.dirtyPut(k, data, exp, DirtyOpPut)
+	c.setDirtyKey(k, DirtyOpPut)
 	return nil
 }
 
@@ -92,7 +92,7 @@ func getNewNum[T Numeric](c *cache, k string, plus bool, n T) (T, error) {
 		return 0, err
 	}
 	c.items[k] = item
-	c.dirtyPut(k, item.Object, item.Expiration, DirtyOpPut)
+	c.setDirtyKey(k, DirtyOpPut)
 	return result, nil
 }
 
@@ -111,7 +111,7 @@ func (c *cache) Del(k string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.delete(k)
-	c.dirtyPut(k, nil, 0, DirtyOpDel)
+	c.setDirtyKey(k, DirtyOpDel)
 }
 
 // delete 删除缓存中的项目。如果键不在缓存中，则不执行任何操作。
