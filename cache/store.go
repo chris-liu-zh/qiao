@@ -120,6 +120,9 @@ func (s *KVStore) flush() error {
 }
 
 func (s *KVStore) sync(c *cache, opKeys []string, keyLen int, sql string) (err error) {
+	if keyLen == 0 {
+		return
+	}
 	// 超过最大批量大小，分块处理
 	if keyLen > maxBatchSize {
 		return s.batchSetInChunks(c, opKeys, keyLen, sql)
@@ -147,19 +150,26 @@ func (s *KVStore) sync(c *cache, opKeys []string, keyLen int, sql string) (err e
 		return fmt.Errorf("failed to prepare statement: %v", err)
 	}
 	defer stmt.Close()
+
+	//执行批量删除
+	if sql == delSql {
+		for _, key := range opKeys {
+			if _, err = stmt.Exec(key); err != nil {
+				return fmt.Errorf("failed to execute statement: %v", err)
+			}
+		}
+		return
+	}
 	// 执行批量插入
-	for _, key := range opKeys {
-		if sql == delSql {
-			_, err = stmt.Exec(key)
-		}
-		if sql == putSql {
+	if sql == putSql {
+		for _, key := range opKeys {
 			item := c.items[key]
-			_, err = stmt.Exec(key, item.Object, item.Expiration)
-		}
-		if err != nil {
-			return fmt.Errorf("failed to execute statement for key %s: %v", key, err)
+			if _, err = stmt.Exec(key, item.Object, item.Expiration); err != nil {
+				return fmt.Errorf("failed to execute statement: %v", err)
+			}
 		}
 	}
+
 	return nil
 }
 

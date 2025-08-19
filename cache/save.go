@@ -14,7 +14,6 @@ func (c *cache) startSaving() {
 				if err := c.Sync(); err != nil {
 					slog.Error("failed to sync cache", "err", err)
 				}
-				c.flushDirty()
 			}
 		}
 	}()
@@ -35,6 +34,7 @@ func (c *cache) Sync() error {
 		return err
 	}
 	tc := time.Since(startT) // 计算耗时
-	slog.Info("sync cache cost", "cost", tc)
+	slog.Info("sync cache ", "cost", tc)
+	c.flushDirty()
 	return nil
 }
