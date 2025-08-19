@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	maxBatchSize = 10000 // 最大批量大小
+	maxBatchSize = 20000 // 最大批量大小
 	delSql       = "DELETE FROM kv WHERE key = ?"
 	putSql       = "INSERT OR REPLACE INTO kv (key,value,expire) VALUES (?,?,?)"
 )
@@ -21,7 +21,7 @@ type Store interface {
 	deleteExpire() error
 	put(key string, value []byte, expire int64) error
 	delete(key string) error
-	sync(cache *cache, opKeys []string, keyLen int, sql string) error
+	sync(cache *cache, opKeys []string, sql string) error
 }
 
 type KVStore struct {
@@ -119,27 +119,29 @@ func (s *KVStore) flush() error {
 	return nil
 }
 
-func (s *KVStore) sync(c *cache, opKeys []string, keyLen int, sql string) (err error) {
+func (s *KVStore) sync(c *cache, opKeys []string, sql string) (err error) {
+	keyLen := len(opKeys)
 	if keyLen == 0 {
 		return
 	}
+	s.kvU.Lock()
+	defer s.kvU.Unlock()
 	// 超过最大批量大小，分块处理
 	if keyLen > maxBatchSize {
 		return s.batchSetInChunks(c, opKeys, keyLen, sql)
 	}
-	s.kvU.Lock()
-	defer s.kvU.Unlock()
-	// 开始事务
+	return s.batch(c, opKeys, sql)
+}
+
+func (s *KVStore) batch(c *cache, opKeys []string, sql string) (err error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %v", err)
 	}
-
 	defer func() {
 		if err != nil {
 			tx.Rollback()
 		}
-		// 提交事务
 		if err = tx.Commit(); err != nil {
 			slog.Error("failed to commit transaction:", "err", err)
 		}
@@ -163,13 +165,11 @@ func (s *KVStore) sync(c *cache, opKeys []string, keyLen int, sql string) (err e
 	// 执行批量插入
 	if sql == putSql {
 		for _, key := range opKeys {
-			item := c.items[key]
-			if _, err = stmt.Exec(key, item.Object, item.Expiration); err != nil {
+			if _, err = stmt.Exec(key, c.items[key].Object, c.items[key].Expiration); err != nil {
 				return fmt.Errorf("failed to execute statement: %v", err)
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -178,8 +178,8 @@ func (s *KVStore) batchSetInChunks(c *cache, opkey []string, length int, sql str
 	for i := 0; i < length; i += maxBatchSize {
 		// 计算当前分组的结束索引
 		end := min(i+maxBatchSize, length)
-		// 执行批量插入
-		if err := s.sync(c, opkey[i:end], end-i, sql); err != nil {
+		// 执行批量操作
+		if err := s.batch(c, opkey[i:end], sql); err != nil {
 			return err
 		}
 	}

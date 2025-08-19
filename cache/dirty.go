@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"log/slog"
 	"time"
 )
 
@@ -22,28 +21,32 @@ func (c *cache) flushDirty() {
 	c.DirtyTotal = 0
 }
 
-func (c *cache) setDirtyKey(key string, opt DirtyOpt) {
+func (c *cache) setPutKey(key string, data []byte, expiration int64) error {
 	if c.store == nil {
-		return
+		return nil
 	}
-	var err error
-	defer func() {
-		if err != nil {
-			slog.Error("setDirtyKey recover", "err", err)
-		}
-	}()
-	// 实时保存
-	if c.saveInterval < 1*time.Second && c.writeInterval == 0 {
-		if opt {
-			err = c.store.put(key, c.items[key].Object, c.items[key].Expiration)
-			return
-		}
-		err = c.store.delete(key)
-		return
-	}
-	c.DirtyKey[opt] = append(c.DirtyKey[opt], key)
-	c.DirtyTotal++
-	if c.DirtyTotal > c.writeInterval && c.saveInterval < 1*time.Second {
+	if c.saveInterval < 1*time.Second && c.DirtyTotal > c.writeInterval {
 		go c.Sync()
 	}
+	if c.saveInterval > 1*time.Second || c.writeInterval > 0 {
+		c.DirtyKey[DirtyOpPut] = append(c.DirtyKey[DirtyOpPut], key)
+		c.DirtyTotal++
+		return nil
+	}
+	return c.store.put(key, data, expiration)
+}
+
+func (c *cache) setDelKey(key string) error {
+	if c.store == nil {
+		return nil
+	}
+	if c.saveInterval < 1*time.Second && c.DirtyTotal > c.writeInterval {
+		go c.Sync()
+	}
+	if c.saveInterval > 1*time.Second || c.writeInterval > 0 {
+		c.DirtyKey[DirtyOpDel] = append(c.DirtyKey[DirtyOpDel], key)
+		c.DirtyTotal++
+		return nil
+	}
+	return c.store.delete(key)
 }

@@ -33,11 +33,13 @@ func (c *cache) Set(k string, v any, exps ...time.Duration) error {
 		}
 		exp = time.Now().Add(e).UnixNano()
 	}
+	if err := c.setPutKey(k, data, exp); err != nil {
+		return err
+	}
 	c.items[k] = Item{
 		Object:     data,
 		Expiration: exp,
 	}
-	c.setDirtyKey(k, DirtyOpPut)
 	return nil
 }
 
@@ -91,8 +93,10 @@ func getNewNum[T Numeric](c *cache, k string, plus bool, n T) (T, error) {
 	if item.Object, err = gobEncode(result); err != nil {
 		return 0, err
 	}
+	if err := c.setPutKey(k, item.Object, item.Expiration); err != nil {
+		return 0, err
+	}
 	c.items[k] = item
-	c.setDirtyKey(k, DirtyOpPut)
 	return result, nil
 }
 
@@ -107,11 +111,14 @@ func Decrement[T Numeric](c *cache, k string, n T) (T, error) {
 }
 
 // Del 删除缓存中的项目
-func (c *cache) Del(k string) {
+func (c *cache) Del(k string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if err := c.setDelKey(k); err != nil {
+		return err
+	}
 	c.delete(k)
-	c.setDirtyKey(k, DirtyOpDel)
+	return nil
 }
 
 // delete 删除缓存中的项目。如果键不在缓存中，则不执行任何操作。
