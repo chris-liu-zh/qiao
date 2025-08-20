@@ -85,7 +85,7 @@ func Parse(s string) (UUID, error) {
 	}
 	binary.BigEndian.PutUint16(u[8:10], uint16(variantAndRandB))
 	// 解析rand_c
-	for i := 0; i < 6; i++ {
+	for i := range 6 {
 		byteVal, err := parseHex(s[24+2*i : 26+2*i])
 		if err != nil {
 			return u, err
