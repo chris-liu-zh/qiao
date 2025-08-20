@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/cache"
 )
 
 type Auth struct {
@@ -25,8 +25,6 @@ type DefaultToken struct {
 var (
 	authList          = make(map[string]*Auth)         // 认证列表
 	ErrIssuerNotExist = errors.New("issuer not exist") // 发行者不存在
-	revokedTokens     = make(map[string]*NumericDate)  // 已撤销的令牌
-	revokedTokensLock sync.Mutex                       // 已撤销令牌锁
 )
 
 type ClaimsOption func(*DefaultClaims)
@@ -179,40 +177,31 @@ func RefreshToken(issuer, accessToken, refreshToken string) (t DefaultToken, err
 	}, nil
 }
 
-// RevokeToken 撤销过期无效的Token
-func init() {
-	ticker := time.NewTicker(60 * time.Second)
-	go func() {
-		for range ticker.C {
-			now := time.Now()
-			revokedTokensLock.Lock()
-			for token, expiresIn := range revokedTokens {
-				if expiresIn.Time.Before(now) {
-					delete(revokedTokens, token)
-				}
-			}
-			revokedTokensLock.Unlock()
-		}
-	}()
-}
-
 // SetInvalidToken 将Token设置为无效
 func SetInvalidToken(issuer, tokenStr string) error {
 	claims, err := GetClaims(issuer, tokenStr)
 	if err != nil {
 		return err
 	}
-	revokedTokensLock.Lock()
-	defer revokedTokensLock.Unlock()
-	revokedTokens[claims.ID] = claims.ExpiresAt
-	return nil
+	return kvdb.Put(claims.ID, "", claims.ExpiresAt.UnixNano())
 }
 
 func GetInvalidToken(id string) bool {
-	revokedTokensLock.Lock()
-	defer revokedTokensLock.Unlock()
-	if _, ok := revokedTokens[id]; ok {
-		return true
+	if _, err := kvdb.Get(id).String(); err != nil {
+		return false
 	}
-	return false
+	return true
+}
+
+var kvdb *cache.Cache
+
+func init() {
+	kvStore, err := cache.NewKVStore("auth.db")
+	if err != nil {
+		return
+	}
+
+	if kvdb, err = cache.New(cache.WithSave(kvStore, 1*time.Second, 0)); err != nil {
+		return
+	}
 }

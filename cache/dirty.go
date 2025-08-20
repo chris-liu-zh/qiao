@@ -17,12 +17,12 @@ type DirtyKey struct {
 	Total uint
 }
 
-func (c *cache) flushDirty() {
+func (c *Cache) flushDirty() {
 	c.DirtyKey = make(map[DirtyOpt][]string)
 	c.DirtyTotal = 0
 }
 
-func (c *cache) setPutKey(key string, data []byte, expiration int64) error {
+func (c *Cache) setPutKey(key string, data []byte, expiration int64) error {
 	if c.store == nil {
 		return nil
 	}
@@ -37,7 +37,7 @@ func (c *cache) setPutKey(key string, data []byte, expiration int64) error {
 	return c.store.put(key, data, expiration)
 }
 
-func (c *cache) setDelKey(key string) error {
+func (c *Cache) setDelKey(key string) error {
 	if c.store == nil {
 		return nil
 	}

@@ -21,7 +21,7 @@ type Store interface {
 	deleteExpire() error
 	put(key string, value []byte, expire int64) error
 	delete(key string) error
-	sync(cache *cache, sql string, opKeys []string) error
+	sync(cache *Cache, sql string, opKeys []string) error
 }
 
 type KVStore struct {
@@ -119,7 +119,7 @@ func (s *KVStore) flush() error {
 	return nil
 }
 
-func (s *KVStore) sync(c *cache, sql string, opKeys []string) (err error) {
+func (s *KVStore) sync(c *Cache, sql string, opKeys []string) (err error) {
 	keyLen := len(opKeys)
 	if keyLen == 0 {
 		return
@@ -133,7 +133,7 @@ func (s *KVStore) sync(c *cache, sql string, opKeys []string) (err error) {
 	return s.batch(c, sql, opKeys)
 }
 
-func (s *KVStore) batch(c *cache, sql string, opKeys []string) (err error) {
+func (s *KVStore) batch(c *Cache, sql string, opKeys []string) (err error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %v", err)
@@ -172,7 +172,7 @@ func (s *KVStore) batch(c *cache, sql string, opKeys []string) (err error) {
 	return nil
 }
 
-func (s *KVStore) batchSetInChunks(c *cache, length int, sql string, opKeys []string) error {
+func (s *KVStore) batchSetInChunks(c *Cache, length int, sql string, opKeys []string) error {
 	// 超过最大批量大小，分块处理
 	for i := 0; i < length; i += maxBatchSize {
 		// 计算当前分组的结束索引

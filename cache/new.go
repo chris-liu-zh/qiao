@@ -26,7 +26,7 @@ const (
 	NoExpiration time.Duration = 0 // 不过期
 )
 
-type cache struct {
+type Cache struct {
 	DirtyTotal      uint            // 脏数据总数
 	expiration      time.Duration   // 默认过期时间
 	items           map[string]Item // 缓存数据
@@ -40,10 +40,10 @@ type cache struct {
 }
 
 // newCacheWithJanitor 创建一个新的缓存实例，同时运行一个清理器 goroutine
-func (c *cache) newCacheWithJanitor() (err error) {
+func (c *Cache) newCacheWithJanitor() (err error) {
 	if c.cleanupInterval > 0 {
 		c.runJanitor()                                // 运行清理器 goroutine
-		runtime.SetFinalizer(c, (*cache).stopJanitor) // 设置清理器 goroutine 的最终izer
+		runtime.SetFinalizer(c, (*Cache).stopJanitor) // 设置清理器 goroutine 的最终izer
 	}
 	if c.store != nil {
 		if c.items, err = c.store.load(); err != nil {
@@ -72,11 +72,11 @@ func (c *cache) newCacheWithJanitor() (err error) {
 	return
 }
 
-type Options func(*cache)
+type Options func(*Cache)
 
 // WithDefaultExpiration 设置缓存项的默认过期时间
 func WithDefaultExpiration(d time.Duration) Options {
-	return func(c *cache) {
+	return func(c *Cache) {
 		if d <= 0 {
 			d = NoExpiration
 		}
@@ -87,9 +87,9 @@ func WithDefaultExpiration(d time.Duration) Options {
 // WithSave 设置缓存保存间隔
 func WithSave(f Store, interval time.Duration, writeNum uint) Options {
 	if f == nil {
-		return func(c *cache) {}
+		return func(c *Cache) {}
 	}
-	return func(c *cache) {
+	return func(c *Cache) {
 		c.store = f
 		c.saveInterval = interval
 		c.writeInterval = writeNum
@@ -99,21 +99,21 @@ func WithSave(f Store, interval time.Duration, writeNum uint) Options {
 
 // WithDatas 设置缓存数据
 func WithDatas(items map[string]Item) Options {
-	return func(c *cache) {
+	return func(c *Cache) {
 		c.items = items
 	}
 }
 
 // WithCleanupInterval 设置缓存清理间隔
 func WithCleanupInterval(interval time.Duration) Options {
-	return func(c *cache) {
+	return func(c *Cache) {
 		c.cleanupInterval = interval
 	}
 }
 
 // New 创建一个新的缓存实例
-func New(opts ...Options) (*cache, error) {
-	c := &cache{
+func New(opts ...Options) (*Cache, error) {
+	c := &Cache{
 		expiration:      5 * time.Minute,
 		cleanupInterval: 5 * time.Minute,
 	}

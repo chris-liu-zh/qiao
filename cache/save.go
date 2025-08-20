@@ -6,7 +6,7 @@ import (
 )
 
 // 定期保存缓存
-func (c *cache) startSaving() {
+func (c *Cache) startSaving() {
 	ticker := time.NewTicker(c.saveInterval)
 	go func() {
 		for range ticker.C {
@@ -19,7 +19,7 @@ func (c *cache) startSaving() {
 	}()
 }
 
-func (c *cache) Sync() error {
+func (c *Cache) Sync() error {
 	if c.store == nil {
 		return nil
 	}

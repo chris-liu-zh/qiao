@@ -11,7 +11,7 @@ type janitor struct {
 }
 
 // Run 运行清理器 goroutine，定期删除过期的缓存项
-func (j *janitor) run(c *cache) {
+func (j *janitor) run(c *Cache) {
 	ticker := time.NewTicker(j.interval)
 	for {
 		select {
@@ -30,12 +30,12 @@ func (j *janitor) run(c *cache) {
 }
 
 // stopJanitor 停止清理器 goroutine
-func (c *cache) stopJanitor() {
+func (c *Cache) stopJanitor() {
 	c.janitor.stop <- true
 }
 
 // runJanitor 运行一个清理器 goroutine，定期删除过期的缓存项
-func (c *cache) runJanitor() {
+func (c *Cache) runJanitor() {
 	j := &janitor{
 		interval: c.cleanupInterval,
 		stop:     make(chan bool),
