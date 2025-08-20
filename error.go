@@ -30,14 +30,16 @@ func Err(msg string, err error, other ...any) error {
 	if ok := errors.As(err, &qe); ok && qe.Id == errId {
 		return err
 	}
+
 	if funcName, file, line, ok := runtime.Caller(1); ok {
+		errId = UUIDV7().String()
 		return &qiaoError{
 			Msg:      msg,
 			Err:      err,
 			File:     file,
 			Line:     line,
 			Other:    other,
-			Id:       UUIDV7().String(),
+			Id:       errId,
 			FuncName: runtime.FuncForPC(funcName).Name(),
 		}
 	}
