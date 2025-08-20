@@ -10,11 +10,7 @@ package qiao
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"math/rand"
 	"runtime"
-	"strconv"
-	"time"
 )
 
 type qiaoError struct {
@@ -22,12 +18,12 @@ type qiaoError struct {
 	Err      error  `json:"err"`
 	File     string `json:"file"`
 	Line     int    `json:"line"`
-	Id       int64  `json:"id"`
+	Id       string `json:"id"`
 	FuncName string `json:"funcName"`
 	Other    any    `json:"other"`
 }
 
-var errId int64 = 1
+var errId string
 
 func Err(msg string, err error, other ...any) error {
 	var qe *qiaoError
@@ -35,26 +31,17 @@ func Err(msg string, err error, other ...any) error {
 		return err
 	}
 	if funcName, file, line, ok := runtime.Caller(1); ok {
-		errId = newID()
 		return &qiaoError{
 			Msg:      msg,
 			Err:      err,
 			File:     file,
 			Line:     line,
 			Other:    other,
-			Id:       errId,
+			Id:       UUIDV7().String(),
 			FuncName: runtime.FuncForPC(funcName).Name(),
 		}
 	}
 	return nil
-}
-
-func newID() int64 {
-	timestamp := time.Now().UnixMilli()
-	rand.New(rand.NewSource(timestamp))
-	randomNum := rand.Intn(9000) + 1000
-	id, _ := strconv.ParseInt(fmt.Sprintf("%d%d", timestamp, randomNum), 10, 64)
-	return id
 }
 
 func (e *qiaoError) Error() string {
