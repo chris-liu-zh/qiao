@@ -49,7 +49,7 @@ func (c *cache) newCacheWithJanitor() (err error) {
 		if c.items, err = c.store.load(); err != nil {
 			return
 		}
-		if c.saveInterval > 1*time.Second {
+		if c.saveInterval >= 1*time.Second {
 			c.startSaving()
 		}
 		// 添加退出信号处理

@@ -10,7 +10,7 @@ func (c *cache) startSaving() {
 	ticker := time.NewTicker(c.saveInterval)
 	go func() {
 		for range ticker.C {
-			if c.DirtyTotal >= c.writeInterval {
+			if c.DirtyTotal > 0 && c.DirtyTotal >= c.writeInterval {
 				if err := c.Sync(); err != nil {
 					slog.Error("failed to sync cache", "err", err)
 				}
@@ -23,16 +23,14 @@ func (c *cache) Sync() error {
 	if c.store == nil {
 		return nil
 	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	slog.Info("start sync cache")
 	startT := time.Now()
 	delKeys := c.DirtyKey[DirtyOpDel]
-	if err := c.store.sync(c, delKeys, delSql); err != nil {
+	if err := c.store.sync(c, delSql, delKeys); err != nil {
 		return err
 	}
 	putKeys := c.DirtyKey[DirtyOpPut]
-	if err := c.store.sync(c, putKeys, putSql); err != nil {
+	if err := c.store.sync(c, putSql, putKeys); err != nil {
 		return err
 	}
 	tc := time.Since(startT) // 计算耗时

@@ -26,7 +26,7 @@ func Test_Cache(t *testing.T) {
 		return
 	}
 
-	kv, err := cache.New(cache.WithSave(kvStore, 5*time.Second, 100))
+	kv, err := cache.New(cache.WithSave(kvStore, 1*time.Second, 1000))
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -34,7 +34,7 @@ func Test_Cache(t *testing.T) {
 	kv.Flush()
 	for _, product := range products {
 		kv.Set(product.Typeid, product)
-		//kv.Del(product.Typeid)
+		// kv.Del(product.Typeid)
 	}
 	time.Sleep(10 * time.Second)
 

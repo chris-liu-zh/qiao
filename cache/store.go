@@ -10,7 +10,7 @@ import (
 
 const (
 	maxBatchSize = 20000 // 最大批量大小
-	delSql       = "DELETE FROM kv WHERE key = ?"
+	delSql       = "DELETE FROM kv WHERE key IN (?)"
 	putSql       = "INSERT OR REPLACE INTO kv (key,value,expire) VALUES (?,?,?)"
 )
 
@@ -21,7 +21,7 @@ type Store interface {
 	deleteExpire() error
 	put(key string, value []byte, expire int64) error
 	delete(key string) error
-	sync(cache *cache, opKeys []string, sql string) error
+	sync(cache *cache, sql string, opKeys []string) error
 }
 
 type KVStore struct {
@@ -119,7 +119,7 @@ func (s *KVStore) flush() error {
 	return nil
 }
 
-func (s *KVStore) sync(c *cache, opKeys []string, sql string) (err error) {
+func (s *KVStore) sync(c *cache, sql string, opKeys []string) (err error) {
 	keyLen := len(opKeys)
 	if keyLen == 0 {
 		return
@@ -128,12 +128,12 @@ func (s *KVStore) sync(c *cache, opKeys []string, sql string) (err error) {
 	defer s.kvU.Unlock()
 	// 超过最大批量大小，分块处理
 	if keyLen > maxBatchSize {
-		return s.batchSetInChunks(c, opKeys, keyLen, sql)
+		return s.batchSetInChunks(c, keyLen, sql, opKeys)
 	}
-	return s.batch(c, opKeys, sql)
+	return s.batch(c, sql, opKeys)
 }
 
-func (s *KVStore) batch(c *cache, opKeys []string, sql string) (err error) {
+func (s *KVStore) batch(c *cache, sql string, opKeys []string) (err error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %v", err)
@@ -146,7 +146,6 @@ func (s *KVStore) batch(c *cache, opKeys []string, sql string) (err error) {
 			slog.Error("failed to commit transaction:", "err", err)
 		}
 	}()
-
 	stmt, err := tx.Prepare(sql)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %v", err)
@@ -173,13 +172,13 @@ func (s *KVStore) batch(c *cache, opKeys []string, sql string) (err error) {
 	return nil
 }
 
-func (s *KVStore) batchSetInChunks(c *cache, opkey []string, length int, sql string) error {
+func (s *KVStore) batchSetInChunks(c *cache, length int, sql string, opKeys []string) error {
 	// 超过最大批量大小，分块处理
 	for i := 0; i < length; i += maxBatchSize {
 		// 计算当前分组的结束索引
 		end := min(i+maxBatchSize, length)
 		// 执行批量操作
-		if err := s.batch(c, opkey[i:end], sql); err != nil {
+		if err := s.batch(c, sql, opKeys[i:end]); err != nil {
 			return err
 		}
 	}

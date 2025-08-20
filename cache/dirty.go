@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"log/slog"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func (c *cache) setPutKey(key string, data []byte, expiration int64) error {
 		return nil
 	}
 	if c.saveInterval < 1*time.Second && c.DirtyTotal > c.writeInterval {
-		go c.Sync()
+		c.Sync()
 	}
 	if c.saveInterval > 1*time.Second || c.writeInterval > 0 {
 		c.DirtyKey[DirtyOpPut] = append(c.DirtyKey[DirtyOpPut], key)
@@ -41,7 +42,9 @@ func (c *cache) setDelKey(key string) error {
 		return nil
 	}
 	if c.saveInterval < 1*time.Second && c.DirtyTotal > c.writeInterval {
-		go c.Sync()
+		if err := c.Sync(); err != nil {
+			slog.Error("failed to sync cache", "err", err)
+		}
 	}
 	if c.saveInterval > 1*time.Second || c.writeInterval > 0 {
 		c.DirtyKey[DirtyOpDel] = append(c.DirtyKey[DirtyOpDel], key)
