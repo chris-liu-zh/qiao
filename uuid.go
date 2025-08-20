@@ -29,7 +29,7 @@ var (
 )
 
 // UUIDV7 生成一个新的UUID v7
-func UUIDV7() UUID {
+func UUIDV7() *UUID {
 	var u UUID
 	// 获取当前时间戳（Unix纪元以来的毫秒数）
 	now := time.Now()
@@ -51,7 +51,7 @@ func UUIDV7() UUID {
 	binary.BigEndian.PutUint16(u[8:10], randB&0x3FFF|0x8000)
 	// 设置rand_c(62位)
 	copy(u[10:], randC[:])
-	return u
+	return &u
 }
 
 // Parse 将UUID字符串解析为UUID对象
