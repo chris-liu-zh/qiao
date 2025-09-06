@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"log/slog"
 	"time"
 )
 
@@ -16,12 +15,7 @@ func (j *janitor) run(c *Cache) {
 	for {
 		select {
 		case <-ticker.C:
-			c.DeleteExpired()
-			go func() {
-				if err := c.store.deleteExpire(); err != nil {
-					slog.Error("delete expire error", "err", err)
-				}
-			}()
+			c.Clear()
 		case <-j.stop:
 			ticker.Stop()
 			return

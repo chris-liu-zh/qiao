@@ -105,5 +105,5 @@ func BeforeTimestamp(y, m, d int) time.Time {
  * @return {*}
  */
 func BeforeDate(y, m, d int) string {
-	return time.Now().AddDate(y, m, d).Format("2006-01-02 15:04:05")
+	return BeforeTimestamp(y, m, d).Format("2006-01-02 15:04:05")
 }

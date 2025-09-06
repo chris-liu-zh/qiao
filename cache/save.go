@@ -1,7 +1,9 @@
 package cache
 
 import (
+	"encoding/gob"
 	"log/slog"
+	"os"
 	"time"
 )
 
@@ -11,30 +13,31 @@ func (c *Cache) startSaving() {
 	go func() {
 		for range ticker.C {
 			if c.DirtyTotal > 0 && c.DirtyTotal >= c.writeInterval {
+				c.mu.RLock()
 				if err := c.Sync(); err != nil {
 					slog.Error("failed to sync cache", "err", err)
 				}
+				c.mu.RUnlock()
 			}
 		}
 	}()
 }
 
 func (c *Cache) Sync() error {
-	if c.store == nil {
-		return nil
-	}
 	slog.Info("start sync cache")
 	startT := time.Now()
-	delKeys := c.DirtyKey[DirtyOpDel]
-	if err := c.store.sync(c, delSql, delKeys); err != nil {
+	file, err := os.Create(c.filename) // 创建或清空目标文件
+	if err != nil {
 		return err
 	}
-	putKeys := c.DirtyKey[DirtyOpPut]
-	if err := c.store.sync(c, putSql, putKeys); err != nil {
+	defer file.Close()
+
+	err = gob.NewEncoder(file).Encode(c.items)
+	if err != nil {
 		return err
 	}
 	tc := time.Since(startT) // 计算耗时
 	slog.Info("sync cache ", "cost", tc)
-	c.flushDirty()
+	c.clearDirty()
 	return nil
 }

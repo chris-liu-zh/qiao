@@ -9,6 +9,7 @@ package qiao
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -102,7 +103,7 @@ func (client *httpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 		return
 	}
 	tr := &http.Transport{
-		// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	c := &http.Client{Transport: tr}
 	var resp *http.Response

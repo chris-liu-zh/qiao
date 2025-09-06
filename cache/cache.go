@@ -9,8 +9,6 @@ import (
 
 var (
 	ErrKeyNotFound = errors.New("key not found")
-	ErrKeyExpired  = errors.New("key expired")
-	ErrKeyInvalid  = errors.New("key invalid")
 )
 
 type Numeric interface {
@@ -24,13 +22,11 @@ func (c *Cache) Put(k string, v any, exp int64) error {
 	if err != nil {
 		return err
 	}
-	if err := c.setPutKey(k, data, exp); err != nil {
-		return err
-	}
 	c.items[k] = Item{
 		Object:     data,
 		Expiration: exp,
 	}
+	c.DirtyTotal++
 	return nil
 }
 
@@ -48,17 +44,17 @@ func (c *Cache) Set(k string, v any, exps ...time.Duration) error {
 }
 
 // Get 获取缓存中的项目。如果项目不存在或已过期，则返回 nil。
-func (c *Cache) Get(k string) (item Item) {
+func (c *Cache) Get(k string) *Item {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	item, found := c.items[k]
 	if !found {
-		return item.SetInvalid(ErrKeyNotFound)
+		return nil
 	}
 	if item.Expired() {
-		return item.SetInvalid(ErrKeyExpired)
+		c.delete(k)
 	}
-	return item
+	return &item
 }
 
 // anyToNumber 将 any 类型转换为 Numeric 类型
@@ -73,14 +69,9 @@ func anyToNumber[T Numeric](k string, value T) (T, error) {
 // getNewNum 获取缓存中的数字类型值
 // plus 表示是否增加，false 表示减少
 func getNewNum[T Numeric](c *Cache, k string, plus bool, n T) (T, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	item, found := c.items[k]
-	if !found {
+	item := c.Get(k)
+	if item == nil {
 		return 0, ErrKeyNotFound
-	}
-	if item.Expired() {
-		return 0, ErrKeyExpired
 	}
 	var val T
 	if err := item.Scan(&val); err != nil {
@@ -94,14 +85,7 @@ func getNewNum[T Numeric](c *Cache, k string, plus bool, n T) (T, error) {
 	if plus {
 		result = num + n
 	}
-	if item.Object, err = gobEncode(result); err != nil {
-		return 0, err
-	}
-	if err := c.setPutKey(k, item.Object, item.Expiration); err != nil {
-		return 0, err
-	}
-	c.items[k] = item
-	return result, nil
+	return result, c.Put(k, result, item.Expiration)
 }
 
 // Increment 将缓存中存储的数字增加 n。如果键不存在或值不是数字，则返回错误。
@@ -116,11 +100,6 @@ func Decrement[T Numeric](c *Cache, k string, n T) (T, error) {
 
 // Del 删除缓存中的项目
 func (c *Cache) Del(k string) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if err := c.setDelKey(k); err != nil {
-		return err
-	}
 	c.delete(k)
 	return nil
 }
@@ -128,10 +107,11 @@ func (c *Cache) Del(k string) error {
 // delete 删除缓存中的项目。如果键不在缓存中，则不执行任何操作。
 func (c *Cache) delete(k string) {
 	delete(c.items, k)
+	c.DirtyTotal++
 }
 
-// DeleteExpired 从缓存中删除所有过期的项目。
-func (c *Cache) DeleteExpired() {
+// Clear 从缓存中删除所有过期的项目。
+func (c *Cache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for k, v := range c.items {
@@ -167,10 +147,7 @@ func (c *Cache) Count() int {
 func (c *Cache) Flush() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.store != nil {
-		return c.store.flush()
-	}
-	c.flushDirty()
+	c.DirtyTotal = 0
 	c.items = map[string]Item{}
 	return nil
 }

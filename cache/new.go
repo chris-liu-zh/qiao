@@ -4,23 +4,15 @@ import "C"
 import (
 	"bytes"
 	"encoding/gob"
-	"log"
-	"os"
-	"os/signal"
 	"runtime"
 	"sync"
-	"syscall"
 	"time"
 )
 
 type Item struct {
 	Object     []byte
 	Expiration int64
-	invalid    bool  // 是否有效
-	err        error // 错误信息
 }
-
-type kvStore func(path string) (Store, error)
 
 const (
 	NoExpiration time.Duration = 0 // 不过期
@@ -31,12 +23,11 @@ type Cache struct {
 	expiration      time.Duration   // 默认过期时间
 	items           map[string]Item // 缓存数据
 	mu              sync.RWMutex
-	store           Store                 // 缓存存储
-	saveInterval    time.Duration         // 缓存文件保存间隔
-	writeInterval   uint                  // 缓存文件写入间隔
-	cleanupInterval time.Duration         // 清理过期项目的间隔时间
-	janitor         *janitor              // 清理过期项目的后台 goroutine
-	DirtyKey        map[DirtyOpt][]string // 脏数据键
+	filename        string        // 缓存文件名
+	saveInterval    time.Duration // 缓存文件保存间隔
+	writeInterval   uint          // 缓存文件写入间隔
+	cleanupInterval time.Duration // 清理过期项目的间隔时间
+	janitor         *janitor      // 清理过期项目的后台 goroutine
 }
 
 // newCacheWithJanitor 创建一个新的缓存实例，同时运行一个清理器 goroutine
@@ -45,29 +36,8 @@ func (c *Cache) newCacheWithJanitor() (err error) {
 		c.runJanitor()                                // 运行清理器 goroutine
 		runtime.SetFinalizer(c, (*Cache).stopJanitor) // 设置清理器 goroutine 的最终izer
 	}
-	if c.store != nil {
-		if c.items, err = c.store.load(); err != nil {
-			return
-		}
-		if c.saveInterval >= 1*time.Second {
-			c.startSaving()
-		}
-		// 添加退出信号处理
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-		go func() {
-			<-sigChan
-			log.Println("收到退出信号，正在将缓存保存到文件...")
-			log.Printf("缓存数据总数：%d", len(c.items))
-			log.Printf("脏数据总数：%d\n", c.DirtyTotal)
-			if c.DirtyTotal > 0 {
-				if err = c.Sync(); err != nil {
-					log.Println("缓存保存失败", err)
-				}
-			}
-			log.Println("缓存保存完成")
-			os.Exit(1)
-		}()
+	if c.saveInterval >= 1*time.Second {
+		c.startSaving()
 	}
 	return
 }
@@ -84,16 +54,16 @@ func WithDefaultExpiration(d time.Duration) Options {
 	}
 }
 
-// WithSave 设置缓存保存间隔
-func WithSave(f Store, interval time.Duration, writeNum uint) Options {
-	if f == nil {
-		return func(c *Cache) {}
+// WithSave 设置缓存保存间隔,interval单位为秒
+func WithSave(cache string, interval uint64, writeNum uint) Options {
+	if cache == "" {
+		cache = "cache.dat"
 	}
+
 	return func(c *Cache) {
-		c.store = f
-		c.saveInterval = interval
+		c.filename = cache
+		c.saveInterval = time.Duration(interval) * time.Second
 		c.writeInterval = writeNum
-		c.DirtyKey = make(map[DirtyOpt][]string)
 	}
 }
 
@@ -104,10 +74,10 @@ func WithDatas(items map[string]Item) Options {
 	}
 }
 
-// WithCleanupInterval 设置缓存清理间隔
-func WithCleanupInterval(interval time.Duration) Options {
+// WithCleanupInterval 设置过期缓存清理间隔,interval单位为秒
+func WithCleanupInterval(interval int64) Options {
 	return func(c *Cache) {
-		c.cleanupInterval = interval
+		c.cleanupInterval = time.Duration(interval) * time.Second
 	}
 }
 
@@ -136,9 +106,5 @@ func gobDecode(data []byte, valType any) error {
 
 func gobEncode(data any) ([]byte, error) {
 	var buf bytes.Buffer
-	err := gob.NewEncoder(&buf).Encode(data)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	return buf.Bytes(), gob.NewEncoder(&buf).Encode(data)
 }

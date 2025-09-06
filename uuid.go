@@ -18,13 +18,10 @@ const (
 	VariantFuture    UUIDVariant = iota // 保留供未来使用
 )
 
-const VariantRFC4122 = VariantRFC9562
-
 // UUID 表示一个UUID v7，遵循draft-peabody-dispatch-new-uuid-format-04草案规范
 type UUID [16]byte
 
 var (
-	// ErrInvalidUUID 当解析无效UUID字符串时返回此错误
 	ErrInvalidUUID = errors.New("invalid uuid format")
 )
 
@@ -134,6 +131,7 @@ func (u *UUID) Variant() UUIDVariant {
 	}
 }
 
+// SetVariant 设置UUID的变体类型
 func (u *UUID) SetVariant(v UUIDVariant) {
 	switch v {
 	case VariantNCS:

@@ -3,6 +3,7 @@ package jwt
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -196,12 +197,9 @@ func GetInvalidToken(id string) bool {
 var kvdb *cache.Cache
 
 func init() {
-	kvStore, err := cache.NewKVStore("auth.db")
-	if err != nil {
-		return
-	}
-
-	if kvdb, err = cache.New(cache.WithSave(kvStore, 1*time.Second, 0)); err != nil {
-		return
+	kvStore := "jwt_invalid_token.db"
+	var err error
+	if kvdb, err = cache.New(cache.WithSave(kvStore, 2, 0)); err != nil {
+		log.Panic(err)
 	}
 }

@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/chris-liu-zh/qiao/jwt"
 )
 
 type RouterHandle struct {
