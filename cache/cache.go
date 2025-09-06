@@ -26,7 +26,6 @@ func (c *Cache) Put(k string, v any, exp int64) error {
 		Object:     data,
 		Expiration: exp,
 	}
-	c.DirtyTotal++
 	return nil
 }
 
@@ -107,7 +106,6 @@ func (c *Cache) Del(k string) error {
 // delete 删除缓存中的项目。如果键不在缓存中，则不执行任何操作。
 func (c *Cache) delete(k string) {
 	delete(c.items, k)
-	c.DirtyTotal++
 }
 
 // Clear 从缓存中删除所有过期的项目。
@@ -147,7 +145,6 @@ func (c *Cache) Count() int {
 func (c *Cache) Flush() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.DirtyTotal = 0
 	c.items = map[string]Item{}
 	return nil
 }

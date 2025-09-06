@@ -10,7 +10,7 @@ import (
 
 func Test_Cache(t *testing.T) {
 	fmt.Println("start1111")
-	kv, err := cache.New(cache.WithSave("cache.db", 2, 1000))
+	kv, err := cache.New()
 	if err != nil {
 		t.Fatal(err)
 		return

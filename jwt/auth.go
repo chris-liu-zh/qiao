@@ -197,9 +197,8 @@ func GetInvalidToken(id string) bool {
 var kvdb *cache.Cache
 
 func init() {
-	kvStore := "jwt_invalid_token.db"
 	var err error
-	if kvdb, err = cache.New(cache.WithSave(kvStore, 2, 0)); err != nil {
+	if kvdb, err = cache.New(); err != nil {
 		log.Panic(err)
 	}
 }
