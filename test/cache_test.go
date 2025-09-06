@@ -23,7 +23,7 @@ func Test_Cache(t *testing.T) {
 	}
 
 	fmt.Println("set cost:", time.Since(start).String())
-	kv.Count()
-	fmt.Println("end1111")
+
+	fmt.Println("end1111", kv.Count())
 	time.Sleep(5 * time.Second)
 }
