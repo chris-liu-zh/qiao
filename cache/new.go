@@ -47,7 +47,7 @@ func WithDefaultExpiration(d time.Duration) Options {
 	}
 }
 
-// WithDatas 设置缓存数据
+// WithDatas 设置初始缓存数据
 func WithDatas(items map[string]Item) Options {
 	return func(c *Cache) {
 		c.items = items
