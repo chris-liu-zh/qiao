@@ -96,7 +96,7 @@ func (p *proc) getSql() *proc {
 func (p *proc) QueryRow() (row *sql.Row) {
 	p = p.getSql()
 	p.m.debug("QueryRow")
-	if row = Write().QueryRow(p.m.Complete.Sql); row.Err() != nil {
+	if row = p.m.Write().QueryRow(p.m.Complete.Sql); row.Err() != nil {
 		return
 	}
 	return
@@ -105,7 +105,7 @@ func (p *proc) QueryRow() (row *sql.Row) {
 func (p *proc) Query() (rows *sql.Rows, err error) {
 	p = p.getSql()
 	p.m.debug("Query")
-	if rows, err = Write().Query(p.m.Complete.Sql); err != nil {
+	if rows, err = p.m.Write().Query(p.m.Complete.Sql); err != nil {
 		return
 	}
 	return
@@ -114,7 +114,7 @@ func (p *proc) Query() (rows *sql.Rows, err error) {
 func (mapper *Mapper) ProcQuery(procSql string, args ...any) (rows *sql.Rows, err error) {
 	mapper.Complete = SqlComplete{Sql: procSql, Args: args}
 	mapper.debug("ProcQuery")
-	if rows, err = Write().Query(procSql, args...); err != nil {
+	if rows, err = mapper.Write().Query(procSql, args...); err != nil {
 		return
 	}
 	return

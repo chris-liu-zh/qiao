@@ -22,7 +22,7 @@ func (mapper *Mapper) UpdateAffected(set any, args ...any) (affected int64, err 
 		return
 	}
 	mapper.debug("UpdateAffected")
-	if affected, err = Write().Affected(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if affected, err = mapper.Write().Affected(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return
@@ -38,7 +38,7 @@ func (mapper *Mapper) Update(data, params any, args ...any) (r sql.Result, err e
 		return
 	}
 	mapper.debug("Update")
-	if r, err = Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if r, err = mapper.Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return

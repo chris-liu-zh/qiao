@@ -57,7 +57,8 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 	return
 }
 
-func MysqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, err error) {
+func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
+	db := mapper.Write()
 	if db == nil {
 		return 0, ErrNoConn()
 	}
@@ -84,7 +85,8 @@ func MysqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, er
 	return
 }
 
-func PgsqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, err error) {
+func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
+	db := mapper.Write()
 	if db == nil {
 		return 0, ErrNoConn()
 	}
@@ -111,7 +113,8 @@ func PgsqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, er
 	return
 }
 
-func MssqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, err error) {
+func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
+	db := mapper.Write()
 	if db == nil {
 		return 0, ErrNoConn()
 	}
@@ -141,7 +144,7 @@ func MssqlAddReturnId(db *ConnDB, sqlStr string, arg ...any) (insertId int64, er
 func (mapper *Mapper) ExecSql(sql string) (r sql.Result, err error) {
 	mapper.Complete.Sql = sql
 	mapper.debug("ExecSql")
-	if r, err = Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if r, err = mapper.Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return
@@ -153,7 +156,7 @@ func (mapper *Mapper) Exec() (r sql.Result, err error) {
 		return
 	}
 	mapper.debug("Exec")
-	if r, err = Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if r, err = mapper.Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return

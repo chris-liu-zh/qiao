@@ -89,7 +89,7 @@ func (db *ConnDB) Count(sqlStr string, args ...any) (RowsCount int, err error) {
 // Query 直接查询sql语句
 func (mapper *Mapper) Query(sql string, args ...any) (rows *sql.Rows, err error) {
 	mapper.Complete = SqlComplete{Sql: sql, Args: args}
-	if rows, err = Read().Query(sql, args...); err != nil {
+	if rows, err = mapper.Read().Query(sql, args...); err != nil {
 		mapper.log(err.Error()).logERROR()
 		return
 	}
@@ -100,7 +100,7 @@ func (mapper *Mapper) Query(sql string, args ...any) (rows *sql.Rows, err error)
 // QueryRow 直接查询sql语句
 func (mapper *Mapper) QueryRow(sql string, args ...any) (row *sql.Row) {
 	mapper.Complete = SqlComplete{Sql: sql, Args: args}
-	if row = Read().QueryRow(sql, args...); row.Err() != nil {
+	if row = mapper.Read().QueryRow(sql, args...); row.Err() != nil {
 		mapper.log(row.Err().Error()).logERROR()
 		return
 	}

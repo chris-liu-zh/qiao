@@ -19,7 +19,7 @@ func (mapper *Mapper) Del() (r sql.Result, err error) {
 		return
 	}
 	mapper.debug("Del")
-	if r, err = Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if r, err = mapper.Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return
@@ -35,7 +35,7 @@ func (mapper *Mapper) DelAffected() (affected int64, err error) {
 		return
 	}
 	mapper.debug("DelAffected")
-	if affected, err = Write().Affected(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if affected, err = mapper.Write().Affected(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return

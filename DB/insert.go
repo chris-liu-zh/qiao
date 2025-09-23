@@ -30,7 +30,7 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 	v := reflect.ValueOf(data)
 	var field string
 	var l int
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		elem := v.Elem()
 		if elem.Kind() != reflect.Struct {
 			return mapper
@@ -72,7 +72,7 @@ func (mapper *Mapper) lastInsertId() (insertId int64, err error) {
 		return
 	}
 	mapper.debug("lastInsertId")
-	if insertId, err = Write().DBFunc.AddReturnId(Write(), mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if insertId, err = mapper.Write().DBFunc.AddReturnId(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return

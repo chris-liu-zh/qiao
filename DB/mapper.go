@@ -1,6 +1,7 @@
 package DB
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
@@ -15,6 +16,8 @@ const (
 
 type Mapper struct {
 	SqlTpl   string
+	Part     string
+	sqlRows  *sql.Rows
 	Debris   SqlDebris
 	Complete SqlComplete
 }
@@ -37,15 +40,30 @@ type SqlDebris struct {
 	join      string `tpl:"join"`
 }
 
-func QiaoDB(openDebug ...bool) *Mapper {
-	debug := false
-	for _, debug = range openDebug {
+type options func(*Mapper)
+
+func OptionsDebug(debug bool) options {
+	return func(m *Mapper) {
+		m.Complete.Debug = debug
 	}
-	return &Mapper{SqlTpl: Select, Complete: SqlComplete{Debug: debug}}
+}
+
+func OptionsDBPart(part string) options {
+	return func(m *Mapper) {
+		m.Part = part
+	}
+}
+
+func QiaoDB(opt ...options) *Mapper {
+	m := &Mapper{SqlTpl: Select}
+	for _, o := range opt {
+		o(m)
+	}
+	return m
 }
 
 func (mapper *Mapper) Begin() *Begin {
-	tx := Write().Begin()
+	tx := mapper.Write().Begin()
 	tx.Mapper = mapper
 	return tx
 }
@@ -137,5 +155,5 @@ Limit	设置分页
 	@page int;-- 当前页
 */
 func (mapper *Mapper) Limit(size, page int) *Mapper {
-	return Read().DBFunc.Page(mapper, size, page)
+	return mapper.Read().DBFunc.Page(mapper, size, page)
 }

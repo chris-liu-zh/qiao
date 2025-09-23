@@ -36,7 +36,7 @@ func (mapper *Mapper) Max(_struct any, field string) (max int, err error) {
 		return
 	}
 	mapper.debug("Max")
-	if max, err = Read().Count(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if max, err = mapper.Read().Count(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return
@@ -49,12 +49,10 @@ func (mapper *Mapper) GetRowMap() (data map[string]any, err error) {
 		return nil, err
 	}
 	mapper.debug("GetRowMap")
-	rows, err := Read().Query(mapper.Complete.Sql, mapper.Complete.Args...)
-	if err != nil {
+	if mapper.sqlRows, err = mapper.Read().Query(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	if data, err = ScanRowMap(rows); err != nil {
+	if data, err = mapper.ScanRowMap(); err != nil {
 		mapper.log(err.Error()).logERROR()
 		return
 	}
@@ -68,12 +66,10 @@ func (mapper *Mapper) GetListMap() (list []map[string]any, err error) {
 		return
 	}
 	mapper.debug("GetListMap")
-	rows, err := Read().Query(mapper.Complete.Sql, mapper.Complete.Args...)
-	if err != nil {
+	if mapper.sqlRows, err = mapper.Read().Query(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
-	defer rows.Close()
-	if list, err = ScanListMap(rows); err != nil {
+	if list, err = mapper.ScanListMap(); err != nil {
 		mapper.log(err.Error()).logERROR()
 		return
 	}
@@ -94,12 +90,10 @@ func (mapper *Mapper) Get(_struct any) (err error) {
 		return
 	}
 	mapper.debug("Get")
-	rows, err := Read().Query(mapper.Complete.Sql, mapper.Complete.Args...)
-	if err != nil {
+	if mapper.sqlRows, err = mapper.Read().Query(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
-	defer rows.Close()
-	if err = ScanRowStruct(rows, _struct); err != nil {
+	if err = mapper.ScanRowStruct(_struct); err != nil {
 		mapper.log(err.Error()).logERROR()
 		return
 	}
@@ -110,7 +104,7 @@ func (mapper *Mapper) Get(_struct any) (err error) {
 func (mapper *Mapper) GetList(_struct any) (err error) {
 
 	reflectT := reflect.TypeOf(_struct)
-	if reflectT.Kind() != reflect.Ptr {
+	if reflectT.Kind() != reflect.Pointer {
 		return ErrNotPtr
 	}
 	sliceType := reflectT.Elem()
@@ -142,11 +136,10 @@ func (mapper *Mapper) GetList(_struct any) (err error) {
 		return
 	}
 	mapper.debug("GetList")
-	rows, err := Read().Query(mapper.Complete.Sql, mapper.Complete.Args...)
-	if err != nil {
+	if mapper.sqlRows, err = mapper.Read().Query(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
-	if err = ScanListStruct(rows, _struct); err != nil {
+	if err = mapper.ScanListStruct(_struct); err != nil {
 		mapper.log(err.Error()).logERROR()
 		return
 	}
@@ -156,7 +149,7 @@ func (mapper *Mapper) GetList(_struct any) (err error) {
 
 func (mapper *Mapper) Count(_struct any, index string) (count int, err error) {
 	ReflectV := reflect.ValueOf(_struct)
-	if ReflectV.Kind() != reflect.Ptr {
+	if ReflectV.Kind() != reflect.Pointer {
 		return 0, ErrNotPtr
 	}
 	elem := ReflectV.Elem()
@@ -171,7 +164,7 @@ func (mapper *Mapper) Count(_struct any, index string) (count int, err error) {
 	}
 	mapper.Complete.Sql = fmt.Sprintf("select count(%s) from(%s) a", index, mapper.Complete.Sql)
 	mapper.debug("Count")
-	if count, err = Read().Count(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if count, err = mapper.Read().Count(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
 	return

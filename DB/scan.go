@@ -15,11 +15,11 @@ var (
 	ErrNotSlice  = errors.New("type is not reflect.Slice")
 )
 
-func ScanRowMap(Rows *sql.Rows) (row map[string]any, err error) {
+func (mapper *Mapper) ScanRowMap() (row map[string]any, err error) {
 	rlock.Lock()
 	defer rlock.Unlock()
-	defer Rows.Close()
-	columns, err := Rows.Columns()
+	defer mapper.sqlRows.Close()
+	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
 	}
@@ -28,29 +28,28 @@ func ScanRowMap(Rows *sql.Rows) (row map[string]any, err error) {
 	for i := range length {
 		pointer[i] = new(any)
 	}
-	if !Rows.Next() {
-		if err = Rows.Err(); err != nil {
+	if !mapper.sqlRows.Next() {
+		if err = mapper.sqlRows.Err(); err != nil {
 			return
 		}
 		return nil, sql.ErrNoRows
 	}
 
-	if err = Rows.Scan(pointer...); err != nil {
+	if err = mapper.sqlRows.Scan(pointer...); err != nil {
 		return
 	}
 	row = make(map[string]any)
 	for i := range length {
 		row[columns[i]] = *pointer[i].(*any)
 	}
-
 	return
 }
 
-func ScanRowStruct(Rows *sql.Rows, _struct any) (err error) {
+func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
 	rlock.Lock()
 	defer rlock.Unlock()
-	defer Rows.Close()
-	columns, err := Rows.Columns()
+	defer mapper.sqlRows.Close()
+	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
 	}
@@ -73,13 +72,13 @@ func ScanRowStruct(Rows *sql.Rows, _struct any) (err error) {
 		pointer[i] = elem.FieldByName(reflectT.Elem().Field(i).Name).Addr().Interface()
 	}
 
-	if !Rows.Next() {
-		if err = Rows.Err(); err != nil {
+	if !mapper.sqlRows.Next() {
+		if err = mapper.sqlRows.Err(); err != nil {
 			return
 		}
 		return sql.ErrNoRows
 	}
-	if err = Rows.Scan(pointer...); err != nil {
+	if err = mapper.sqlRows.Scan(pointer...); err != nil {
 		return
 	}
 	return
@@ -87,11 +86,11 @@ func ScanRowStruct(Rows *sql.Rows, _struct any) (err error) {
 
 //------GetList-----------------------------------------------------------------------------------------------//
 
-func ScanListMap(Rows *sql.Rows) (list []map[string]any, err error) {
+func (mapper *Mapper) ScanListMap() (list []map[string]any, err error) {
 	rlock.Lock()
 	defer rlock.Unlock()
-	defer Rows.Close()
-	columns, err := Rows.Columns()
+	defer mapper.sqlRows.Close()
+	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
 	}
@@ -100,9 +99,9 @@ func ScanListMap(Rows *sql.Rows) (list []map[string]any, err error) {
 	for i := range length {
 		pointer[i] = new(any)
 	}
-	for Rows.Next() {
+	for mapper.sqlRows.Next() {
 		row := make(map[string]any)
-		if err = Rows.Scan(pointer...); err == nil {
+		if err = mapper.sqlRows.Scan(pointer...); err == nil {
 			for i := range length {
 				row[columns[i]] = *pointer[i].(*any)
 			}
@@ -112,10 +111,10 @@ func ScanListMap(Rows *sql.Rows) (list []map[string]any, err error) {
 	return
 }
 
-func ScanListStruct(Rows *sql.Rows, _struct any) (err error) {
+func (mapper *Mapper) ScanListStruct(_struct any) (err error) {
 	rlock.Lock()
 	defer rlock.Unlock()
-	defer Rows.Close()
+	defer mapper.sqlRows.Close()
 
 	reflectT := reflect.TypeOf(_struct)
 	if reflectT.Kind() != reflect.Ptr {
@@ -123,12 +122,12 @@ func ScanListStruct(Rows *sql.Rows, _struct any) (err error) {
 	}
 	sliceVal := reflect.Indirect(reflect.ValueOf(_struct))
 	sliceItem := reflect.New(reflectT.Elem().Elem()).Elem()
-	columns, err := Rows.Columns()
+	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
 	}
 	length := len(columns)
-	for Rows.Next() {
+	for mapper.sqlRows.Next() {
 		pointer := make([]any, 0, length)
 		for i := range reflectT.Elem().Elem().NumField() {
 			columns := strings.Split(reflectT.Elem().Elem().Field(i).Tag.Get("db"), ";")
@@ -138,10 +137,10 @@ func ScanListStruct(Rows *sql.Rows, _struct any) (err error) {
 			}
 		}
 
-		if err = Rows.Scan(pointer...); err != nil {
+		if err = mapper.sqlRows.Scan(pointer...); err != nil {
 			return err
 		}
 		sliceVal.Set(reflect.Append(sliceVal, sliceItem))
 	}
-	return Rows.Err()
+	return mapper.sqlRows.Err()
 }

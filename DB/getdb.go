@@ -25,7 +25,7 @@ func GetMaster() *ConnDB {
 	return &Pool.Master.DBConn[id]
 }
 
-func Alone() *ConnDB {
+func alone() *ConnDB {
 	if Pool.Alone.PoolNum == 0 {
 		return nil
 	}
@@ -33,24 +33,24 @@ func Alone() *ConnDB {
 	return &Pool.Alone.DBConn[id]
 }
 
-func Read() *ConnDB {
+func (mapper *Mapper) Read() *ConnDB {
+	if mapper.Part == "alone" {
+		return alone()
+	}
 	if dbconn := GetSlave(); dbconn != nil {
 		return dbconn
 	}
-	if dbconn := GetMaster(); dbconn != nil {
-		return dbconn
-	}
-	return nil
+	return GetMaster()
 }
 
-func Write() *ConnDB {
+func (mapper *Mapper) Write() *ConnDB {
+	if mapper.Part == "alone" {
+		return alone()
+	}
 	if dbconn := GetMaster(); dbconn != nil {
 		return dbconn
 	}
-	if dbconn := GetSlave(); dbconn != nil {
-		return dbconn
-	}
-	return nil
+	return GetSlave()
 }
 
 func GetNewPool(part string) (conn *ConnDB) {

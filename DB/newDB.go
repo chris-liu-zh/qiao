@@ -71,7 +71,7 @@ type Return struct {
 
 type Page func(*Mapper, int, int) *Mapper
 
-type GetReturn func(*ConnDB, string, ...any) (int64, error)
+type GetReturn func(string, ...any) (int64, error)
 
 func PGpage(mapper *Mapper, size, page int) *Mapper {
 	mapper.SqlTpl = fmt.Sprintf(Select+"LIMIT %d OFFSET %d", size, page)
@@ -106,7 +106,7 @@ func (db DBNew) NewDB() (err error) {
 	case "pgsql":
 		conndb.Sign = "$"
 		conndb.DBFunc.Page = PGpage
-		conndb.DBFunc.AddReturnId = PgsqlAddReturnId
+		conndb.DBFunc.AddReturnId = QiaoDB().PgsqlAddReturnId
 		drive = "postgres"
 		if db.Dsn == "" {
 			conndb.Dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable connect_timeout=%d", db.Host, db.Port, db.User, db.Pwd, db.DBName, db.TimeOut)
@@ -114,7 +114,7 @@ func (db DBNew) NewDB() (err error) {
 	case "mysql":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
-		conndb.DBFunc.AddReturnId = MysqlAddReturnId
+		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
 		drive = "mysql"
 		if db.Dsn == "" {
 			conndb.Dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?timeout=%ds&parseTime=true&loc=Local", db.User, db.Pwd, db.Host, db.Port, db.DBName, db.TimeOut)
@@ -122,13 +122,13 @@ func (db DBNew) NewDB() (err error) {
 	case "sqlite":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
-		conndb.DBFunc.AddReturnId = MysqlAddReturnId
+		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
 		drive = "sqlite3"
 		conndb.Dsn = db.Dsn
 	case "mssql":
 		conndb.Sign = "@p"
 		conndb.DBFunc.Page = MSpage
-		conndb.DBFunc.AddReturnId = MssqlAddReturnId
+		conndb.DBFunc.AddReturnId = QiaoDB().MssqlAddReturnId
 		drive = "sqlserver"
 		if db.Dsn == "" {
 			conndb.Dsn = fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s&dial+timeout=%d&encrypt=disable&parseTime=true", db.User, db.Pwd, db.Host, db.Port, db.DBName, db.TimeOut)
@@ -171,7 +171,7 @@ func (db DBNew) NewDB() (err error) {
 	case "slave":
 		Pool.Slave.DBConn = append(Pool.Slave.DBConn, conndb)
 		Pool.Slave.PoolNum = len(Pool.Slave.DBConn)
-	case "alone":
+	default:
 		Pool.Alone.DBConn = append(Pool.Alone.DBConn, conndb)
 		Pool.Alone.PoolNum = len(Pool.Alone.DBConn)
 	}
