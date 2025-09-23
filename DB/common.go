@@ -21,7 +21,7 @@ struct转map
 */
 func Struct2Map(_struct any) (map[string]string, error) {
 	v := reflect.ValueOf(_struct)
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		return nil, ErrNotPtr
 	}
 	elem := v.Elem()

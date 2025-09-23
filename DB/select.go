@@ -79,7 +79,7 @@ func (mapper *Mapper) GetListMap() (list []map[string]any, err error) {
 // 获取单行struct数据
 func (mapper *Mapper) Get(_struct any) (err error) {
 	ReflectV := reflect.ValueOf(_struct)
-	if ReflectV.Kind() != reflect.Ptr {
+	if ReflectV.Kind() != reflect.Pointer {
 		return ErrNotPtr
 	}
 	elem := ReflectV.Elem()

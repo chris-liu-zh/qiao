@@ -49,7 +49,7 @@ func (mapper *Mapper) JoinFind(params any, args ...any) *Mapper {
 		return mapper.where(params.(string), args...)
 	}
 
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		return mapper
 	}
 

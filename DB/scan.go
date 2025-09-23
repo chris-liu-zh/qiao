@@ -10,7 +10,7 @@ import (
 
 var (
 	rlock        sync.RWMutex
-	ErrNotPtr    = errors.New("type is not reflect.Ptr")
+	ErrNotPtr    = errors.New("type is not reflect.Pointer")
 	ErrNotStruct = errors.New("type is not reflect.Struct")
 	ErrNotSlice  = errors.New("type is not reflect.Slice")
 )
@@ -57,7 +57,7 @@ func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
 	pointer := make([]any, length)
 
 	ReflectV := reflect.ValueOf(_struct)
-	if ReflectV.Kind() != reflect.Ptr {
+	if ReflectV.Kind() != reflect.Pointer {
 		return ErrNotPtr
 	}
 	elem := ReflectV.Elem()
@@ -65,7 +65,7 @@ func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
 		return ErrNotStruct
 	}
 	reflectT := reflect.TypeOf(_struct)
-	if reflectT.Kind() != reflect.Ptr {
+	if reflectT.Kind() != reflect.Pointer {
 		return ErrNotPtr
 	}
 	for i := range length {
@@ -117,7 +117,7 @@ func (mapper *Mapper) ScanListStruct(_struct any) (err error) {
 	defer mapper.sqlRows.Close()
 
 	reflectT := reflect.TypeOf(_struct)
-	if reflectT.Kind() != reflect.Ptr {
+	if reflectT.Kind() != reflect.Pointer {
 		return ErrNotPtr
 	}
 	sliceVal := reflect.Indirect(reflect.ValueOf(_struct))

@@ -18,7 +18,7 @@ func (mapper *Mapper) Find(params any, args ...any) *Mapper {
 		return mapper.whereMap(params.(map[string]any))
 	}
 
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		return mapper
 	}
 

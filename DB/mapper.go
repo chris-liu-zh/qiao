@@ -89,7 +89,7 @@ func (mapper *Mapper) Set(set any, args ...any) *Mapper {
 		return mapper
 	}
 
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		elem := v.Elem()
 		if mapper.Debris.table == "" {
 			mapper.Debris.table = CamelCaseToUdnderscore(elem.Type().Name())
