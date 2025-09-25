@@ -18,7 +18,6 @@ type Mapper struct {
 	SqlTpl   string
 	Part     string
 	sqlRows  *sql.Rows
-	sqlRow   *sql.Row
 	Debris   SqlDebris
 	Complete SqlComplete
 }
