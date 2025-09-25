@@ -11,32 +11,6 @@ import (
 	"database/sql"
 )
 
-func (db *ConnDB) QueryRow(sqlStr string, args ...any) (row *sql.Row) {
-	if db == nil {
-		return nil
-	}
-	query := Replace(sqlStr, "?", db.Sign)
-	db.log("QueryRow", query, args).logDEBUG()
-	if row = db.DBFunc.Conn.QueryRow(query, args...); row.Err() == nil {
-		return
-	}
-	db.log(row.Err().Error(), query, args).logERROR()
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-
-	if db = GetNewPool(db.Part); db == nil {
-		return nil
-	}
-
-	if row = db.DBFunc.Conn.QueryRow(query, args...); row.Err() == nil {
-		return
-	}
-	db.log(row.Err().Error(), query, args).logERROR()
-	return
-}
-
 func (db *ConnDB) Query(sqlStr string, args ...any) (rows *sql.Rows, err error) {
 	if db == nil {
 		return nil, ErrNoConn()
@@ -87,23 +61,25 @@ func (db *ConnDB) Count(sqlStr string, args ...any) (RowsCount int, err error) {
 }
 
 // Query 直接查询sql语句
-func (mapper *Mapper) Query(sql string, args ...any) (rows *sql.Rows, err error) {
+func (mapper *Mapper) Query(sql string, args ...any) (*Mapper, error) {
 	mapper.Complete = SqlComplete{Sql: sql, Args: args}
-	if rows, err = mapper.Read().Query(sql, args...); err != nil {
+	var err error
+	if mapper.sqlRows, err = mapper.Read().Query(sql, args...); err != nil {
 		mapper.log(err.Error()).logERROR()
-		return
+		return nil, err
 	}
 	mapper.debug("Query")
-	return
+	return mapper, nil
 }
 
 // QueryRow 直接查询sql语句
-func (mapper *Mapper) QueryRow(sql string, args ...any) (row *sql.Row) {
+func (mapper *Mapper) QueryRow(sql string, args ...any) (*Mapper, error) {
+	var err error
 	mapper.Complete = SqlComplete{Sql: sql, Args: args}
-	if row = mapper.Read().QueryRow(sql, args...); row.Err() != nil {
-		mapper.log(row.Err().Error()).logERROR()
-		return
+	if mapper.sqlRows, err = mapper.Read().Query(sql, args...); err != nil {
+		mapper.log(err.Error()).logERROR()
+		return nil, err
 	}
 	mapper.debug("QueryRow")
-	return
+	return mapper, nil
 }

@@ -93,15 +93,6 @@ func (p *proc) getSql() *proc {
 	return p
 }
 
-func (p *proc) QueryRow() (row *sql.Row) {
-	p = p.getSql()
-	p.m.debug("QueryRow")
-	if row = p.m.Write().QueryRow(p.m.Complete.Sql); row.Err() != nil {
-		return
-	}
-	return
-}
-
 func (p *proc) Query() (rows *sql.Rows, err error) {
 	p = p.getSql()
 	p.m.debug("Query")
