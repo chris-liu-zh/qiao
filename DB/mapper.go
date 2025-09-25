@@ -62,12 +62,6 @@ func QiaoDB(opt ...options) *Mapper {
 	return m
 }
 
-func (mapper *Mapper) Begin() *Begin {
-	tx := mapper.Write().Begin()
-	tx.Mapper = mapper
-	return tx
-}
-
 /*
 Set 设置
 
