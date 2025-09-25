@@ -13,10 +13,8 @@ import (
 
 type Begin struct {
 	Tx     *sql.Tx
-	Sign   string
-	Title  string
-	Part   string
 	Err    error
+	Title  string
 	Mapper *Mapper
 }
 
@@ -39,10 +37,7 @@ func (db *ConnDB) Begin() (begin *Begin) {
 		begin.Err = ErrNoConn()
 		return
 	}
-
-	begin.Sign = db.Sign
 	begin.Title = db.Title
-	begin.Part = db.Part
 	if begin.Tx, begin.Err = db.DBFunc.Conn.Begin(); begin.Err == nil {
 		return
 	}
@@ -69,8 +64,23 @@ func (tx *Begin) Exec() *Begin {
 		return tx
 	}
 	args := handleNull(tx.Mapper.Complete.Args...)
-	query := Replace(tx.Mapper.Complete.Sql, "?", tx.Sign)
+	query := Replace(tx.Mapper.Complete.Sql, "?", tx.Mapper.Debris.sign)
 	if _, tx.Err = tx.Tx.Exec(query, args...); tx.Err != nil {
+		if tx.Err = tx.Tx.Rollback(); tx.Err != nil {
+			return tx
+		}
+		return tx
+	}
+	return tx
+}
+
+func (tx *Begin) ExecSql(sqlStr string, args ...any) *Begin {
+	if tx.Err != nil {
+		return tx
+	}
+	beginArgs := handleNull(args...)
+	query := Replace(sqlStr, "?", tx.Mapper.Debris.sign)
+	if _, tx.Err = tx.Tx.Exec(query, beginArgs...); tx.Err != nil {
 		if tx.Err = tx.Tx.Rollback(); tx.Err != nil {
 			return tx
 		}
