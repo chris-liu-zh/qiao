@@ -9,6 +9,7 @@ package Http
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"time"
 )
@@ -25,35 +26,38 @@ func NewHttpServer(address string, router *RouterHandle) *H {
 	return &H{Addr: address, Router: router}
 }
 
-func (h *H) StartAutoTLS(domain string, cacheDir string, mail string) {
+func (h *H) StartTLS(tlsConfig *tls.Config) error {
 	h.Server = &http.Server{
 		Addr:      h.Addr,
 		Handler:   h.Router,
-		TLSConfig: GetTlsCert(domain, cacheDir, mail),
+		TLSConfig: tlsConfig,
 	}
 	h.Status = true
 	if err := h.Server.ListenAndServeTLS("", ""); err != nil {
 		h.Status = false
 		h.Err = err
 	}
+	return h.Err
 }
 
-func (h *H) StartTLS(certFile string, keyFile string) {
+func (h *H) StartFileTLS(certFile string, keyFile string) error {
 	h.Server = &http.Server{Addr: h.Addr, Handler: h.Router}
 	h.Status = true
 	if err := h.Server.ListenAndServeTLS(certFile, keyFile); err != nil {
 		h.Status = false
 		h.Err = err
 	}
+	return h.Err
 }
 
-func (h *H) Start() {
+func (h *H) Start() error {
 	h.Server = &http.Server{Addr: h.Addr, Handler: h.Router}
 	h.Status = true
 	if err := h.Server.ListenAndServe(); err != nil {
 		h.Status = false
 		h.Err = err
 	}
+	return h.Err
 }
 
 func (h *H) Stop() error {

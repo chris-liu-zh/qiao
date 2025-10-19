@@ -26,15 +26,6 @@ type Cache struct {
 	janitor         *janitor      // 清理过期项目的后台 goroutine
 }
 
-// newCacheWithJanitor 创建一个新的缓存实例，同时运行一个清理器 goroutine
-func (c *Cache) newCacheWithJanitor() (err error) {
-	if c.cleanupInterval > 0 {
-		c.runJanitor()                                // 运行清理器 goroutine
-		runtime.SetFinalizer(c, (*Cache).stopJanitor) // 设置清理器 goroutine 的最终izer
-	}
-	return
-}
-
 type Options func(*Cache)
 
 // WithDefaultExpiration 设置缓存项的默认过期时间
@@ -62,7 +53,7 @@ func WithCleanupInterval(interval int64) Options {
 }
 
 // New 创建一个新的缓存实例
-func New(opts ...Options) (*Cache, error) {
+func New(opts ...Options) *Cache {
 	c := &Cache{
 		expiration:      5 * time.Minute,
 		cleanupInterval: 5 * time.Minute,
@@ -73,11 +64,11 @@ func New(opts ...Options) (*Cache, error) {
 	if c.items == nil {
 		c.items = make(map[string]Item)
 	}
-
-	if err := c.newCacheWithJanitor(); err != nil {
-		return nil, err
+	if c.cleanupInterval > 0 {
+		c.runJanitor()                                // 运行清理器 goroutine
+		runtime.SetFinalizer(c, (*Cache).stopJanitor) // 设置清理器 goroutine 的最终izer
 	}
-	return c, nil
+	return c
 }
 
 func gobDecode(data []byte, valType any) error {

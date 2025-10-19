@@ -20,6 +20,4 @@ func DefaultHeader(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization,Timestamp,Sign,Appkey")
 	//允许请求方法
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	//返回数据格式是json
-	// w.Header().Set("content-type", "application/json;charset=UTF-8")
 }

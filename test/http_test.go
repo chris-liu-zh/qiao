@@ -64,9 +64,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 		Public string `json:"public"`
 	}
 	data.Public = "public"
-	// Http.Success(data).Json(w)
 	json.NewEncoder(w).Encode(data)
-	// Http.Html(w, "template/index", data)
 }
 
 func onEvicted(w http.ResponseWriter, r *http.Request) {

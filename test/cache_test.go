@@ -10,11 +10,7 @@ import (
 
 func Test_Cache(t *testing.T) {
 	fmt.Println("start1111")
-	kv, err := cache.New()
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
+	kv := cache.New()
 	start := time.Now()
 	for i := range 100000 {
 		key := fmt.Sprintf("key%05d", i)

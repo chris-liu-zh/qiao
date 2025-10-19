@@ -3,7 +3,6 @@ package jwt
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -197,8 +196,5 @@ func GetInvalidToken(id string) bool {
 var kvdb *cache.Cache
 
 func init() {
-	var err error
-	if kvdb, err = cache.New(); err != nil {
-		log.Panic(err)
-	}
+	kvdb = cache.New()
 }

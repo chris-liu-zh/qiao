@@ -66,7 +66,9 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lw := &logResponseWriter{ResponseWriter: w}
-	router.m.setHeader(lw)
+	if router.m.setHeader != nil {
+		router.m.setHeader(lw)
+	}
 	if r.Method == "OPTIONS" {
 		return
 	}
