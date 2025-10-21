@@ -24,6 +24,7 @@ type DefaultToken struct {
 var (
 	authList          = make(map[string]*Auth)         // 认证列表
 	ErrIssuerNotExist = errors.New("issuer not exist") // 发行者不存在
+	ErrIssuerExist    = errors.New("issuer exist")     // 发行者已存在
 )
 
 type ClaimsOption func(*DefaultClaims)
@@ -54,7 +55,7 @@ func getNumericDate(exp time.Duration) *NumericDate {
 
 func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) error {
 	if _, ok := authList[issuer]; ok {
-		return ErrIssuerNotExist
+		return ErrIssuerExist
 	}
 	authList[issuer] = &Auth{
 		issuer:     issuer,
