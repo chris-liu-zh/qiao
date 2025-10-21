@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/chris-liu-zh/qiao"
-	"github.com/chris-liu-zh/qiao/cache"
 )
 
 type Auth struct {
@@ -121,9 +120,9 @@ func CheckToken(issuer, token string, userinfo any) error {
 		if err := VerifyToken(token, c, auth.key); err != nil {
 			return err
 		}
-		if GetInvalidToken(c.ID) {
-			return ErrTokenRevoked
-		}
+		// if GetInvalidToken(c.ID) {
+		// 	return ErrTokenRevoked
+		// }
 		if c.Issuer != auth.issuer {
 			return ErrTokenInvalidIssuer
 		}
@@ -138,9 +137,9 @@ func GetClaims(issuer, token string) (claims *DefaultClaims, err error) {
 		if err = VerifyToken(token, claims, auth.key); err != nil {
 			return
 		}
-		if GetInvalidToken(claims.ID) {
-			return nil, ErrTokenRevoked
-		}
+		// if GetInvalidToken(claims.ID) {
+		// 	return nil, ErrTokenRevoked
+		// }
 		return
 	}
 	return nil, ErrIssuerNotExist
@@ -178,23 +177,17 @@ func RefreshToken(issuer, accessToken, refreshToken string) (t DefaultToken, err
 }
 
 // SetInvalidToken 将Token设置为无效
-func SetInvalidToken(issuer, tokenStr string) error {
-	claims, err := GetClaims(issuer, tokenStr)
-	if err != nil {
-		return err
-	}
-	return kvdb.Put(claims.ID, "", claims.ExpiresAt.UnixNano())
-}
+// func SetInvalidToken(issuer, tokenStr string) error {
+// 	claims, err := GetClaims(issuer, tokenStr)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return kvdb.Put(claims.ID, "", claims.ExpiresAt.UnixNano())
+// }
 
-func GetInvalidToken(id string) bool {
-	if _, err := kvdb.Get(id).String(); err != nil {
-		return false
-	}
-	return true
-}
-
-var kvdb *cache.Cache
-
-func init() {
-	kvdb = cache.New()
-}
+// func GetInvalidToken(id string) bool {
+// 	if _, err := kvdb.Get(id).String(); err != nil {
+// 		return false
+// 	}
+// 	return true
+// }
