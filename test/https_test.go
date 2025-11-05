@@ -75,7 +75,7 @@ func Test_Https(t *testing.T) {
 	}
 	r := Http.NewRouter()
 	r.Get("/version", GetVersion)
-	tlsconfig, err := Http.DNS01Challenge(dnsProvider, config.Domains, config.Email, config.CacheDir, "02:00")
+	tlsconfig, err := Http.DNS01Challenge(dnsProvider, config.Domains, config.CacheDir, config.Email, "02:00")
 	if err != nil {
 		t.Fatalf("创建TLS配置失败: %v", err)
 	}

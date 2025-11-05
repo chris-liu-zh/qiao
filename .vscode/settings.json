@@ -1,6 +1,0 @@
-{
-    "idf.port": "/dev/tty.usbserial-A5069RR4",
-    "idf.openOcdConfigs": [
-        "board/esp32s3-builtin.cfg"
-    ]
-}

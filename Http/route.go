@@ -87,7 +87,6 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			TokenExpire().WriteJson(lw)
-			LogError(r, lw.status, lw.bytesWritten, lw.msg)
 			return
 		}
 		AuthFail().WriteJson(lw)
@@ -124,6 +123,26 @@ func (router *RouterHandle) Get(path string, handler http.HandlerFunc) {
 
 func (router *RouterHandle) Post(path string, handler http.HandlerFunc) {
 	router.mux.HandleFunc(fmt.Sprintf("POST %s", path), handler)
+}
+
+func (router *RouterHandle) Put(path string, handler http.HandlerFunc) {
+	router.mux.HandleFunc(fmt.Sprintf("PUT %s", path), handler)
+}
+
+func (router *RouterHandle) Delete(path string, handler http.HandlerFunc) {
+	router.mux.HandleFunc(fmt.Sprintf("DELETE %s", path), handler)
+}
+
+func (router *RouterHandle) Patch(path string, handler http.HandlerFunc) {
+	router.mux.HandleFunc(fmt.Sprintf("PATCH %s", path), handler)
+}
+
+func (router *RouterHandle) Head(path string, handler http.HandlerFunc) {
+	router.mux.HandleFunc(fmt.Sprintf("HEAD %s", path), handler)
+}
+
+func (router *RouterHandle) Options(path string, handler http.HandlerFunc) {
+	router.mux.HandleFunc(fmt.Sprintf("OPTIONS %s", path), handler)
 }
 
 // 文件服务路由

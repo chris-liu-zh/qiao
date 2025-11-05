@@ -4,3 +4,89 @@ GET http://127.0.0.1:8080/ HTTP/1.1
 ###/users/{id}
 
 GET http://127.0.0.1:8080/users/1 HTTP/1.1
+###
+# HTTP方法测试 - 新添加的PUT、DELETE、PATCH、HEAD、OPTIONS方法
+
+# GET请求测试
+GET http://127.0.0.1:8081/test/get HTTP/1.1
+
+###
+# POST请求测试
+POST http://127.0.0.1:8081/test/post HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Test User",
+  "message": "Creating new resource"
+}
+
+###
+# PUT请求测试 - 更新资源
+PUT http://127.0.0.1:8081/test/put/123 HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Updated User",
+  "message": "Updating resource"
+}
+
+###
+# DELETE请求测试 - 删除资源
+DELETE http://127.0.0.1:8081/test/delete/123 HTTP/1.1
+
+###
+# PATCH请求测试 - 部分更新资源
+PATCH http://127.0.0.1:8081/test/patch/123 HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Partially Updated User"
+}
+
+###
+# HEAD请求测试
+HEAD http://127.0.0.1:8081/test/head HTTP/1.1
+
+###
+# OPTIONS请求测试
+OPTIONS http://127.0.0.1:8081/test/options HTTP/1.1
+
+###
+# 统一资源测试 - 测试所有HTTP方法
+GET http://127.0.0.1:8082/api/resource HTTP/1.1
+
+###
+POST http://127.0.0.1:8082/api/resource HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Test Resource"
+}
+
+###
+PUT http://127.0.0.1:8082/api/resource/456 HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": 456,
+  "name": "Updated Resource"
+}
+
+###
+DELETE http://127.0.0.1:8082/api/resource/456 HTTP/1.1
+
+###
+PATCH http://127.0.0.1:8082/api/resource/456 HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Partially Updated"
+}
+
+###
+HEAD http://127.0.0.1:8082/api/resource HTTP/1.1
+
+###
+OPTIONS http://127.0.0.1:8082/api/resource HTTP/1.1

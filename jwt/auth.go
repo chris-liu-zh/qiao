@@ -176,19 +176,3 @@ func RefreshToken(issuer, accessToken, refreshToken string) (t DefaultToken, err
 		RefreshToken: refreshToken,
 	}, nil
 }
-
-// SetInvalidToken 将Token设置为无效
-// func SetInvalidToken(issuer, tokenStr string) error {
-// 	claims, err := GetClaims(issuer, tokenStr)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return kvdb.Put(claims.ID, "", claims.ExpiresAt.UnixNano())
-// }
-
-// func GetInvalidToken(id string) bool {
-// 	if _, err := kvdb.Get(id).String(); err != nil {
-// 		return false
-// 	}
-// 	return true
-// }
