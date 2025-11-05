@@ -8,16 +8,15 @@
 package Http
 
 import (
-	"bytes"
 	"net/http"
 	"sync"
 )
 
 type timeoutWriter struct {
-	w      http.ResponseWriter
-	h      http.Header
-	wbuf   bytes.Buffer
-	req    *http.Request
+	w http.ResponseWriter
+	h http.Header
+	// wbuf   bytes.Buffer
+	// req    *http.Request
 	code   int
 	mu     sync.Mutex
 	closed bool

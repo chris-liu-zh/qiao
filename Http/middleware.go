@@ -71,9 +71,9 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	r = r.WithContext(ctx)
 	done := make(chan struct{})
 	tw := &timeoutWriter{
-		w:    w,
-		h:    w.Header(),
-		req:  r,
+		w: w,
+		h: w.Header(),
+		// req:  r,
 		code: http.StatusOK,
 	}
 	go func() {
