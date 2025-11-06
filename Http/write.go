@@ -25,6 +25,10 @@ func Success(data any) *Response {
 	return &Response{Code: http.StatusOK, Message: "ok", Data: data, Success: true}
 }
 
+func Forbidden(message string) *Response {
+	return &Response{Code: http.StatusForbidden, Message: message, Debug: nil}
+}
+
 func Fail(message string, err error) *Response {
 	if err == nil {
 		return &Response{Code: http.StatusNotFound, Message: message}
