@@ -67,14 +67,14 @@ func home(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func onEvicted(w http.ResponseWriter, r *http.Request) {
+func onEvicted(w http.ResponseWriter, r *http.Request) bool {
 	h := Http.GetHeader(r)
 	if r.URL.Path == "/logout" {
 		if token, ok := h["Authorization"]; ok {
-			//Http.SetInvalidToken(token)
 			fmt.Println(token)
 		}
 	}
+	return false
 }
 
 func setContest(r *http.Request) *http.Request {

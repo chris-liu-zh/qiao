@@ -24,7 +24,7 @@ type RouterHandle struct {
 	timeout   time.Duration
 	ctx       context.Context
 	mux       *http.ServeMux
-	onEvicted func(http.ResponseWriter, *http.Request)
+	onEvicted func(http.ResponseWriter, *http.Request) bool
 }
 
 type CtxKey string
@@ -62,7 +62,9 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		router.Next = http.DefaultServeMux
 	}
 	if router.onEvicted != nil {
-		router.onEvicted(w, r)
+		if router.onEvicted(w, r) {
+			return
+		}
 	}
 
 	lw := &logResponseWriter{ResponseWriter: w}
@@ -158,7 +160,7 @@ func (router *RouterHandle) FilesServer(path, dir string) {
 	})
 }
 
-func (router *RouterHandle) SetOnEvicted(f func(http.ResponseWriter, *http.Request)) {
+func (router *RouterHandle) SetOnEvicted(f func(http.ResponseWriter, *http.Request) bool) {
 	router.onEvicted = f
 }
 
