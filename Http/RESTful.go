@@ -20,7 +20,7 @@ type Response struct {
 	Success bool   `json:"success"`
 }
 
-func Success(w http.ResponseWriter, data ...any) {
+func Success(w http.ResponseWriter, data any) {
 	WriteJson(w, http.StatusOK, "ok", data)
 }
 
