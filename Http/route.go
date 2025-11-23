@@ -9,13 +9,10 @@ package Http
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"time"
-
-	"github.com/chris-liu-zh/qiao/jwt"
 )
 
 type RouterHandle struct {
@@ -87,10 +84,6 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	key, userinfo, err := router.m.auth(r.URL.Path, header)
 	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			NotFound(lw)
-			return
-		}
 		Unauthorized(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
