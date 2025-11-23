@@ -55,7 +55,7 @@ func HandleGet(w http.ResponseWriter, r *http.Request) {
 func HandlePost(w http.ResponseWriter, r *http.Request) {
 	var requestData TestData
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		Http.BadRequest(w)
+		Http.BadRequest(w, " Invalid JSON data")
 		return
 	}
 
@@ -73,7 +73,7 @@ func HandlePut(w http.ResponseWriter, r *http.Request) {
 
 	var requestData TestData
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		Http.BadRequest(w)
+		Http.BadRequest(w, " Invalid JSON data")
 		return
 	}
 
@@ -101,7 +101,7 @@ func HandlePatch(w http.ResponseWriter, r *http.Request) {
 
 	var requestData map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		Http.BadRequest(w)
+		Http.BadRequest(w, " Invalid JSON data")
 		return
 	}
 

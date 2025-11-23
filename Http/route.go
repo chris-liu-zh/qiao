@@ -72,19 +72,19 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, pattern := router.mux.Handler(r); pattern == "" {
-		NotFound(lw)
+		NotFound(lw, " Not Found")
 		return
 	}
 	header := GetHeader(r)
 	if err := router.m.sign(r.URL.Path, header); err != nil {
-		NotFound(lw)
+		NotFound(lw, "signature verification failed: "+err.Error())
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}
 
 	key, userinfo, err := router.m.auth(r.URL.Path, header)
 	if err != nil {
-		Unauthorized(lw)
+		Unauthorized(lw, err.Error())
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}
@@ -109,16 +109,6 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 	} else {
 		LogAccess(r, lw.status, lw.bytesWritten)
-	}
-}
-
-func Authorization(menuName string, authFunc func(r *http.Request, menuName string) bool, handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !authFunc(r, menuName) {
-			Forbidden(w)
-			return
-		}
-		handler(w, r)
 	}
 }
 

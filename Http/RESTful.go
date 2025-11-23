@@ -20,28 +20,28 @@ type Response struct {
 	Success bool   `json:"success"`
 }
 
-func Success(w http.ResponseWriter, data any) {
+func Success(w http.ResponseWriter, data ...any) {
 	WriteJson(w, http.StatusOK, "ok", data)
 }
 
-func BadRequest(w http.ResponseWriter) {
-	WriteJson(w, http.StatusBadRequest, "Bad Request", nil)
+func BadRequest(w http.ResponseWriter, msg string) {
+	WriteJson(w, http.StatusBadRequest, msg, nil)
 }
 
-func Forbidden(w http.ResponseWriter) {
-	WriteJson(w, http.StatusForbidden, "Forbidden", nil)
+func Forbidden(w http.ResponseWriter, msg string) {
+	WriteJson(w, http.StatusForbidden, msg, nil)
 }
 
-func NotFound(w http.ResponseWriter) {
-	WriteJson(w, http.StatusNotFound, "Not Found", nil)
+func NotFound(w http.ResponseWriter, msg string) {
+	WriteJson(w, http.StatusNotFound, msg, nil)
 }
 
 func TimeoutFail(w http.ResponseWriter) {
 	WriteJson(w, http.StatusRequestTimeout, "Request timeout", nil)
 }
 
-func Unauthorized(w http.ResponseWriter) {
-	WriteJson(w, http.StatusUnauthorized, "Unauthorized", nil)
+func Unauthorized(w http.ResponseWriter, msg string) {
+	WriteJson(w, http.StatusUnauthorized, msg, nil)
 }
 
 func WriteJson(w http.ResponseWriter, code int, message string, data any) {
