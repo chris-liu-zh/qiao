@@ -48,14 +48,14 @@ func HandleGet(w http.ResponseWriter, r *http.Request) {
 		Name:    "GET Test",
 		Message: "This is a GET request test",
 	}
-	Http.SuccessJson(w, data)
+	Http.Success(w, data)
 }
 
 // POST请求处理
 func HandlePost(w http.ResponseWriter, r *http.Request) {
 	var requestData TestData
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		Http.Fail("Invalid JSON", nil).WriteJson(w)
+		Http.BadRequest(w)
 		return
 	}
 
@@ -64,7 +64,7 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 		Name:    requestData.Name,
 		Message: "Data created successfully",
 	}
-	Http.SuccessJson(w, responseData)
+	Http.Success(w, responseData)
 }
 
 // PUT请求处理 - 更新资源
@@ -73,7 +73,7 @@ func HandlePut(w http.ResponseWriter, r *http.Request) {
 
 	var requestData TestData
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		Http.Fail("Invalid JSON", nil).WriteJson(w)
+		Http.BadRequest(w)
 		return
 	}
 
@@ -82,7 +82,7 @@ func HandlePut(w http.ResponseWriter, r *http.Request) {
 		Name:    requestData.Name,
 		Message: fmt.Sprintf("Resource with ID %s updated successfully", id),
 	}
-	Http.SuccessJson(w, responseData)
+	Http.Success(w, responseData)
 }
 
 // DELETE请求处理 - 删除资源
@@ -92,7 +92,7 @@ func HandleDelete(w http.ResponseWriter, r *http.Request) {
 	responseData := map[string]string{
 		"message": fmt.Sprintf("Resource with ID %s deleted successfully", id),
 	}
-	Http.SuccessJson(w, responseData)
+	Http.Success(w, responseData)
 }
 
 // PATCH请求处理 - 部分更新资源
@@ -101,7 +101,7 @@ func HandlePatch(w http.ResponseWriter, r *http.Request) {
 
 	var requestData map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		Http.Fail("Invalid JSON", nil).WriteJson(w)
+		Http.BadRequest(w)
 		return
 	}
 
@@ -110,7 +110,7 @@ func HandlePatch(w http.ResponseWriter, r *http.Request) {
 		"message":        "Resource partially updated successfully",
 		"updated_fields": requestData,
 	}
-	Http.SuccessJson(w, responseData)
+	Http.Success(w, responseData)
 }
 
 // HEAD请求处理 - 返回头部信息
@@ -169,5 +169,5 @@ func HandleResource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Http.SuccessJson(w, response)
+	Http.Success(w, response)
 }

@@ -68,20 +68,20 @@ func Test_TokenAuth(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	fmt.Println(token.AccessToken)
+	fmt.Println(token.Token)
 	fmt.Println(token.RefreshToken)
 
 	time.Sleep(ATExp)
 	//at := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkiLCJleHAiOiIyMDI1LTA4LTA3VDIzOjQwOjA4KzA4OjAwIiwidXNlcl9pbmZvIjp7InVpZCI6MSwidXNlcm5hbWUiOiIxMjMifX0.k7etCPO8ZdItPMK-_gkX0ooJGjfyEh770LCuhrcmDWk"
-	token, err = jwt.RefreshToken("api", token.AccessToken, token.RefreshToken)
+	token, err = jwt.RefreshToken("api", token.Token, token.RefreshToken)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	fmt.Println(token.AccessToken)
+	fmt.Println(token.Token)
 	fmt.Println(token.RefreshToken)
 	getData := Userdata{}
-	if err = jwt.CheckToken("api", token.AccessToken, &getData); err != nil {
+	if err = jwt.CheckToken("api", token.Token, &getData); err != nil {
 		t.Error(err)
 		return
 	}

@@ -75,12 +75,12 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, pattern := router.mux.Handler(r); pattern == "" {
-		Fail("404 Not Found", nil).WriteJson(lw)
+		NotFound(lw)
 		return
 	}
 	header := GetHeader(r)
 	if err := router.m.sign(r.URL.Path, header); err != nil {
-		SignFail().WriteJson(lw)
+		NotFound(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}
@@ -88,10 +88,10 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	key, userinfo, err := router.m.auth(r.URL.Path, header)
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			TokenExpire().WriteJson(lw)
+			NotFound(lw)
 			return
 		}
-		AuthFail().WriteJson(lw)
+		Unauthorized(lw)
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}
@@ -116,6 +116,16 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 	} else {
 		LogAccess(r, lw.status, lw.bytesWritten)
+	}
+}
+
+func Authorization(menuName string, authFunc func(r *http.Request, menuName string) bool, handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !authFunc(r, menuName) {
+			Forbidden(w)
+			return
+		}
+		handler(w, r)
 	}
 }
 

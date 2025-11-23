@@ -17,8 +17,8 @@ type Auth struct {
 }
 
 type DefaultToken struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken,omitempty"`
 }
 
 var (
@@ -96,7 +96,7 @@ func CreateToken(issuer string, claimsOption ...ClaimsOption) (t DefaultToken, e
 		for _, option := range claimsOption {
 			option(&ac)
 		}
-		t.AccessToken, err = NewToken(SignMethodHS256, ac).Sign(auth.key)
+		t.Token, err = NewToken(SignMethodHS256, ac).Sign(auth.key)
 		if err != nil {
 			return
 		}
@@ -138,9 +138,6 @@ func GetClaims(issuer, token string) (claims *DefaultClaims, err error) {
 		if err = VerifyToken(token, claims, auth.key); err != nil {
 			return
 		}
-		// if GetInvalidToken(claims.ID) {
-		// 	return nil, ErrTokenRevoked
-		// }
 		return
 	}
 	return nil, ErrIssuerNotExist
@@ -161,7 +158,7 @@ func RefreshToken(issuer, accessToken, refreshToken string) (t DefaultToken, err
 			auth := authList[issuer]
 			accessClaims.ExpiresAt = getNumericDate(auth.accessExp)
 			refreshClaims.ExpiresAt = getNumericDate(auth.refreshExp)
-			if t.AccessToken, err = NewToken(SignMethodHS256, accessClaims).Sign(auth.key); err != nil {
+			if t.Token, err = NewToken(SignMethodHS256, accessClaims).Sign(auth.key); err != nil {
 				return t, err
 			}
 			if t.RefreshToken, err = NewToken(SignMethodHS256, refreshClaims).Sign(auth.key); err != nil {
@@ -172,7 +169,7 @@ func RefreshToken(issuer, accessToken, refreshToken string) (t DefaultToken, err
 		return t, err
 	}
 	return DefaultToken{
-		AccessToken:  accessToken,
+		Token:        accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
