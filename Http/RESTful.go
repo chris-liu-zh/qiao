@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-type Response struct {
+type RESTful struct {
 	Code    int    `json:"code"`
 	Message string `json:"msg"`
 	Data    any    `json:"data,omitempty"`
@@ -22,6 +22,10 @@ type Response struct {
 
 func Success(w http.ResponseWriter, data any) {
 	WriteJson(w, http.StatusOK, "ok", data)
+}
+
+func Error(w http.ResponseWriter, code int, message string) {
+	WriteJson(w, code, message, nil)
 }
 
 func BadRequest(w http.ResponseWriter, msg string) {
@@ -47,7 +51,7 @@ func Unauthorized(w http.ResponseWriter, msg string) {
 func WriteJson(w http.ResponseWriter, code int, message string, data any) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(code)
-	r := &Response{Code: code, Message: message, Data: data}
+	r := &RESTful{Code: code, Message: message, Data: data}
 	if code == http.StatusOK {
 		r.Success = true
 	}
