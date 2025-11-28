@@ -52,28 +52,6 @@ func (mapper *Mapper) where(where string, args ...any) *Mapper {
 	return mapper
 }
 
-/*
-WhereIn in查询
-
-	field string; --字段名称
-	params Slice; --切片
-*/
-// func (mapper *Mapper) WhereIn(field string, params any) *Mapper {
-// 	if reflect.TypeOf(params).Kind() != reflect.Slice {
-// 		return mapper
-// 	}
-// 	s := reflect.ValueOf(params)
-// 	l := s.Len()
-// 	if l == 0 {
-// 		return mapper
-// 	}
-// 	for i := 0; i < s.Len(); i++ {
-// 		mapper.Complete.Args = append(mapper.Complete.Args, s.Index(i).Interface())
-// 	}
-// 	query := fmt.Sprintf(" %s in (%s)", field, placeholders(l))
-// 	return mapper.where(query)
-// }
-
 func (mapper *Mapper) whereStruct(elem reflect.Value) *Mapper {
 	var fields string
 	var args []any
