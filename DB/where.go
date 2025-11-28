@@ -156,11 +156,25 @@ func getfind(column, find string, val any) (where string, args []any) {
 		}
 		where = fmt.Sprintf("%s between  ? and ?  ", column)
 		return
-	case strings.Contains(find, "like"):
+	case find == "like":
 		if val == "%" || val == "" || val == "%%" {
 			return
 		}
-		args = append(args, val)
+		args = append(args, fmt.Sprintf("%%%s%%", val))
+		where = fmt.Sprintf("%s like ? ", column)
+		return
+	case find == "likeLeft":
+		if val == "%" || val == "" || val == "%%" {
+			return
+		}
+		args = append(args, fmt.Sprintf("%s%%", val))
+		where = fmt.Sprintf("%s like ? ", column)
+		return
+	case find == "likeRight":
+		if val == "%" || val == "" || val == "%%" {
+			return
+		}
+		args = append(args, fmt.Sprintf("%%%s", val))
 		where = fmt.Sprintf("%s like ? ", column)
 		return
 	default:
