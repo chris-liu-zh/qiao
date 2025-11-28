@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/chris-liu-zh/qiao"
 )
 
 func (mapper *Mapper) Find(params any, args ...any) *Mapper {
@@ -82,7 +84,7 @@ func (mapper *Mapper) whereStruct(elem reflect.Value) *Mapper {
 		if exclude == fmt.Sprintf("%v", elem.Field(i).Interface()) {
 			continue
 		}
-		column := CamelCaseToUdnderscore(elem.Type().Field(i).Name)
+		column := qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name)
 		field, arg := getfind(column, find, elem.Field(i).Interface())
 		if field == "" {
 			continue
@@ -113,7 +115,7 @@ func (mapper *Mapper) whereMap(params map[string]any) *Mapper {
 		if len(column) > 1 {
 			find = column[1]
 		}
-		field, arg := getfind(CamelCaseToUdnderscore(column[0]), find, v)
+		field, arg := getfind(qiao.CamelCaseToUdnderscore(column[0]), find, v)
 		fields += fmt.Sprintf(" %s", field)
 
 		args = append(args, arg...)

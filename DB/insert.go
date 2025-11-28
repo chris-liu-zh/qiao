@@ -11,6 +11,8 @@ import (
 	"database/sql"
 	"reflect"
 	"strings"
+
+	"github.com/chris-liu-zh/qiao"
 )
 
 var Insert = "INSERT INTO ${table}(${field})VALUES (${sign})"
@@ -36,7 +38,7 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 			return mapper
 		}
 		if mapper.Debris.table == "" {
-			mapper.Debris.table = CamelCaseToUdnderscore(elem.Type().Name())
+			mapper.Debris.table = qiao.CamelCaseToUdnderscore(elem.Type().Name())
 		}
 		for i := range elem.NumField() {
 			fields := strings.Split(elem.Type().Field(i).Tag.Get("db"), ";")
@@ -44,7 +46,7 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 				if c := getColumn(fields); c != "" {
 					field += c + `,`
 				} else {
-					field += CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`
+					field += qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`
 				}
 
 				mapper.Complete.Args = append(mapper.Complete.Args, elem.Field(i).Interface())
@@ -55,7 +57,7 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 
 	if v.Kind() == reflect.Map {
 		for k, v := range data.(map[string]any) {
-			field += CamelCaseToUdnderscore(k) + `,`
+			field += qiao.CamelCaseToUdnderscore(k) + `,`
 			mapper.Complete.Args = append(mapper.Complete.Args, v)
 		}
 	}
