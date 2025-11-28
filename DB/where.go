@@ -57,17 +57,34 @@ func (mapper *Mapper) whereStruct(elem reflect.Value) *Mapper {
 	var args []any
 	var next string
 	for i := range elem.NumField() {
-		find := elem.Type().Field(i).Tag.Get("find")
-		exclude := elem.Type().Field(i).Tag.Get("ignore")
-		if exclude == fmt.Sprintf("%v", elem.Field(i).Interface()) {
+		finds := elem.Type().Field(i).Tag.Get("find")
+		if finds == "~" {
 			continue
 		}
-		column := qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name)
+		findSplit := strings.Split(finds, ",")
+		find := findSplit[0]
+		var column string
+		switch len(findSplit) {
+		case 2:
+			column = findSplit[1]
+		case 3:
+			next = findSplit[2]
+		}
+		if column == "" {
+			column = qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name)
+		}
+
+		ignore := elem.Type().Field(i).Tag.Get("ignore")
+		if ignore == fmt.Sprintf("%v", elem.Field(i).Interface()) {
+			continue
+		}
+
 		field, arg := getfind(column, find, elem.Field(i).Interface())
 		if field == "" {
 			continue
 		}
-		if next = elem.Type().Field(i).Tag.Get("next"); next == "" {
+
+		if next == "" {
 			next = "and"
 		}
 		next = strings.TrimSpace(next)
