@@ -52,9 +52,12 @@ func Unauthorized(w http.ResponseWriter, msg string, debug ...any) {
 func WriteJson(w http.ResponseWriter, code int, message string, data any, debug ...any) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(code)
-	r := &RESTful{Code: code, Message: message, Data: data, Debug: debug}
+	r := &RESTful{Code: code, Message: message, Data: data}
 	if code <= 400 {
 		r.Success = true
+	}
+	if len(debug) > 0 {
+		r.Debug = debug
 	}
 	json.NewEncoder(w).Encode(r)
 }
