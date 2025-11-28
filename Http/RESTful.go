@@ -17,42 +17,43 @@ type RESTful struct {
 	Code    int    `json:"code"`
 	Message string `json:"msg"`
 	Data    any    `json:"data,omitempty"`
+	Debug   any    `json:"debug,omitempty"`
 	Success bool   `json:"success"`
 }
 
-func Success(w http.ResponseWriter, data any) {
-	WriteJson(w, http.StatusOK, "ok", data)
+func Success(w http.ResponseWriter, data any, debug ...any) {
+	WriteJson(w, http.StatusOK, "ok", data, debug)
 }
 
-func Error(w http.ResponseWriter, code int, message string) {
-	WriteJson(w, code, message, nil)
+func Error(w http.ResponseWriter, code int, message string, debug ...any) {
+	WriteJson(w, code, message, nil, debug)
 }
 
-func BadRequest(w http.ResponseWriter, msg string) {
-	WriteJson(w, http.StatusBadRequest, msg, nil)
+func BadRequest(w http.ResponseWriter, msg string, debug ...any) {
+	WriteJson(w, http.StatusBadRequest, msg, nil, debug)
 }
 
-func Forbidden(w http.ResponseWriter, msg string) {
-	WriteJson(w, http.StatusForbidden, msg, nil)
+func Forbidden(w http.ResponseWriter, msg string, debug ...any) {
+	WriteJson(w, http.StatusForbidden, msg, nil, debug)
 }
 
-func NotFound(w http.ResponseWriter, msg string) {
-	WriteJson(w, http.StatusNotFound, msg, nil)
+func NotFound(w http.ResponseWriter, msg string, debug ...any) {
+	WriteJson(w, http.StatusNotFound, msg, nil, debug)
 }
 
-func TimeoutFail(w http.ResponseWriter) {
-	WriteJson(w, http.StatusRequestTimeout, "Request timeout", nil)
+func TimeoutFail(w http.ResponseWriter, debug ...any) {
+	WriteJson(w, http.StatusRequestTimeout, "Request timeout", nil, debug)
 }
 
-func Unauthorized(w http.ResponseWriter, msg string) {
-	WriteJson(w, http.StatusUnauthorized, msg, nil)
+func Unauthorized(w http.ResponseWriter, msg string, debug ...any) {
+	WriteJson(w, http.StatusUnauthorized, msg, nil, debug)
 }
 
-func WriteJson(w http.ResponseWriter, code int, message string, data any) {
+func WriteJson(w http.ResponseWriter, code int, message string, data any, debug ...any) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	w.WriteHeader(code)
-	r := &RESTful{Code: code, Message: message, Data: data}
-	if code == http.StatusOK {
+	r := &RESTful{Code: code, Message: message, Data: data, Debug: debug}
+	if code <= 400 {
 		r.Success = true
 	}
 	json.NewEncoder(w).Encode(r)
