@@ -22,31 +22,39 @@ type RESTful struct {
 }
 
 func Success(w http.ResponseWriter, data any, debug ...any) {
-	WriteJson(w, http.StatusOK, "ok", data, debug)
+	WriteJson(w, http.StatusOK, "ok", data, debug...)
+}
+
+func SuccessNoContent(w http.ResponseWriter, debug ...any) {
+	WriteJson(w, http.StatusNoContent, "no content", nil, debug...)
+}
+
+func SuccessCreated(w http.ResponseWriter, debug ...any) {
+	WriteJson(w, http.StatusCreated, "created", nil, debug...)
 }
 
 func Error(w http.ResponseWriter, code int, message string, debug ...any) {
-	WriteJson(w, code, message, nil, debug)
+	WriteJson(w, code, message, nil, debug...)
 }
 
 func BadRequest(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusBadRequest, msg, nil, debug)
+	WriteJson(w, http.StatusBadRequest, msg, nil, debug...)
 }
 
 func Forbidden(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusForbidden, msg, nil, debug)
+	WriteJson(w, http.StatusForbidden, msg, nil, debug...)
 }
 
 func NotFound(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusNotFound, msg, nil, debug)
+	WriteJson(w, http.StatusNotFound, msg, nil, debug...)
 }
 
 func TimeoutFail(w http.ResponseWriter, debug ...any) {
-	WriteJson(w, http.StatusRequestTimeout, "Request timeout", nil, debug)
+	WriteJson(w, http.StatusRequestTimeout, "Request timeout", nil, debug...)
 }
 
 func Unauthorized(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusUnauthorized, msg, nil, debug)
+	WriteJson(w, http.StatusUnauthorized, msg, nil, debug...)
 }
 
 func WriteJson(w http.ResponseWriter, code int, message string, data any, debug ...any) {
