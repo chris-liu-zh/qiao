@@ -57,6 +57,9 @@ func (mapper *Mapper) whereStruct(elem reflect.Value) *Mapper {
 	var args []any
 	var next string
 	for i := range elem.NumField() {
+		if !elem.Field(i).IsValid() || elem.Field(i).IsNil() || !elem.Field(i).CanInterface() {
+			continue
+		}
 		finds := elem.Type().Field(i).Tag.Get("find")
 		if finds == "~" {
 			continue
