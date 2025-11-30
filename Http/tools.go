@@ -80,56 +80,110 @@ func setFieldValue(field reflect.Value, tag string, getter func(key string) stri
 	switch field.Kind() {
 	// 字符串类型
 	case reflect.String:
-		field.SetString(getter(tag))
+		val := getter(tag)
+		field.SetString(val)
 	case reflect.Slice:
-		var vals []string
-		var val string
-		keys := strings.Split(tag, ",")
-		for _, key := range keys {
-			if val = getter(key); val != "" {
-				vals = append(vals, val)
-			}
+		// 支持逗号分隔的多个值
+		val := getter(tag)
+		if val == "" {
+			// 如果值为空，设置空切片
+			field.Set(reflect.MakeSlice(field.Type(), 0, 0))
+			return nil
 		}
+
+		// 分割逗号分隔的值
+		vals := strings.Split(val, ",")
 		field.Set(reflect.ValueOf(vals))
 	// 有符号整数类型
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		iv, err := strconv.ParseInt(getter(tag), 10, field.Type().Bits())
+		val := getter(tag)
+		if val == "" {
+			// 空值设置为0
+			field.SetInt(0)
+			return nil
+		}
+		iv, err := strconv.ParseInt(val, 10, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid int value %q: %w", getter(tag), err)
+			return fmt.Errorf("invalid int value %q: %w", val, err)
 		}
 		field.SetInt(iv)
 
 	// 无符号整数类型
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		uv, err := strconv.ParseUint(getter(tag), 10, field.Type().Bits())
+		val := getter(tag)
+		if val == "" {
+			// 空值设置为0
+			field.SetUint(0)
+			return nil
+		}
+		uv, err := strconv.ParseUint(val, 10, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid uint value %q: %w", getter(tag), err)
+			return fmt.Errorf("invalid uint value %q: %w", val, err)
 		}
 		field.SetUint(uv)
 
 	// 布尔类型
 	case reflect.Bool:
-		bv, err := strconv.ParseBool(getter(tag))
+		val := getter(tag)
+		if val == "" {
+			// 空值设置为false
+			field.SetBool(false)
+			return nil
+		}
+		bv, err := strconv.ParseBool(val)
 		if err != nil {
-			return fmt.Errorf("invalid bool value %q: %w", getter(tag), err)
+			return fmt.Errorf("invalid bool value %q: %w", val, err)
 		}
 		field.SetBool(bv)
 
 	// 浮点类型
 	case reflect.Float32, reflect.Float64:
-		fv, err := strconv.ParseFloat(getter(tag), field.Type().Bits())
+		val := getter(tag)
+		if val == "" {
+			// 空值设置为0
+			field.SetFloat(0)
+			return nil
+		}
+		fv, err := strconv.ParseFloat(val, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid float value %q: %w", getter(tag), err)
+			return fmt.Errorf("invalid float value %q: %w", val, err)
 		}
 		field.SetFloat(fv)
 
 	// 复数类型
 	case reflect.Complex64, reflect.Complex128:
-		cv, err := strconv.ParseComplex(getter(tag), field.Type().Bits())
+		val := getter(tag)
+		if val == "" {
+			// 空值设置为0
+			field.SetComplex(0)
+			return nil
+		}
+		cv, err := strconv.ParseComplex(val, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid complex value %q: %w", getter(tag), err)
+			return fmt.Errorf("invalid complex value %q: %w", val, err)
 		}
 		field.SetComplex(cv)
+	case reflect.Pointer:
+		// 获取指针指向的元素类型
+		elemType := field.Type().Elem()
+
+		// 如果值为空字符串，则设置nil指针
+		val := getter(tag)
+		if val == "" {
+			field.Set(reflect.Zero(field.Type()))
+			return nil
+		}
+
+		// 创建新的指针并设置值
+		newPtr := reflect.New(elemType)
+		elemField := newPtr.Elem()
+
+		// 递归设置元素值
+		if err := setFieldValue(elemField, tag, getter); err != nil {
+			return fmt.Errorf("pointer field: %w", err)
+		}
+
+		field.Set(newPtr)
 	default:
 		return fmt.Errorf("unsupported field type %s", field.Kind())
 	}
