@@ -17,10 +17,11 @@ import (
 )
 
 func initdb() error {
-	db := &DB.DBNew{
+	db := &DB.Config{
 		Title: "test",
 		Part:  "master",
 		Type:  "mssql",
+		Open:  true,
 		Dsn:   "sqlserver://api:CF18.COM@chris.com:1433?database=cf2024a&encrypt=disable&parseTime=true",
 	}
 	if err := db.NewDB(); err != nil {

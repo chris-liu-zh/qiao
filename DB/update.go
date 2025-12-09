@@ -18,7 +18,7 @@ func (mapper *Mapper) UpdateAffected(set any, args ...any) (affected int64, err 
 	mapper = mapper.Set(set, args...)
 	mapper.SqlTpl = Update
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return
 	}
 	mapper.debug("UpdateAffected")
