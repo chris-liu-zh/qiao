@@ -41,6 +41,9 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 			mapper.Debris.table = qiao.CamelCaseToUdnderscore(elem.Type().Name())
 		}
 		for i := range elem.NumField() {
+			if !elem.Field(i).IsValid() || (elem.Field(i).Kind() == reflect.Pointer && elem.Field(i).IsNil()) || !elem.Field(i).CanInterface() {
+				continue
+			}
 			fields := strings.Split(elem.Type().Field(i).Tag.Get("db"), ";")
 			if WritableField(fields) {
 				if c := getColumn(fields); c != "" {

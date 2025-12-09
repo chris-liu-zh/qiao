@@ -94,21 +94,21 @@ func (mapper *Mapper) Set(set any, args ...any) *Mapper {
 		var column string
 		if elem.Kind() == reflect.Struct {
 			for i := range l {
+				if !elem.Field(i).IsValid() || (elem.Field(i).Kind() == reflect.Pointer && elem.Field(i).IsNil()) || !elem.Field(i).CanInterface() {
+					continue
+				}
 				fields := strings.Split(elem.Type().Field(i).Tag.Get("db"), ";")
 				if WritableField(fields) {
 					if c := getColumn(fields); c != "" {
-						column += c + "=?"
+						column += c + "=?,"
 					} else {
-						column += qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `=?`
-					}
-					if i != l-1 {
-						column += ","
+						column += qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `=?,`
 					}
 					mapper.Complete.Args = append(mapper.Complete.Args, elem.Field(i).Interface())
 				}
 			}
 		}
-		mapper.Debris.set = column
+		mapper.Debris.set = strings.TrimRight(column, ",")
 		return mapper
 	}
 
