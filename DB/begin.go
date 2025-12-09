@@ -25,20 +25,22 @@ func (mapper *Mapper) Begin() *Begin {
 	}
 	db := mapper.Write()
 	if db == nil {
-		tx.Err = ErrNoConn()
+		tx.Err = ErrNoConn
 		return tx
 	}
-	tx.Title = db.Title
+	tx.Title = db.Conf.Title
 	if tx.Tx, tx.Err = db.DBFunc.Conn.Begin(); tx.Err == nil {
 		return tx
 	}
-	var ok bool
-	if db, ok = online(db); ok {
-		return tx
+	role := db.Conf.Role
+	if timeout := db.check(tx.Err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return tx
+		}
 	}
 
-	if db = GetNewPool(db.Part); db == nil {
-		tx.Err = ErrNoConn()
+	if db = GetNewPool(role); db == nil {
+		tx.Err = ErrNoConn
 		return tx
 	}
 	if tx.Tx, tx.Err = db.DBFunc.Conn.Begin(); tx.Err == nil {

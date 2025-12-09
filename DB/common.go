@@ -10,20 +10,7 @@ import (
 	"unicode/utf8"
 )
 
-const (
-	errNotStruct   = "input parameter is not a struct"
-	errNotPtr      = "input parameter is not a pointer to struct"
-	errGetSql      = "failed to get SQL statement"
-	errNoConn      = "no database connection available"
-	errQueryFailed = "database query failed"
-	errExecFailed  = "database execution failed"
-	errScanRowMap  = "failed to scan row into map"
-	errScanListMap = "failed to scan list into map slice"
-)
-
-func ErrNoConn() error {
-	return errors.New("no database connection available")
-}
+var ErrNoConn = errors.New("no available database connection")
 
 /*
 struct转map
@@ -174,8 +161,8 @@ func (mapper *Mapper) log(msg string) *sqlLog {
 	return &sqlLog{Message: msg, Sqlstr: mapper.Complete.Sql, Args: mapper.Complete.Args}
 }
 
-func (conndb *ConnDB) log(msg, sqlstr string, args ...any) *sqlLog {
-	return &sqlLog{Message: msg, Title: conndb.Title, Sqlstr: sqlstr, Args: args}
+func (db *ConnDB) log(msg, sqlstr string, args ...any) *sqlLog {
+	return &sqlLog{Message: msg, Title: db.Conf.Title, Sqlstr: sqlstr, Args: args}
 }
 
 func (mapper *Mapper) GetSql() (sql SqlComplete, err error) {

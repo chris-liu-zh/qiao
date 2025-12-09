@@ -6,7 +6,7 @@ import (
 
 func (db *ConnDB) Exec(sqlStr string, arg ...any) (r sql.Result, err error) {
 	if db == nil {
-		return nil, ErrNoConn()
+		return nil, ErrNoConn
 	}
 	args := handleNull(arg...)
 	query := Replace(sqlStr, "?", db.Sign)
@@ -15,13 +15,11 @@ func (db *ConnDB) Exec(sqlStr string, arg ...any) (r sql.Result, err error) {
 		return
 	}
 	db.log("exec error", query, args...).logERROR(err)
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-
-	if db = GetNewPool(db.Part); db == nil {
-		return nil, ErrNoConn()
+	role := db.Conf.Role
+	if timeout := db.check(err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return nil, ErrNoConn
+		}
 	}
 	if r, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return
@@ -32,7 +30,7 @@ func (db *ConnDB) Exec(sqlStr string, arg ...any) (r sql.Result, err error) {
 
 func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error) {
 	if db == nil {
-		return 0, ErrNoConn()
+		return 0, ErrNoConn
 	}
 	args := handleNull(arg)
 	query := Replace(sqlStr, "?", db.Sign)
@@ -42,13 +40,11 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 		return result.RowsAffected()
 	}
 	db.log("Affected error", query, args...).logERROR(err)
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-
-	if db = GetNewPool(db.Part); db == nil {
-		return 0, ErrNoConn()
+	role := db.Conf.Role
+	if timeout := db.check(err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return 0, ErrNoConn
+		}
 	}
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.RowsAffected()
@@ -60,7 +56,7 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
 	db := mapper.Write()
 	if db == nil {
-		return 0, ErrNoConn()
+		return 0, ErrNoConn
 	}
 	args := handleNull(arg...)
 	var result sql.Result
@@ -70,13 +66,11 @@ func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 		return result.LastInsertId()
 	}
 	db.log("MysqlAddReturnId error", query, args...).logERROR(err)
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-
-	if db = GetNewPool(db.Part); db == nil {
-		return 0, ErrNoConn()
+	role := db.Conf.Role
+	if timeout := db.check(err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return 0, ErrNoConn
+		}
 	}
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.LastInsertId()
@@ -88,7 +82,7 @@ func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
 	db := mapper.Write()
 	if db == nil {
-		return 0, ErrNoConn()
+		return 0, ErrNoConn
 	}
 	args := handleNull(arg...)
 	sqlStr = sqlStr + " RETURNING id"
@@ -98,13 +92,11 @@ func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 		return
 	}
 	db.log("PgsqlAddReturnId", query, args...).logERROR(err)
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-
-	if db = GetNewPool(db.Part); db == nil {
-		return 0, ErrNoConn()
+	role := db.Conf.Role
+	if timeout := db.check(err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return 0, ErrNoConn
+		}
 	}
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {
 		return
@@ -116,7 +108,7 @@ func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
 	db := mapper.Write()
 	if db == nil {
-		return 0, ErrNoConn()
+		return 0, ErrNoConn
 	}
 	args := handleNull(arg...)
 	sqlStr = sqlStr + " ;SELECT SCOPE_IDENTITY();"
@@ -126,13 +118,11 @@ func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 		return
 	}
 	db.log("MssqlAddReturnId error", query, args...).logERROR(err)
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-
-	if db = GetNewPool(db.Part); db == nil {
-		return 0, ErrNoConn()
+	role := db.Conf.Role
+	if timeout := db.check(err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return 0, ErrNoConn
+		}
 	}
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {
 		return

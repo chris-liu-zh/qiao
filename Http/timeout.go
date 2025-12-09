@@ -51,7 +51,7 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 		ctx, cancelCtx = context.WithTimeout(r.Context(), router.timeout)
 		defer cancelCtx()
 	}
-	r = r.WithContext(ctx)
+	// r = r.WithContext(ctx)
 	done := make(chan struct{})
 	tw := &timeoutWriter{
 		w: w,

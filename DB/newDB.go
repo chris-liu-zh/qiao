@@ -13,13 +13,16 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var Pool PoolPart
+var Pool DBPool
 
-type PoolPart struct {
-	PoolCount int
-	Master    PoolConn
-	Slave     PoolConn
-	Alone     PoolConn
+type DBPool struct {
+	PoolCount         int
+	SwitchRole        bool
+	ReconnectNum      int
+	ReconnectInterval time.Duration
+	Master            PoolConn
+	Slave             PoolConn
+	Alone             PoolConn
 }
 
 type PoolConn struct {
@@ -32,7 +35,7 @@ type Config struct {
 	Title       string `json:"title"`
 	Type        string `json:"Type"`
 	Open        bool   `json:"Open"`
-	Part        string `json:"Part"`
+	Role        string `json:"Role"`
 	Host        string `json:"Host"`
 	Port        int    `json:"Port"`
 	User        string `json:"User"`
@@ -46,11 +49,8 @@ type Config struct {
 }
 
 type ConnDB struct {
-	ID      int
-	Title   string
-	Part    string //角色，主从，独立
-	Sign    string //占位符
-	Dsn     string
+	Conf    Config
+	Sign    string
 	Err     error
 	IsClose bool //连接是否关闭
 	DBFunc  dbFunc
@@ -86,7 +86,7 @@ func MSpage(mapper *Mapper, size, page int) *Mapper {
 	return mapper
 }
 
-func InitDB(conf ...Config) error {
+func InitDB(switchRole bool, ReconnectNum int, ReconnectInterval time.Duration, conf ...Config) error {
 	for _, v := range conf {
 		if v.Open {
 			if err := v.NewDB(); err != nil {
@@ -94,72 +94,73 @@ func InitDB(conf ...Config) error {
 			}
 		}
 	}
+
 	if Pool.PoolCount == 0 {
 		return errors.New("没有打开的数据库")
 	}
+	Pool.ReconnectInterval = ReconnectInterval
+	Pool.ReconnectNum = ReconnectNum
+	Pool.SwitchRole = switchRole
 	return nil
 }
 
-func (db Config) NewDB() (err error) {
+func (conf Config) NewDB() (err error) {
 	conndb := ConnDB{
-		ID:    db.ID,
-		Title: fmt.Sprintf("%s:%d", db.Title, db.ID),
-		Dsn:   db.Dsn,
+		Conf: conf,
 	}
 	var drive string
-	switch db.Type {
+	switch conndb.Conf.Type {
 	case "pgsql":
 		conndb.Sign = "$"
 		conndb.DBFunc.Page = PGpage
 		conndb.DBFunc.AddReturnId = QiaoDB().PgsqlAddReturnId
 		drive = "postgres"
-		if db.Dsn == "" {
-			conndb.Dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable connect_timeout=%d", db.Host, db.Port, db.User, db.Pwd, db.DBName, db.TimeOut)
+		if conndb.Conf.Dsn == "" {
+			conndb.Conf.Dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable connect_timeout=%d", conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.DBName, conndb.Conf.TimeOut)
 		}
 	case "mysql":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
 		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
 		drive = "mysql"
-		if db.Dsn == "" {
-			conndb.Dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?timeout=%ds&parseTime=true&loc=Local", db.User, db.Pwd, db.Host, db.Port, db.DBName, db.TimeOut)
+		if conndb.Conf.Dsn == "" {
+			conndb.Conf.Dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?timeout=%ds&parseTime=true&loc=Local", conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.DBName, conndb.Conf.TimeOut)
 		}
 	case "sqlite":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
 		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
 		drive = "sqlite3"
-		conndb.Dsn = db.Dsn
 	case "mssql":
 		conndb.Sign = "@p"
 		conndb.DBFunc.Page = MSpage
 		conndb.DBFunc.AddReturnId = QiaoDB().MssqlAddReturnId
 		drive = "sqlserver"
-		if db.Dsn == "" {
-			conndb.Dsn = fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s&dial+timeout=%d&encrypt=disable&parseTime=true", db.User, db.Pwd, db.Host, db.Port, db.DBName, db.TimeOut)
+		if conndb.Conf.Dsn == "" {
+			conndb.Conf.Dsn = fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s&dial+timeout=%d&encrypt=disable&parseTime=true", conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.DBName, conndb.Conf.TimeOut)
 		}
 	}
 
-	conn, err := sql.Open(drive, conndb.Dsn)
+	conn, err := sql.Open(drive, conndb.Conf.Dsn)
 	if err != nil {
-		conndb.log("get sql error", conndb.Dsn).logERROR(err)
+		conndb.log("get sql error", conndb.Conf.Dsn).logERROR(err)
 		return
 	}
 	if err = conn.Ping(); err != nil {
-		conndb.log("get sql error", conndb.Dsn).logERROR(err)
+		conndb.log("get sql error", conndb.Conf.Dsn).logERROR(err)
 		return
 	}
-	conn.SetMaxOpenConns(db.MaxOpen)
-	conn.SetMaxIdleConns(db.MaxIdle)
+	conn.SetMaxOpenConns(conndb.Conf.MaxOpen)
+	conn.SetMaxIdleConns(conndb.Conf.MaxIdle)
 
 	var duration time.Duration
-	if db.MaxIdleTime == "" {
+	if conndb.Conf.MaxIdleTime == "" {
 		duration = 7 * time.Hour
 	}
 
 	//设置最大空闲超时
 	if duration == 0 {
-		if duration, err = time.ParseDuration(db.MaxIdleTime); err != nil {
+		if duration, err = time.ParseDuration(conndb.Conf.MaxIdleTime); err != nil {
 			conndb.log("format error, MaxIdleTime will default to 7 hours", "").logWARNING()
 			duration = 7 * time.Hour
 		}
@@ -168,8 +169,7 @@ func (db Config) NewDB() (err error) {
 	conn.SetConnMaxIdleTime(duration)
 
 	conndb.DBFunc.Conn = conn
-	conndb.Part = db.Part
-	switch db.Part {
+	switch conndb.Conf.Role {
 	case "master":
 		Pool.Master.DBConn = append(Pool.Master.DBConn, conndb)
 		Pool.Master.PoolNum = len(Pool.Master.DBConn)
@@ -186,9 +186,9 @@ func (db Config) NewDB() (err error) {
 
 func Stop() {
 	Pool.PoolCount = 0
-	parts := []string{"master", "slave", "alone"}
-	for _, part := range parts {
-		switch part {
+	roles := []string{"master", "slave", "alone"}
+	for _, role := range roles {
+		switch role {
 		case "master":
 			close(Pool.Master.DBConn)
 			Pool.Master.PoolNum = 0

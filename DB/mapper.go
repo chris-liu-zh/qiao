@@ -18,7 +18,7 @@ const (
 
 type Mapper struct {
 	SqlTpl   string
-	Part     string
+	Role     string
 	sqlRows  *sql.Rows
 	Debris   SqlDebris
 	Complete SqlComplete
@@ -50,9 +50,9 @@ func OptionsDebug(debug bool) options {
 	}
 }
 
-func OptionsDBPart(part string) options {
+func OptionsRole(role string) options {
 	return func(m *Mapper) {
-		m.Part = part
+		m.Role = role
 	}
 }
 

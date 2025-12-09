@@ -25,7 +25,7 @@ func GetMaster() *ConnDB {
 	return &Pool.Master.DBConn[id]
 }
 
-func alone() *ConnDB {
+func GetAlone() *ConnDB {
 	if Pool.Alone.PoolNum == 0 {
 		return nil
 	}
@@ -34,8 +34,8 @@ func alone() *ConnDB {
 }
 
 func (mapper *Mapper) Read() *ConnDB {
-	if mapper.Part == "alone" {
-		return alone()
+	if mapper.Role == "alone" {
+		return GetAlone()
 	}
 	if dbconn := GetSlave(); dbconn != nil {
 		return dbconn
@@ -44,8 +44,8 @@ func (mapper *Mapper) Read() *ConnDB {
 }
 
 func (mapper *Mapper) Write() *ConnDB {
-	if mapper.Part == "alone" {
-		return alone()
+	if mapper.Role == "alone" {
+		return GetAlone()
 	}
 	if dbconn := GetMaster(); dbconn != nil {
 		return dbconn
@@ -53,14 +53,16 @@ func (mapper *Mapper) Write() *ConnDB {
 	return GetSlave()
 }
 
-func GetNewPool(part string) (conn *ConnDB) {
-	switch part {
+func GetNewPool(Role string) (conn *ConnDB) {
+	switch Role {
 	case "master":
 		if conn = GetMasterDB(); conn != nil {
 			return
 		}
-		if conn = GetSlaveDB(); conn != nil {
-			return
+		if Pool.SwitchRole {
+			if conn = GetSlaveDB(); conn != nil {
+				return
+			}
 		}
 	case "slave":
 		if conn = GetSlaveDB(); conn != nil {
@@ -70,7 +72,7 @@ func GetNewPool(part string) (conn *ConnDB) {
 			return
 		}
 	case "alone":
-		if conn = GetAloneDB(); conn != nil {
+		if conn = GetAlone(); conn != nil {
 			return
 		}
 	}
@@ -79,7 +81,7 @@ func GetNewPool(part string) (conn *ConnDB) {
 
 func GetMasterDB() *ConnDB {
 	for _, conn := range Pool.Master.DBConn {
-		if db, ok := online(&conn); ok {
+		if db, ok := checkOnline(&conn); ok {
 			return db
 		}
 	}
@@ -89,20 +91,10 @@ func GetMasterDB() *ConnDB {
 
 func GetSlaveDB() *ConnDB {
 	for _, conn := range Pool.Slave.DBConn {
-		if db, ok := online(&conn); ok {
+		if db, ok := checkOnline(&conn); ok {
 			return db
 		}
 	}
 	Pool.Slave.PoolNum = 0
-	return nil
-}
-
-func GetAloneDB() *ConnDB {
-	for _, conn := range Pool.Alone.DBConn {
-		if db, ok := online(&conn); ok {
-			return db
-		}
-	}
-	Pool.Alone.PoolNum = 0
 	return nil
 }

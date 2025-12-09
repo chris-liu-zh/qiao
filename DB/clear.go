@@ -7,20 +7,48 @@
  */
 package DB
 
-import "slices"
+import (
+	"net"
+	"slices"
+	"time"
+)
 
-func online(db *ConnDB) (*ConnDB, bool) {
+// 检测数据库错误是否为网络错误,并使用重连机制
+func (db *ConnDB) check(err error) bool {
+	if _, ok := err.(*net.OpError); ok {
+		//网络错误，断开连接
+		db.IsClose = true
+		clear(db.Conf.Role) //清理连接池
+		go db.reconnect()   //异步重连
+		return true
+	}
+	return false
+}
+
+func (db *ConnDB) reconnect() {
+	//TODO 重连机制
+	for range Pool.ReconnectNum {
+		time.Sleep(Pool.ReconnectInterval)
+		if err := db.Conf.NewDB(); err != nil {
+			db.log("reconnect error", db.Conf.Dsn).logERROR(err)
+			continue
+		}
+		return
+	}
+}
+
+func checkOnline(db *ConnDB) (*ConnDB, bool) {
 	if err := db.DBFunc.Conn.Ping(); err != nil {
 		db.IsClose = true
 		db.log(err.Error(), "").logWARNING()
-		go clear(db.Part)
+		go clear(db.Conf.Role)
 		return nil, false
 	}
 	return db, true
 }
 
-func clear(part string) {
-	switch part {
+func clear(role string) {
+	switch role {
 	case "master":
 		poolList := Pool.Master.DBConn
 		poolList = clearDB(poolList)

@@ -13,7 +13,7 @@ import (
 
 func (db *ConnDB) Query(sqlStr string, args ...any) (rows *sql.Rows, err error) {
 	if db == nil {
-		return nil, ErrNoConn()
+		return nil, ErrNoConn
 	}
 	query := Replace(sqlStr, "?", db.Sign)
 	db.log("Query", query, args).logDEBUG()
@@ -21,12 +21,11 @@ func (db *ConnDB) Query(sqlStr string, args ...any) (rows *sql.Rows, err error) 
 		return
 	}
 	db.log("Query error", query, args).logERROR(err)
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-	if db = GetNewPool(db.Part); db == nil {
-		return nil, ErrNoConn()
+	role := db.Conf.Role
+	if timeout := db.check(err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return nil, ErrNoConn
+		}
 	}
 	if rows, err = db.DBFunc.Conn.Query(query, args...); err == nil {
 		return
@@ -37,7 +36,7 @@ func (db *ConnDB) Query(sqlStr string, args ...any) (rows *sql.Rows, err error) 
 
 func (db *ConnDB) Count(sqlStr string, args ...any) (RowsCount int, err error) {
 	if db == nil {
-		return 0, ErrNoConn()
+		return 0, ErrNoConn
 	}
 	RowsCount = 0
 	query := Replace(sqlStr, "?", db.Sign)
@@ -46,12 +45,11 @@ func (db *ConnDB) Count(sqlStr string, args ...any) (RowsCount int, err error) {
 		return
 	}
 	db.log("Count error", query, args).logERROR(err)
-	var ok bool
-	if db, ok = online(db); ok {
-		return
-	}
-	if db = GetNewPool(db.Part); db == nil {
-		return 0, ErrNoConn()
+	role := db.Conf.Role
+	if timeout := db.check(err); timeout {
+		if db = GetNewPool(role); db == nil {
+			return 0, ErrNoConn
+		}
 	}
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&RowsCount); err == nil {
 		return

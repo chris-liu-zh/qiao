@@ -19,7 +19,7 @@ import (
 func initdb() error {
 	db := &DB.Config{
 		Title: "test",
-		Part:  "master",
+		Role:  "master",
 		Type:  "mssql",
 		Open:  true,
 		Dsn:   "sqlserver://api:CF18.COM@chris.com:1433?database=cf2024a&encrypt=disable&parseTime=true",
