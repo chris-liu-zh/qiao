@@ -14,7 +14,7 @@ func (db *ConnDB) Exec(sqlStr string, arg ...any) (r sql.Result, err error) {
 	if r, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("exec error", query, args...).logERROR(err)
 	var ok bool
 	if db, ok = online(db); ok {
 		return
@@ -26,7 +26,7 @@ func (db *ConnDB) Exec(sqlStr string, arg ...any) (r sql.Result, err error) {
 	if r, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("exec error", query, args...).logERROR(err)
 	return
 }
 
@@ -41,7 +41,7 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.RowsAffected()
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("Affected error", query, args...).logERROR(err)
 	var ok bool
 	if db, ok = online(db); ok {
 		return
@@ -53,7 +53,7 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.RowsAffected()
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("Affected error", query, args...).logERROR(err)
 	return
 }
 
@@ -69,7 +69,7 @@ func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.LastInsertId()
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("MysqlAddReturnId error", query, args...).logERROR(err)
 	var ok bool
 	if db, ok = online(db); ok {
 		return
@@ -81,7 +81,7 @@ func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.LastInsertId()
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("MysqlAddReturnId error", query, args...).logERROR(err)
 	return
 }
 
@@ -97,7 +97,7 @@ func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("PgsqlAddReturnId", query, args...).logERROR(err)
 	var ok bool
 	if db, ok = online(db); ok {
 		return
@@ -109,7 +109,7 @@ func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("PgsqlAddReturnId", query, args...).logERROR(err)
 	return
 }
 
@@ -125,7 +125,7 @@ func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("MssqlAddReturnId error", query, args...).logERROR(err)
 	var ok bool
 	if db, ok = online(db); ok {
 		return
@@ -137,7 +137,7 @@ func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args...).logERROR()
+	db.log("MssqlAddReturnId error", query, args...).logERROR(err)
 	return
 }
 
@@ -152,7 +152,7 @@ func (mapper *Mapper) ExecSql(sql string) (r sql.Result, err error) {
 
 func (mapper *Mapper) Exec() (r sql.Result, err error) {
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("exec error").logERROR(err)
 		return
 	}
 	mapper.debug("Exec")

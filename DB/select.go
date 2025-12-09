@@ -34,7 +34,7 @@ func (mapper *Mapper) Max(_struct any, field string) (max int, err error) {
 	}
 	mapper.Debris.field = fmt.Sprintf("max(%s) as max", field)
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return
 	}
 	mapper.debug("Max")
@@ -47,7 +47,7 @@ func (mapper *Mapper) Max(_struct any, field string) (max int, err error) {
 // 获取单行map数据
 func (mapper *Mapper) GetRowMap() (data map[string]any, err error) {
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return nil, err
 	}
 	mapper.debug("GetRowMap")
@@ -55,7 +55,7 @@ func (mapper *Mapper) GetRowMap() (data map[string]any, err error) {
 		return nil, err
 	}
 	if data, err = mapper.ScanRowMap(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("scan row map").logERROR(err)
 		return
 	}
 	return
@@ -64,7 +64,7 @@ func (mapper *Mapper) GetRowMap() (data map[string]any, err error) {
 // 获取多行map数据
 func (mapper *Mapper) GetListMap() (list []map[string]any, err error) {
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return
 	}
 	mapper.debug("GetListMap")
@@ -72,7 +72,7 @@ func (mapper *Mapper) GetListMap() (list []map[string]any, err error) {
 		return
 	}
 	if list, err = mapper.ScanListMap(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("scan list map").logERROR(err)
 		return
 	}
 	return
@@ -96,7 +96,7 @@ func (mapper *Mapper) Get(_struct any) (err error) {
 		return
 	}
 	if err = mapper.ScanRowStruct(_struct); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("scan row struct error").logERROR(err)
 		return
 	}
 	return
@@ -134,7 +134,7 @@ func (mapper *Mapper) GetList(_struct any) (err error) {
 	}
 	mapper.Debris.field = strings.TrimRight(mapper.Debris.field, ",")
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return
 	}
 	mapper.debug("GetList")
@@ -142,7 +142,7 @@ func (mapper *Mapper) GetList(_struct any) (err error) {
 		return
 	}
 	if err = mapper.ScanListStruct(_struct); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("scan list struct error").logERROR(err)
 		return
 	}
 
@@ -191,7 +191,7 @@ func (mapper *Mapper) getMapper(elem reflect.Value) (*Mapper, error) {
 	mapper.Debris.field = strings.TrimRight(mapper.Debris.field, ",")
 	var err error
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return mapper, err
 	}
 	return mapper, nil

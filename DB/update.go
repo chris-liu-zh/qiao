@@ -34,7 +34,7 @@ func (mapper *Mapper) Update(data, params any, args ...any) (r sql.Result, err e
 	mapper = mapper.Find(params, args...)
 	mapper.SqlTpl = Update
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return
 	}
 	mapper.debug("Update")

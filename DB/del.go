@@ -15,7 +15,7 @@ var Del = "DELETE FROM ${table} ${where} ${order} ${group}"
 func (mapper *Mapper) Del() (r sql.Result, err error) {
 	mapper.SqlTpl = Del
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return
 	}
 	mapper.debug("Del")
@@ -31,7 +31,7 @@ func (mapper *Mapper) Del() (r sql.Result, err error) {
 func (mapper *Mapper) DelAffected() (affected int64, err error) {
 	mapper.SqlTpl = Del
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("get sql error").logERROR(err)
 		return
 	}
 	mapper.debug("DelAffected")

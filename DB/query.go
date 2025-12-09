@@ -20,7 +20,7 @@ func (db *ConnDB) Query(sqlStr string, args ...any) (rows *sql.Rows, err error) 
 	if rows, err = db.DBFunc.Conn.Query(query, args...); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args).logERROR()
+	db.log("Query error", query, args).logERROR(err)
 	var ok bool
 	if db, ok = online(db); ok {
 		return
@@ -31,7 +31,7 @@ func (db *ConnDB) Query(sqlStr string, args ...any) (rows *sql.Rows, err error) 
 	if rows, err = db.DBFunc.Conn.Query(query, args...); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args).logERROR()
+	db.log("Query error", query, args).logERROR(err)
 	return
 }
 
@@ -45,7 +45,7 @@ func (db *ConnDB) Count(sqlStr string, args ...any) (RowsCount int, err error) {
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&RowsCount); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args).logERROR()
+	db.log("Count error", query, args).logERROR(err)
 	var ok bool
 	if db, ok = online(db); ok {
 		return
@@ -56,7 +56,7 @@ func (db *ConnDB) Count(sqlStr string, args ...any) (RowsCount int, err error) {
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&RowsCount); err == nil {
 		return
 	}
-	db.log(err.Error(), query, args).logERROR()
+	db.log("Count error", query, args).logERROR(err)
 	return
 }
 
@@ -65,7 +65,7 @@ func (mapper *Mapper) Query(sql string, args ...any) (*Mapper, error) {
 	mapper.Complete = SqlComplete{Sql: sql, Args: args}
 	var err error
 	if mapper.sqlRows, err = mapper.Read().Query(sql, args...); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("Query error").logERROR(err)
 		return nil, err
 	}
 	mapper.debug("Query")
@@ -77,7 +77,7 @@ func (mapper *Mapper) QueryRow(sql string, args ...any) (*Mapper, error) {
 	var err error
 	mapper.Complete = SqlComplete{Sql: sql, Args: args}
 	if mapper.sqlRows, err = mapper.Read().Query(sql, args...); err != nil {
-		mapper.log(err.Error()).logERROR()
+		mapper.log("Query error").logERROR(err)
 		return nil, err
 	}
 	mapper.debug("QueryRow")

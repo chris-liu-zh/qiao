@@ -10,6 +10,17 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	errNotStruct   = "input parameter is not a struct"
+	errNotPtr      = "input parameter is not a pointer to struct"
+	errGetSql      = "failed to get SQL statement"
+	errNoConn      = "no database connection available"
+	errQueryFailed = "database query failed"
+	errExecFailed  = "database execution failed"
+	errScanRowMap  = "failed to scan row into map"
+	errScanListMap = "failed to scan list into map slice"
+)
+
 func ErrNoConn() error {
 	return errors.New("no database connection available")
 }
@@ -52,8 +63,7 @@ func (mapper *Mapper) getSql() (sql string, err error) {
 	if err != nil {
 		return
 	}
-	sql = os.Expand(mapper.SqlTpl, func(k string) string { return sqlMap[k] })
-	return
+	return os.Expand(mapper.SqlTpl, func(k string) string { return sqlMap[k] }), nil
 }
 
 /*

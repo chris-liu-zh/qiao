@@ -80,7 +80,7 @@ func (tx *Begin) Commit() error {
 	tx.Mapper.debug("Commit")
 	defer tx.stmt.Close()
 	if tx.Err != nil {
-		tx.log(tx.Err.Error()).logERROR()
+		tx.log("Commit error").logERROR(tx.Err)
 		return tx.Err
 	}
 	return tx.Tx.Commit()

@@ -24,6 +24,7 @@ type sqlLog struct {
 	Title   string `json:"title"`
 	Message string `json:"msg"`
 	Sqlstr  string `json:"sql"`
+	Err     error  `json:"error,omitempty"`
 	Args    []any  `json:"args"`
 }
 
@@ -229,12 +230,12 @@ func (info *sqlLog) logWARNING() {
 	loggerPre["WARNING"].Warn(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
 }
 
-func (info *sqlLog) logERROR() {
+func (info *sqlLog) logERROR(err error) {
 	if loggerPre["ERROR"] == nil {
 		info.formatLog("ERROR")
 		return
 	}
-	loggerPre["ERROR"].Error(info.Message, "sql", info.Sqlstr, "args", info.Args, "DBTitle", info.Title)
+	loggerPre["ERROR"].Error(info.Message, "sql", info.Sqlstr, "args", info.Args, "err", err, "DBTitle", info.Title)
 }
 
 func (info *sqlLog) formatLog(types string) {

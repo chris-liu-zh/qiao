@@ -2,7 +2,9 @@ package DB
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -25,11 +27,7 @@ type PoolConn struct {
 	DBConn  []ConnDB
 }
 
-type DBList struct {
-	List []DBNew
-}
-
-type DBNew struct {
+type Config struct {
 	ID          int    `json:"ID"`
 	Title       string `json:"title"`
 	Type        string `json:"Type"`
@@ -88,14 +86,21 @@ func MSpage(mapper *Mapper, size, page int) *Mapper {
 	return mapper
 }
 
-func (list DBList) InitDB() error {
-	for _, v := range list.List {
-		return v.NewDB()
+func InitDB(conf ...Config) error {
+	for _, v := range conf {
+		if v.Open {
+			if err := v.NewDB(); err != nil {
+				slog.Error(err.Error())
+			}
+		}
+	}
+	if Pool.PoolCount == 0 {
+		return errors.New("没有打开的数据库")
 	}
 	return nil
 }
 
-func (db DBNew) NewDB() (err error) {
+func (db Config) NewDB() (err error) {
 	conndb := ConnDB{
 		ID:    db.ID,
 		Title: fmt.Sprintf("%s:%d", db.Title, db.ID),
@@ -137,11 +142,11 @@ func (db DBNew) NewDB() (err error) {
 
 	conn, err := sql.Open(drive, conndb.Dsn)
 	if err != nil {
-		conndb.log(err.Error(), "").logERROR()
+		conndb.log("get sql error", conndb.Dsn).logERROR(err)
 		return
 	}
 	if err = conn.Ping(); err != nil {
-		conndb.log(err.Error(), "").logERROR()
+		conndb.log("get sql error", conndb.Dsn).logERROR(err)
 		return
 	}
 	conn.SetMaxOpenConns(db.MaxOpen)
