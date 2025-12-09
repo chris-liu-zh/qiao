@@ -80,9 +80,12 @@ func GetNewPool(Role string) (conn *ConnDB) {
 }
 
 func GetMasterDB() *ConnDB {
+	if Pool.Master.PoolNum == 0 {
+		return nil
+	}
 	for _, conn := range Pool.Master.DBConn {
-		if db, ok := checkOnline(&conn); ok {
-			return db
+		if ok := conn.checkOnline(); ok {
+			return &conn
 		}
 	}
 	Pool.Master.PoolNum = 0
@@ -90,9 +93,12 @@ func GetMasterDB() *ConnDB {
 }
 
 func GetSlaveDB() *ConnDB {
+	if Pool.Slave.PoolNum == 0 {
+		return nil
+	}
 	for _, conn := range Pool.Slave.DBConn {
-		if db, ok := checkOnline(&conn); ok {
-			return db
+		if ok := conn.checkOnline(); ok {
+			return &conn
 		}
 	}
 	Pool.Slave.PoolNum = 0

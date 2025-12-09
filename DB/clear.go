@@ -37,14 +37,17 @@ func (db *ConnDB) reconnect() {
 	}
 }
 
-func checkOnline(db *ConnDB) (*ConnDB, bool) {
+func (db *ConnDB) checkOnline() bool {
+	if db == nil {
+		return false
+	}
 	if err := db.DBFunc.Conn.Ping(); err != nil {
 		db.IsClose = true
 		db.log(err.Error(), "").logWARNING()
 		go clear(db.Conf.Role)
-		return nil, false
+		return false
 	}
-	return db, true
+	return true
 }
 
 func clear(role string) {
