@@ -18,8 +18,8 @@ var Pool DBPool
 type DBPool struct {
 	PoolCount         int
 	SwitchRole        bool
-	ReconnectNum      int
-	ReconnectInterval time.Duration
+	ReconnectNum      int           //重连次数
+	ReconnectInterval time.Duration //重连间隔时间
 	Master            PoolConn
 	Slave             PoolConn
 	Alone             PoolConn
