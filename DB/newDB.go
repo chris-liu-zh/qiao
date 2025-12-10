@@ -117,6 +117,7 @@ func Reconnect(role string, id int) {
 		if dbs[i].Conf.ID == id {
 			if err := dbs[i].reconnect(); err != nil {
 				fmt.Println(err)
+				return
 			}
 			fmt.Println("reconnect success")
 			return
