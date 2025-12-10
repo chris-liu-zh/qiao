@@ -31,12 +31,14 @@ func (mapper *Mapper) Begin() *Begin {
 	}
 	tx.Title = db.Conf.Title
 	if tx.Tx, tx.Err = db.DBFunc.Conn.Begin(); tx.Err == nil {
+		tx.Mapper.debug("Begin")
 		return tx
 	}
 	return tx
 }
 
 func (tx *Begin) Prepare(sqlStr string) *Begin {
+	tx.Mapper.debug("Begin Prepare")
 	if tx.Err != nil {
 		return tx
 	}
@@ -44,7 +46,20 @@ func (tx *Begin) Prepare(sqlStr string) *Begin {
 	return tx
 }
 
+func (tx *Begin) StmtExec(args ...any) *Begin {
+	tx.Mapper.debug("Begin StmtExec")
+	if tx.Err != nil {
+		return tx
+	}
+	txArgs := handleNull(args...)
+	if _, tx.Err = tx.stmt.Exec(txArgs...); tx.Err != nil {
+		return tx
+	}
+	return tx
+}
+
 func (tx *Begin) Exec(args ...any) *Begin {
+	tx.Mapper.debug("Begin Exec")
 	if tx.Err != nil {
 		return tx
 	}
@@ -54,18 +69,12 @@ func (tx *Begin) Exec(args ...any) *Begin {
 	txArgs := handleNull(args...)
 	query := Replace(tx.Mapper.Complete.Sql, "?", tx.Mapper.Debris.sign)
 	if _, tx.Err = tx.Tx.Exec(query, txArgs...); tx.Err != nil {
-		if tx.Err = tx.Tx.Rollback(); tx.Err != nil {
-			return tx
-		}
 		return tx
 	}
 	return tx
 }
 
 func (tx *Begin) Rollback() *Begin {
-	if tx.Err != nil {
-		return tx
-	}
 	tx.Mapper.debug("Rollback")
 	defer tx.stmt.Close()
 	tx.Err = tx.Tx.Rollback()
@@ -76,7 +85,7 @@ func (tx *Begin) Commit() error {
 	tx.Mapper.debug("Commit")
 	defer tx.stmt.Close()
 	if tx.Err != nil {
-		tx.log("Commit error").logERROR(tx.Err)
+		tx.log("Begin error").logERROR(tx.Err)
 		return tx.Err
 	}
 	return tx.Tx.Commit()
