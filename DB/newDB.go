@@ -16,17 +16,17 @@ import (
 var Pool DBPool
 
 type DBPool struct {
-	PoolCount         int
-	SwitchRole        bool
-	ReconnectNum      int           //重连次数
-	ReconnectInterval time.Duration //重连间隔时间
+	PoolCount         int           `json:"PoolCount"`
+	SwitchRole        bool          `json:"SwitchRole"`        //是否启用主从切换
+	ReconnectNum      int           `json:"ReconnectNum"`      //重连次数
+	ReconnectInterval time.Duration `json:"ReconnectInterval"` //重连间隔时间
 	Master            PoolConn
 	Slave             PoolConn
 	Alone             PoolConn
 }
 
 type PoolConn struct {
-	PoolNum int
+	PoolNum int `json:"PoolNum"`
 	DBConn  []ConnDB
 }
 
@@ -50,9 +50,9 @@ type Config struct {
 
 type ConnDB struct {
 	Conf    Config
-	Sign    string
-	Err     error
-	IsClose bool //连接是否关闭
+	Sign    string `json:"Sign"`
+	Err     error  `json:"Err"`
+	IsClose bool   `json:"IsClose"` //连接是否关闭
 	DBFunc  dbFunc
 }
 
@@ -70,6 +70,23 @@ type Return struct {
 type Page func(*Mapper, int, int) *Mapper
 
 type GetReturn func(string, ...any) (int64, error)
+
+func PrintPool() {
+	fmt.Println("数据库连接池信息")
+	fmt.Printf("总连接数: %d\n", Pool.PoolCount)
+	fmt.Printf("主库连接数: %d\n", Pool.Master.PoolNum)
+	for _, v := range Pool.Master.DBConn {
+		fmt.Printf("主库连接 %d : %s\n", v.Conf.ID, v.Conf.Dsn)
+	}
+	fmt.Printf("从库连接数: %d\n", Pool.Slave.PoolNum)
+	for _, v := range Pool.Slave.DBConn {
+		fmt.Printf("从库连接 %d : %s\n", v.Conf.ID, v.Conf.Dsn)
+	}
+	fmt.Printf("单库连接数: %d\n", Pool.Alone.PoolNum)
+	for _, v := range Pool.Alone.DBConn {
+		fmt.Printf("单库连接 %d : %s\n", v.Conf.ID, v.Conf.Dsn)
+	}
+}
 
 func PGpage(mapper *Mapper, size, page int) *Mapper {
 	mapper.SqlTpl = fmt.Sprintf(Select+"LIMIT %d OFFSET %d", size, page)
