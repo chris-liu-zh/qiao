@@ -19,6 +19,7 @@ type Begin struct {
 	Mapper *Mapper
 }
 
+// Begin 开始事务
 func (mapper *Mapper) Begin() *Begin {
 	tx := &Begin{
 		Mapper: mapper,
@@ -32,30 +33,18 @@ func (mapper *Mapper) Begin() *Begin {
 	if tx.Tx, tx.Err = db.DBFunc.Conn.Begin(); tx.Err == nil {
 		return tx
 	}
-	role := db.Conf.Role
-	if timeout := db.check(tx.Err); timeout {
-		if db = GetNewPool(role); db == nil {
-			return tx
-		}
-	}
-
-	if db = GetNewPool(role); db == nil {
-		tx.Err = ErrNoConn
-		return tx
-	}
-	if tx.Tx, tx.Err = db.DBFunc.Conn.Begin(); tx.Err == nil {
-		return tx
-	}
 	return tx
 }
 
 func (tx *Begin) Prepare(sqlStr string) *Begin {
+	if tx.Err != nil {
+		return tx
+	}
 	tx.stmt, tx.Err = tx.Tx.Prepare(sqlStr)
 	return tx
 }
 
 func (tx *Begin) Exec(args ...any) *Begin {
-
 	if tx.Err != nil {
 		return tx
 	}
@@ -74,6 +63,11 @@ func (tx *Begin) Exec(args ...any) *Begin {
 }
 
 func (tx *Begin) Rollback() *Begin {
+	if tx.Err != nil {
+		return tx
+	}
+	tx.Mapper.debug("Rollback")
+	defer tx.stmt.Close()
 	tx.Err = tx.Tx.Rollback()
 	return tx
 }
