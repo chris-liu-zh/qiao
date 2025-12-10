@@ -20,9 +20,9 @@ type DBPool struct {
 	SwitchRole        bool          `json:"SwitchRole"`        //是否启用主从切换
 	ReconnectNum      int           `json:"ReconnectNum"`      //重连次数
 	ReconnectInterval time.Duration `json:"ReconnectInterval"` //重连间隔时间
-	Master            PoolConn
-	Slave             PoolConn
-	Alone             PoolConn
+	Master            *PoolConn
+	Slave             *PoolConn
+	Alone             *PoolConn
 }
 
 type PoolConn struct {
@@ -76,15 +76,15 @@ func PrintPool() {
 	fmt.Printf("总连接数: %d\n", Pool.PoolCount)
 	fmt.Printf("主库连接数: %d\n", Pool.Master.PoolNum)
 	for _, v := range Pool.Master.DBConn {
-		fmt.Printf("主库连接 %d : %s\n", v.Conf.ID, v.Conf.Dsn)
+		fmt.Printf("主库连接 id: %d;是否关闭:%v;DSN: %s\n", v.Conf.ID, v.IsClose, v.Conf.Dsn)
 	}
 	fmt.Printf("从库连接数: %d\n", Pool.Slave.PoolNum)
 	for _, v := range Pool.Slave.DBConn {
-		fmt.Printf("从库连接 %d : %s\n", v.Conf.ID, v.Conf.Dsn)
+		fmt.Printf("从库连接 id: %d;是否关闭:%v;DSN: %s\n", v.Conf.ID, v.IsClose, v.Conf.Dsn)
 	}
 	fmt.Printf("单库连接数: %d\n", Pool.Alone.PoolNum)
 	for _, v := range Pool.Alone.DBConn {
-		fmt.Printf("单库连接 %d : %s\n", v.Conf.ID, v.Conf.Dsn)
+		fmt.Printf("单库连接 id: %d;是否关闭:%v;DSN: %s\n", v.Conf.ID, v.IsClose, v.Conf.Dsn)
 	}
 }
 

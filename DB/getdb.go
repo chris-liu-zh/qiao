@@ -10,27 +10,15 @@ func GetRand() *rand.Rand {
 }
 
 func GetSlave() *ConnDB {
-	if Pool.Slave.PoolNum == 0 {
-		return nil
-	}
-	id := GetRand().Intn(Pool.Slave.PoolNum)
-	return &Pool.Slave.DBConn[id]
+	return Pool.Slave.getDB()
 }
 
 func GetMaster() *ConnDB {
-	if Pool.Master.PoolNum == 0 {
-		return nil
-	}
-	id := GetRand().Intn(Pool.Master.PoolNum)
-	return &Pool.Master.DBConn[id]
+	return Pool.Master.getDB()
 }
 
 func GetAlone() *ConnDB {
-	if Pool.Alone.PoolNum == 0 {
-		return nil
-	}
-	id := rand.Intn(Pool.Alone.PoolNum)
-	return &Pool.Alone.DBConn[id]
+	return Pool.Alone.getDB()
 }
 
 func (mapper *Mapper) Read() *ConnDB {
@@ -80,27 +68,50 @@ func GetNewPool(Role string) (conn *ConnDB) {
 }
 
 func GetMasterDB() *ConnDB {
-	if Pool.Master.PoolNum == 0 {
-		return nil
-	}
-	for _, conn := range Pool.Master.DBConn {
-		if ok := conn.checkOnline(); ok {
-			return &conn
-		}
-	}
-	Pool.Master.PoolNum = 0
-	return nil
+	return Pool.Master.getOnlineDB()
 }
 
 func GetSlaveDB() *ConnDB {
-	if Pool.Slave.PoolNum == 0 {
+	return Pool.Slave.getOnlineDB()
+}
+
+func (rolePool *PoolConn) getOnlineDB() *ConnDB {
+	if Pool.Master.PoolNum == 0 {
 		return nil
 	}
-	for _, conn := range Pool.Slave.DBConn {
+	for i := range rolePool.DBConn {
+		conn := &rolePool.DBConn[i]
+		if conn.IsClose {
+			continue
+		}
 		if ok := conn.checkOnline(); ok {
-			return &conn
+			return conn
 		}
 	}
-	Pool.Slave.PoolNum = 0
 	return nil
+}
+
+func (rolePool *PoolConn) getDB() *ConnDB {
+	n := rolePool.PoolNum
+	if n == 0 {
+		return nil
+	}
+
+	// 收集可用连接的索引
+	avail := make([]int, 0, n)
+	for i := range n {
+		conn := &rolePool.DBConn[i]
+		if conn.IsClose {
+			continue
+		}
+		avail = append(avail, i)
+	}
+
+	if len(avail) == 0 {
+		return nil
+	}
+
+	// 随机选择一个可用连接
+	idx := GetRand().Intn(len(avail))
+	return &rolePool.DBConn[avail[idx]]
 }
