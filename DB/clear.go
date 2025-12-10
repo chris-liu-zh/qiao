@@ -23,16 +23,19 @@ func (db *ConnDB) check(err error) bool {
 	return false
 }
 
-func (db *ConnDB) reconnect() {
+func (db *ConnDB) reconnect() (err error) {
 	//TODO 重连机制
 	for range Pool.ReconnectNum {
-		time.Sleep(Pool.ReconnectInterval)
-		if err := db.Conf.NewDB(); err != nil {
+		if db.DBFunc.Conn, err = db.connect(); err != nil {
+			time.Sleep(Pool.ReconnectInterval)
 			db.log("reconnect error", db.Conf.Dsn).logERROR(err)
 			continue
 		}
+		db.IsClose = false
+		db.log("reconnect success", db.Conf.Dsn).logINFO()
 		return
 	}
+	return
 }
 
 func (db *ConnDB) checkOnline() bool {

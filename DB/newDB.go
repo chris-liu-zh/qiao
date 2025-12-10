@@ -50,6 +50,7 @@ type Config struct {
 
 type ConnDB struct {
 	Conf    Config
+	drive   string
 	Sign    string `json:"Sign"`
 	Err     error  `json:"Err"`
 	IsClose bool   `json:"IsClose"` //连接是否关闭
@@ -71,6 +72,18 @@ type Page func(*Mapper, int, int) *Mapper
 
 type GetReturn func(string, ...any) (int64, error)
 
+func init() {
+	if Pool.Master == nil {
+		Pool.Master = &PoolConn{}
+	}
+	if Pool.Slave == nil {
+		Pool.Slave = &PoolConn{}
+	}
+	if Pool.Alone == nil {
+		Pool.Alone = &PoolConn{}
+	}
+}
+
 func PrintPool() {
 	fmt.Println("数据库连接池信息")
 	fmt.Printf("总连接数: %d\n", Pool.PoolCount)
@@ -86,6 +99,30 @@ func PrintPool() {
 	for _, v := range Pool.Alone.DBConn {
 		fmt.Printf("单库连接 id: %d;是否关闭:%v;DSN: %s\n", v.Conf.ID, v.IsClose, v.Conf.Dsn)
 	}
+}
+
+func Reconnect(role string, id int) {
+	var dbs []ConnDB
+	switch role {
+	case "master":
+		dbs = Pool.Master.DBConn
+	case "slave":
+		dbs = Pool.Slave.DBConn
+	case "alone":
+		dbs = Pool.Alone.DBConn
+	default:
+		fmt.Println("role只支持master,slave,alone")
+	}
+	for i := range dbs {
+		if dbs[i].Conf.ID == id {
+			if err := dbs[i].reconnect(); err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println("reconnect success")
+			return
+		}
+	}
+	fmt.Println("没有找到对应的数据库连接")
 }
 
 func PGpage(mapper *Mapper, size, page int) *Mapper {
@@ -125,13 +162,13 @@ func (conf Config) NewDB() (err error) {
 	conndb := ConnDB{
 		Conf: conf,
 	}
-	var drive string
+
 	switch conndb.Conf.Type {
 	case "pgsql":
 		conndb.Sign = "$"
 		conndb.DBFunc.Page = PGpage
 		conndb.DBFunc.AddReturnId = QiaoDB().PgsqlAddReturnId
-		drive = "postgres"
+		conndb.drive = "postgres"
 		if conndb.Conf.Dsn == "" {
 			conndb.Conf.Dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable connect_timeout=%d", conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.DBName, conndb.Conf.TimeOut)
 		}
@@ -139,7 +176,7 @@ func (conf Config) NewDB() (err error) {
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
 		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
-		drive = "mysql"
+		conndb.drive = "mysql"
 		if conndb.Conf.Dsn == "" {
 			conndb.Conf.Dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?timeout=%ds&parseTime=true&loc=Local", conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.DBName, conndb.Conf.TimeOut)
 		}
@@ -147,44 +184,20 @@ func (conf Config) NewDB() (err error) {
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
 		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
-		drive = "sqlite3"
+		conndb.drive = "sqlite3"
 	case "mssql":
 		conndb.Sign = "@p"
 		conndb.DBFunc.Page = MSpage
 		conndb.DBFunc.AddReturnId = QiaoDB().MssqlAddReturnId
-		drive = "sqlserver"
+		conndb.drive = "sqlserver"
 		if conndb.Conf.Dsn == "" {
 			conndb.Conf.Dsn = fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s&dial+timeout=%d&encrypt=disable&parseTime=true", conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.DBName, conndb.Conf.TimeOut)
 		}
 	}
-
-	conn, err := sql.Open(drive, conndb.Conf.Dsn)
+	conn, err := conndb.connect()
 	if err != nil {
-		conndb.log("get sql error", conndb.Conf.Dsn).logERROR(err)
-		return
+		return err
 	}
-	if err = conn.Ping(); err != nil {
-		conndb.log("get sql error", conndb.Conf.Dsn).logERROR(err)
-		return
-	}
-	conn.SetMaxOpenConns(conndb.Conf.MaxOpen)
-	conn.SetMaxIdleConns(conndb.Conf.MaxIdle)
-
-	var duration time.Duration
-	if conndb.Conf.MaxIdleTime == "" {
-		duration = 7 * time.Hour
-	}
-
-	//设置最大空闲超时
-	if duration == 0 {
-		if duration, err = time.ParseDuration(conndb.Conf.MaxIdleTime); err != nil {
-			conndb.log("format error, MaxIdleTime will default to 7 hours", "").logWARNING()
-			duration = 7 * time.Hour
-		}
-	}
-
-	conn.SetConnMaxIdleTime(duration)
-
 	conndb.DBFunc.Conn = conn
 	switch conndb.Conf.Role {
 	case "master":
@@ -199,6 +212,36 @@ func (conf Config) NewDB() (err error) {
 	}
 	Pool.PoolCount = Pool.Master.PoolNum + Pool.Slave.PoolNum + Pool.Alone.PoolNum
 	return
+}
+
+func (conn *ConnDB) connect() (*sql.DB, error) {
+	sqlDB, err := sql.Open(conn.drive, conn.Conf.Dsn)
+	if err != nil {
+		conn.log("get sql error", conn.Conf.Dsn).logERROR(err)
+		return nil, err
+	}
+	if err = sqlDB.Ping(); err != nil {
+		conn.log("get sql error", conn.Conf.Dsn).logERROR(err)
+		return nil, err
+	}
+	sqlDB.SetMaxOpenConns(conn.Conf.MaxOpen)
+	sqlDB.SetMaxIdleConns(conn.Conf.MaxIdle)
+
+	var duration time.Duration
+	if conn.Conf.MaxIdleTime == "" {
+		duration = 7 * time.Hour
+	}
+
+	//设置最大空闲超时
+	if duration == 0 {
+		if duration, err = time.ParseDuration(conn.Conf.MaxIdleTime); err != nil {
+			conn.log("format error, MaxIdleTime will default to 7 hours", "").logWARNING()
+			duration = 7 * time.Hour
+		}
+	}
+
+	sqlDB.SetConnMaxIdleTime(duration)
+	return sqlDB, nil
 }
 
 func Stop() {
