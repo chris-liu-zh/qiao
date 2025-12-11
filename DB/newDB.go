@@ -127,12 +127,12 @@ func Reconnect(role string, id int) {
 }
 
 func PGpage(mapper *Mapper, size, page int) *Mapper {
-	mapper.SqlTpl = fmt.Sprintf(Select+"LIMIT %d OFFSET %d", size, page)
+	mapper.SqlTpl = fmt.Sprintf("%s LIMIT %d OFFSET %d", Select, size, page)
 	return mapper
 }
 
 func MYpage(mapper *Mapper, size, page int) *Mapper {
-	mapper.SqlTpl = fmt.Sprintf(Select+"LIMIT %d , %d", page-1, size)
+	mapper.SqlTpl = fmt.Sprintf("%s LIMIT %d , %d", Select, page-1, size)
 	return mapper
 }
 
@@ -162,6 +162,19 @@ func InitDB(switchRole bool, ReconnectNum int, ReconnectInterval time.Duration, 
 func (conf Config) NewDB() (err error) {
 	conndb := ConnDB{
 		Conf: conf,
+	}
+
+	if !conndb.Conf.Open {
+		return
+	}
+
+	if conndb.Conf.Role == "" {
+		conndb.Conf.Role = "alone"
+	}
+
+	if conndb.Conf.Type == "" {
+		return errors.New("数据库类型不能为空")
+
 	}
 
 	switch conndb.Conf.Type {
