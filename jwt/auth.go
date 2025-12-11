@@ -54,7 +54,7 @@ func getNumericDate(exp time.Duration) *NumericDate {
 	return NewNumericDate(time.Now())
 }
 
-func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) error {
+func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) {
 	if _, ok := authList[issuer]; ok {
 		slog.Warn("issuer exist", "issuer", issuer)
 	}
@@ -64,7 +64,6 @@ func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) err
 		accessExp:  accessExp,
 		refreshExp: refreshExp,
 	}
-	return nil
 }
 
 // DefaultSign /**

@@ -31,10 +31,7 @@ const (
 )
 
 func Test_Http(t *testing.T) {
-	err := jwt.SetAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
-	if err != nil {
-		return
-	}
+	jwt.SetAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
 	// if err := Http.NewTemplates("template/*.html", "template/**/*.html"); err != nil {
 	// 	log.Println(err)
 	// }
