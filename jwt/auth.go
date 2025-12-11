@@ -3,6 +3,7 @@ package jwt
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -55,7 +56,7 @@ func getNumericDate(exp time.Duration) *NumericDate {
 
 func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) error {
 	if _, ok := authList[issuer]; ok {
-		return ErrIssuerExist
+		slog.Warn("issuer exist", "issuer", issuer)
 	}
 	authList[issuer] = &Auth{
 		issuer:     issuer,
