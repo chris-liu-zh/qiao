@@ -35,10 +35,7 @@ func (mapper *Mapper) Write() *ConnDB {
 	if mapper.Role == "alone" {
 		return GetAlone()
 	}
-	if dbconn := GetMaster(); dbconn != nil {
-		return dbconn
-	}
-	return GetSlave()
+	return GetMaster()
 }
 
 func GetNewPool(Role string) (conn *ConnDB) {
