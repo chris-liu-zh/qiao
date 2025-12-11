@@ -53,11 +53,7 @@ func Test_Token(t *testing.T) {
 
 func Test_TokenAuth(t *testing.T) {
 
-	err := jwt.SetAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	jwt.SetAuth("api", ATExp, RTExp, "1D4JWUEGWWFK94JB74W1YGP9OF4L205F")
 	data := Userdata{
 		ID:   1,
 		Name: "123",
