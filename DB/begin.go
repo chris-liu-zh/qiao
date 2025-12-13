@@ -74,11 +74,10 @@ func (tx *Begin) Exec(args ...any) *Begin {
 	return tx
 }
 
-func (tx *Begin) Rollback() *Begin {
+func (tx *Begin) Rollback() error {
 	tx.Mapper.debug("Rollback")
 	defer tx.stmt.Close()
-	tx.Err = tx.Tx.Rollback()
-	return tx
+	return tx.Tx.Rollback()
 }
 
 func (tx *Begin) Commit() error {
