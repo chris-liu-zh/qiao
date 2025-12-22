@@ -9,13 +9,15 @@ package DB
 
 import (
 	"context"
+	"errors"
 	"net"
 	"time"
 )
 
 // 检测数据库错误是否为网络错误,并使用重连机制
 func (db *ConnDB) check(err error) bool {
-	if _, ok := err.(*net.OpError); ok {
+	var opError *net.OpError
+	if errors.As(err, &opError) {
 		//网络错误，断开连接
 		db.IsClose = true
 		go db.reconnect() //异步重连
@@ -47,5 +49,6 @@ func (db *ConnDB) checkOnline() bool {
 		db.log("ping error", "").logERROR(err)
 		return false
 	}
+	db.IsClose = false
 	return true
 }
