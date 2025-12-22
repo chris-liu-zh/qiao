@@ -115,8 +115,8 @@ func Reconnect(role string, id int) {
 	}
 	for i := range dbs {
 		if dbs[i].Conf.ID == id {
-			if err := dbs[i].reconnect(); err != nil {
-				fmt.Println("reconnect failed", err)
+			if ok := dbs[i].checkOnline(); !ok {
+				fmt.Println("reconnect failed")
 				return
 			}
 			fmt.Println("reconnect success")
@@ -208,11 +208,12 @@ func (conf Config) NewDB() (err error) {
 			conndb.Conf.Dsn = fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s&dial+timeout=%d&encrypt=disable&parseTime=true", conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.DBName, conndb.Conf.TimeOut)
 		}
 	}
-	conn, err := conndb.connect()
+	conn, err := conndb.openSql()
 	if err != nil {
 		return err
 	}
 	conndb.DBFunc.Conn = conn
+
 	switch conndb.Conf.Role {
 	case "master":
 		Pool.Master.DBConn = append(Pool.Master.DBConn, conndb)
@@ -228,13 +229,9 @@ func (conf Config) NewDB() (err error) {
 	return
 }
 
-func (conn *ConnDB) connect() (*sql.DB, error) {
+func (conn *ConnDB) openSql() (*sql.DB, error) {
 	sqlDB, err := sql.Open(conn.drive, conn.Conf.Dsn)
 	if err != nil {
-		conn.log("get sql error", conn.Conf.Dsn).logERROR(err)
-		return nil, err
-	}
-	if err = sqlDB.Ping(); err != nil {
 		conn.log("get sql error", conn.Conf.Dsn).logERROR(err)
 		return nil, err
 	}

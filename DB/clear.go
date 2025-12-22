@@ -8,6 +8,7 @@
 package DB
 
 import (
+	"context"
 	"net"
 	"time"
 )
@@ -23,28 +24,27 @@ func (db *ConnDB) check(err error) bool {
 	return false
 }
 
-func (db *ConnDB) reconnect() (err error) {
+func (db *ConnDB) reconnect() {
 	//TODO 重连机制
 	for range Pool.ReconnectNum {
-		if db.DBFunc.Conn, err = db.connect(); err != nil {
-			time.Sleep(Pool.ReconnectInterval)
-			db.log("reconnect error", db.Conf.Dsn).logERROR(err)
-			continue
+		if ok := db.checkOnline(); ok {
+			db.IsClose = false
+			db.log("reconnect success", db.Conf.Dsn).logINFO()
+			return
 		}
-		db.IsClose = false
-		db.log("reconnect success", db.Conf.Dsn).logINFO()
-		return
+		time.Sleep(Pool.ReconnectInterval)
 	}
-	return
 }
 
 func (db *ConnDB) checkOnline() bool {
 	if db == nil {
 		return false
 	}
-	if err := db.DBFunc.Conn.Ping(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := db.DBFunc.Conn.PingContext(ctx); err != nil {
 		db.IsClose = true
-		db.log(err.Error(), "").logWARNING()
+		db.log("ping error", "").logERROR(err)
 		return false
 	}
 	return true

@@ -122,6 +122,13 @@ func (mapper *Mapper) whereMap(params map[string]any) *Mapper {
 }
 
 func getfind(column, find string, val any) (where string, args []any) {
+	v := reflect.ValueOf(val)
+	if v.Kind() == reflect.Pointer {
+		if !v.IsNil() {
+			v = v.Elem()
+			val = v.Interface()
+		}
+	}
 	find = strings.ToLower(find)
 	switch {
 	case regexp.MustCompile(`eq|lt|gt|=|<|>|!`).MatchString(find):
