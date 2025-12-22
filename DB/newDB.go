@@ -229,24 +229,24 @@ func (conf Config) NewDB() (err error) {
 	return
 }
 
-func (conn *ConnDB) openSql() (*sql.DB, error) {
-	sqlDB, err := sql.Open(conn.drive, conn.Conf.Dsn)
+func (db *ConnDB) openSql() (*sql.DB, error) {
+	sqlDB, err := sql.Open(db.drive, db.Conf.Dsn)
 	if err != nil {
-		conn.log("get sql error", conn.Conf.Dsn).logERROR(err)
+		db.log("get sql error", db.Conf.Dsn).logERROR(err)
 		return nil, err
 	}
-	sqlDB.SetMaxOpenConns(conn.Conf.MaxOpen)
-	sqlDB.SetMaxIdleConns(conn.Conf.MaxIdle)
+	sqlDB.SetMaxOpenConns(db.Conf.MaxOpen)
+	sqlDB.SetMaxIdleConns(db.Conf.MaxIdle)
 
 	var duration time.Duration
-	if conn.Conf.MaxIdleTime == "" {
+	if db.Conf.MaxIdleTime == "" {
 		duration = 7 * time.Hour
 	}
 
 	//设置最大空闲超时
 	if duration == 0 {
-		if duration, err = time.ParseDuration(conn.Conf.MaxIdleTime); err != nil {
-			conn.log("format error, MaxIdleTime will default to 7 hours", "").logWARNING()
+		if duration, err = time.ParseDuration(db.Conf.MaxIdleTime); err != nil {
+			db.log("format error, MaxIdleTime will default to 7 hours", "").logWARNING()
 			duration = 7 * time.Hour
 		}
 	}
