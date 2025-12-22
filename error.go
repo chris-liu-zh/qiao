@@ -14,13 +14,13 @@ import (
 )
 
 type qiaoError struct {
-	Msg      string `json:"msg"`
-	Err      error  `json:"err"`
-	File     string `json:"file"`
-	Line     int    `json:"line"`
-	Id       string `json:"id"`
-	FuncName string `json:"funcName"`
-	Other    any    `json:"other"`
+	Msg      string `json:"msg,omitempty"`
+	Err      error  `json:"err,omitempty"`
+	File     string `json:"file,omitempty"`
+	Line     int    `json:"line,omitempty"`
+	Id       string `json:"id,omitempty"`
+	FuncName string `json:"funcName,omitempty"`
+	Other    any    `json:"other,omitempty"`
 }
 
 var errId string
