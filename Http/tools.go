@@ -84,15 +84,22 @@ func setFieldValue(field reflect.Value, tag string, getter func(key string) stri
 		field.SetString(val)
 	case reflect.Slice:
 		// 支持逗号分隔的多个值
-		val := getter(tag)
-		if val == "" {
+		tags := strings.Split(tag, ",")
+		vals := []string{}
+		for _, v := range tags {
+			val := getter(v)
+			if val != "" {
+				vals = append(vals, val)
+			}
+		}
+
+		if len(vals) == 0 {
 			// 如果值为空，设置空切片
 			field.Set(reflect.MakeSlice(field.Type(), 0, 0))
 			return nil
 		}
 
 		// 分割逗号分隔的值
-		vals := strings.Split(val, ",")
 		field.Set(reflect.ValueOf(vals))
 	// 有符号整数类型
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -167,13 +174,13 @@ func setFieldValue(field reflect.Value, tag string, getter func(key string) stri
 		// 获取指针指向的元素类型
 		elemType := field.Type().Elem()
 
-		// 如果值为空字符串，则设置nil指针
-		val := getter(tag)
-		if val == "" {
-			field.Set(reflect.Zero(field.Type()))
-			return nil
+		if elemType.Kind() != reflect.Slice {
+			val := getter(tag)
+			if val == "" {
+				field.Set(reflect.Zero(field.Type()))
+				return nil
+			}
 		}
-
 		// 创建新的指针并设置值
 		newPtr := reflect.New(elemType)
 		elemField := newPtr.Elem()
