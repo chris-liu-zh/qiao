@@ -22,7 +22,7 @@ func (db *ConnDB) Query(sqlStr string, args ...any) (rows *sql.Rows, err error) 
 	}
 	db.log("Query error", query, args).logERROR(err)
 	role := db.Conf.Role
-	if timeout := db.check(err); timeout {
+	if opErr := db.checkOpError(err); opErr {
 		if db = GetNewPool(role); db == nil {
 			return nil, ErrNoConn
 		}
@@ -46,7 +46,7 @@ func (db *ConnDB) Count(sqlStr string, args ...any) (RowsCount int, err error) {
 	}
 	db.log("Count error", query, args).logERROR(err)
 	role := db.Conf.Role
-	if timeout := db.check(err); timeout {
+	if opErr := db.checkOpError(err); opErr {
 		if db = GetNewPool(role); db == nil {
 			return 0, ErrNoConn
 		}

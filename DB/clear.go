@@ -15,7 +15,7 @@ import (
 )
 
 // 检测数据库错误是否为网络错误,并使用重连机制
-func (db *ConnDB) check(err error) bool {
+func (db *ConnDB) checkOpError(err error) bool {
 	var opError *net.OpError
 	if errors.As(err, &opError) {
 		//网络错误，断开连接
@@ -27,10 +27,15 @@ func (db *ConnDB) check(err error) bool {
 }
 
 func (db *ConnDB) reconnect() {
+	if db == nil {
+		return
+	}
 	//TODO 重连机制
 	for range Pool.ReconnectNum {
+		if db.IsClose {
+			return
+		}
 		if ok := db.checkOnline(); ok {
-			db.IsClose = false
 			db.log("reconnect success", db.Conf.Dsn).logINFO()
 			return
 		}
@@ -39,9 +44,6 @@ func (db *ConnDB) reconnect() {
 }
 
 func (db *ConnDB) checkOnline() bool {
-	if db == nil {
-		return false
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	if err := db.DBFunc.Conn.PingContext(ctx); err != nil {

@@ -16,7 +16,7 @@ func (db *ConnDB) Exec(sqlStr string, arg ...any) (r sql.Result, err error) {
 	}
 	db.log("exec error", query, args...).logERROR(err)
 	role := db.Conf.Role
-	if timeout := db.check(err); timeout {
+	if opErr := db.checkOpError(err); opErr {
 		if db = GetNewPool(role); db == nil {
 			return nil, ErrNoConn
 		}
@@ -41,7 +41,7 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 	}
 	db.log("Affected error", query, args...).logERROR(err)
 	role := db.Conf.Role
-	if timeout := db.check(err); timeout {
+	if opErr := db.checkOpError(err); opErr {
 		if db = GetNewPool(role); db == nil {
 			return 0, ErrNoConn
 		}
@@ -67,7 +67,7 @@ func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	}
 	db.log("MysqlAddReturnId error", query, args...).logERROR(err)
 	role := db.Conf.Role
-	if timeout := db.check(err); timeout {
+	if opErr := db.checkOpError(err); opErr {
 		if db = GetNewPool(role); db == nil {
 			return 0, ErrNoConn
 		}
@@ -93,7 +93,7 @@ func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	}
 	db.log("PgsqlAddReturnId", query, args...).logERROR(err)
 	role := db.Conf.Role
-	if timeout := db.check(err); timeout {
+	if opErr := db.checkOpError(err); opErr {
 		if db = GetNewPool(role); db == nil {
 			return 0, ErrNoConn
 		}
@@ -119,7 +119,7 @@ func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	}
 	db.log("MssqlAddReturnId error", query, args...).logERROR(err)
 	role := db.Conf.Role
-	if timeout := db.check(err); timeout {
+	if opErr := db.checkOpError(err); opErr {
 		if db = GetNewPool(role); db == nil {
 			return 0, ErrNoConn
 		}
