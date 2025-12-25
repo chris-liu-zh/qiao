@@ -105,7 +105,14 @@ func (cache *RedisCache) HSet(key, field string, value ...any) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	cmd = cache.client.HSet(cache.ctx, cache.sign+key, field, value)
+
+	vals := make([]any, 0, 1+len(value))
+	vals = append(vals, field)
+	for _, v := range value {
+		vals = append(vals, v)
+	}
+
+	cmd = cache.client.HSet(cache.ctx, cache.sign+key, vals...)
 	if err := cmd.Err(); err != nil {
 		cmd.SetErr(cache.CheckOpError(err))
 	}
