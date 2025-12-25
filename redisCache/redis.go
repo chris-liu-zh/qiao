@@ -42,7 +42,7 @@ func NewStandaloneClient(options *RedisOptions) error {
 	cache = &RedisCache{
 		client:            client,
 		ctx:               context.Background(),
-		sign:              options.Base.Sign + "_cache_",
+		sign:              options.Base.Sign + ":",
 		ReconnectNum:      options.Base.ReconnectNum,
 		ReconnectInterval: options.Base.ReconnectInterval,
 	}
@@ -59,7 +59,7 @@ func NewFailoverClient(options *FailoverOptions) error {
 	cache = &RedisCache{
 		client:            client,
 		ctx:               context.Background(),
-		sign:              options.Base.Sign + "_cache_",
+		sign:              options.Base.Sign + ":",
 		ReconnectNum:      options.Base.ReconnectNum,
 		ReconnectInterval: options.Base.ReconnectInterval,
 	}

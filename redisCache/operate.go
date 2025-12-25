@@ -1,7 +1,6 @@
 package redisCache
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -18,8 +17,9 @@ func (cache *RedisCache) Set(key string, value any, ttl time.Duration) *redis.St
 		cmd.SetErr(ErrRedisCacheOffline)
 		return cmd
 	}
-	if cmd = cache.client.Set(cache.ctx, cache.sign+key, value, ttl); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Set(cache.ctx, cache.sign+key, value, ttl)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -35,8 +35,9 @@ func (cache *RedisCache) Get(key string) *redis.StringCmd {
 		cmd.SetErr(ErrRedisCacheOffline)
 		return cmd
 	}
-	if cmd = cache.client.Get(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Get(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -48,8 +49,9 @@ func (cache *RedisCache) Delete(key string) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.Del(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Del(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -61,8 +63,9 @@ func (cache *RedisCache) Exists(key string) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.Exists(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Exists(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -74,8 +77,9 @@ func (cache *RedisCache) Expire(key string, ttl time.Duration) *redis.BoolCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.Expire(cache.ctx, cache.sign+key, ttl); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Expire(cache.ctx, cache.sign+key, ttl)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -87,21 +91,36 @@ func (cache *RedisCache) TTL(key string) *redis.DurationCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.TTL(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.TTL(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
 
 // HSet 设置哈希字段的值
-func (cache *RedisCache) HSet(key, field string, value any) *redis.IntCmd {
+func (cache *RedisCache) HSet(key, field string, value ...any) *redis.IntCmd {
 	cmd := &redis.IntCmd{}
 	if cache.client == nil {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.HSet(cache.ctx, cache.sign+key, field, value); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.HSet(cache.ctx, cache.sign+key, field, value)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
+	}
+	return cmd
+}
+
+func (cache *RedisCache) HExpire(key string, ttl time.Duration, fields ...string) *redis.IntSliceCmd {
+	cmd := &redis.IntSliceCmd{}
+	if cache.client == nil {
+		cmd.SetErr(ErrRedisCacheNotInit)
+		return cmd
+	}
+	cmd = cache.client.HExpire(cache.ctx, cache.sign+key, ttl, fields...)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -113,8 +132,9 @@ func (cache *RedisCache) HGet(key, field string) *redis.StringCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.HGet(cache.ctx, cache.sign+key, field); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.HGet(cache.ctx, cache.sign+key, field)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -126,8 +146,9 @@ func (cache *RedisCache) HDel(key, field string) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.HDel(cache.ctx, cache.sign+key, field); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.HDel(cache.ctx, cache.sign+key, field)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -139,8 +160,9 @@ func (cache *RedisCache) HGetAll(key string) *redis.MapStringStringCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.HGetAll(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.HGetAll(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -152,8 +174,9 @@ func (cache *RedisCache) Incr(key string) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.Incr(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Incr(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -165,8 +188,9 @@ func (cache *RedisCache) IncrBy(key string, increment int64) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.IncrBy(cache.ctx, cache.sign+key, increment); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.IncrBy(cache.ctx, cache.sign+key, increment)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -178,8 +202,9 @@ func (cache *RedisCache) Decr(key string) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.Decr(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Decr(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -191,8 +216,9 @@ func (cache *RedisCache) DecrBy(key string, decrement int64) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.DecrBy(cache.ctx, cache.sign+key, decrement); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.DecrBy(cache.ctx, cache.sign+key, decrement)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -204,8 +230,9 @@ func (cache *RedisCache) LPush(key string, values ...any) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.LPush(cache.ctx, cache.sign+key, values...); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.LPush(cache.ctx, cache.sign+key, values...)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -217,8 +244,9 @@ func (cache *RedisCache) RPush(key string, values ...any) *redis.IntCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.RPush(cache.ctx, cache.sign+key, values...); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.RPush(cache.ctx, cache.sign+key, values...)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -230,8 +258,9 @@ func (cache *RedisCache) LPop(key string) *redis.StringCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.LPop(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.LPop(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -243,8 +272,9 @@ func (cache *RedisCache) RPop(key string) *redis.StringCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.RPop(cache.ctx, cache.sign+key); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.RPop(cache.ctx, cache.sign+key)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
@@ -256,53 +286,44 @@ func (cache *RedisCache) Keys(pattern string) *redis.StringSliceCmd {
 		cmd.SetErr(ErrRedisCacheNotInit)
 		return cmd
 	}
-	if cmd = cache.client.Keys(cache.ctx, cache.sign+pattern); cmd.Err() != nil {
-		cache.CheckOpError(cmd.Err())
+	cmd = cache.client.Keys(cache.ctx, cache.sign+pattern)
+	if err := cmd.Err(); err != nil {
+		cmd.SetErr(cache.CheckOpError(err))
 	}
 	return cmd
 }
 
 // Flush 清空当前数据库中以cache.sign开头的key
-func (cache *RedisCache) Flush() *redis.StatusCmd {
-	cmd := &redis.StatusCmd{}
+func (cache *RedisCache) Flush() error {
 	if cache.client == nil {
-		cmd.SetErr(ErrRedisCacheNotInit)
-		return cmd
+		return ErrRedisCacheNotInit
 	}
 
 	// 使用SCAN命令查找所有以cache.sign开头的key
 	pattern := cache.sign + "*"
 	cursor := uint64(0)
-	deletedCount := int64(0)
 	var err error
-
 	for {
 		var keys []string
 		var nextCursor uint64
 		keys, nextCursor, err = cache.client.Scan(cache.ctx, cursor, pattern, 100).Result()
 		if err != nil {
-			cache.CheckOpError(err)
-			return cmd
+			return cache.CheckOpError(err)
 		}
 
 		if len(keys) > 0 {
 			// 删除找到的keys
 			delCmd := cache.client.Del(cache.ctx, keys...)
 			if delErr := delCmd.Err(); delErr != nil {
-				cache.CheckOpError(delErr)
-				return cmd
+				return cache.CheckOpError(delErr)
 			}
-			deletedCount += delCmd.Val()
-		}
 
-		// 如果游标回到0，表示遍历完成
-		if nextCursor == 0 {
-			break
+			// 如果游标回到0，表示遍历完成
+			if nextCursor == 0 {
+				break
+			}
+			cursor = nextCursor
 		}
-		cursor = nextCursor
 	}
-
-	// 设置成功状态
-	cmd.SetVal(fmt.Sprintf("Deleted %d keys with prefix %s", deletedCount, cache.sign))
-	return cmd
+	return nil
 }
