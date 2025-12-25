@@ -30,9 +30,14 @@ func (db *ConnDB) reconnect() {
 	if db == nil {
 		return
 	}
+	if db.RetryIng {
+		return
+	}
+	db.RetryIng = true
+	defer func() { db.RetryIng = false }()
 	//TODO 重连机制
 	for range Pool.ReconnectNum {
-		if db.IsClose {
+		if !db.IsClose {
 			return
 		}
 		if ok := db.checkOnline(); ok {

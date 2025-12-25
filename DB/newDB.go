@@ -49,12 +49,13 @@ type Config struct {
 }
 
 type ConnDB struct {
-	Conf    Config
-	drive   string
-	Sign    string `json:"Sign"`
-	Err     error  `json:"Err"`
-	IsClose bool   `json:"IsClose"` //连接是否关闭
-	DBFunc  dbFunc
+	Conf     Config
+	drive    string
+	Sign     string `json:"Sign"`
+	Err      error  `json:"Err"`
+	IsClose  bool   `json:"IsClose"`  //连接是否关闭
+	RetryIng bool   `json:"RetryIng"` //是否正在重连
+	DBFunc   dbFunc
 }
 
 type dbFunc struct {
