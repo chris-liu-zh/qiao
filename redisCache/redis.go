@@ -13,7 +13,6 @@ import (
 )
 
 var ErrRedisCacheOffline = errors.New("redis cache offline")
-var ErrRedisCacheNotInit = errors.New("redis cache not init")
 
 type RedisCache struct {
 	Client            redis.Cmdable
@@ -25,20 +24,10 @@ type RedisCache struct {
 	ReconnectInterval time.Duration //重连间隔时间
 }
 
-func ping(client *redis.Client) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	return client.Ping(ctx).Err()
-}
-
 // NewStandaloneClient 创建单机Redis客户端
 func NewStandaloneClient(options *RedisOptions) (*RedisCache, error) {
-	client := redis.NewClient(options.Opt)
-	if err := ping(client); err != nil {
-		return nil, err
-	}
 	cache := &RedisCache{
-		Client:            client,
+		Client:            redis.NewClient(options.Opt),
 		ctx:               context.Background(),
 		sign:              options.Base.Sign + ":",
 		ReconnectNum:      options.Base.ReconnectNum,
@@ -50,12 +39,8 @@ func NewStandaloneClient(options *RedisOptions) (*RedisCache, error) {
 
 // NewFailoverClient 创建主从Redis客户端
 func NewFailoverClient(options *FailoverOptions) (*RedisCache, error) {
-	client := redis.NewFailoverClient(options.Opt)
-	if err := ping(client); err != nil {
-		return nil, err
-	}
 	cache := &RedisCache{
-		Client:            client,
+		Client:            redis.NewFailoverClient(options.Opt),
 		ctx:               context.Background(),
 		sign:              options.Base.Sign + ":",
 		ReconnectNum:      options.Base.ReconnectNum,
@@ -65,19 +50,14 @@ func NewFailoverClient(options *FailoverOptions) (*RedisCache, error) {
 	return cache, nil
 }
 
-func (cache *RedisCache) getClient() *redis.Client {
-	if cache.Client == nil {
-		slog.Error("Redis server not started", "error", ErrRedisCacheNotInit)
-		return nil
-	}
-	if client, ok := cache.Client.(*redis.Client); ok {
-		return client
-	}
-	return nil
+func (cache *RedisCache) Ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return cache.Client.Ping(ctx).Err()
 }
 
 func (cache *RedisCache) ShowPoolStats() {
-	if client := cache.getClient(); client != nil {
+	if client, ok := cache.Client.(*redis.Client); ok {
 		stats := client.PoolStats()
 		// 打印连接池详细信息
 		fmt.Println("\n===== Redis连接池统计信息 =====")
@@ -91,17 +71,17 @@ func (cache *RedisCache) ShowPoolStats() {
 		fmt.Printf("未命中空闲连接的次数: %d\n", stats.Misses)
 		return
 	}
-	slog.Error("Redis server not started", "error", ErrRedisCacheNotInit)
+	slog.Warn("无法显示连接池统计信息，客户端类型不支持")
 }
 
 func (cache *RedisCache) ShowSentinelInfo() {
-	if client := cache.getClient(); client != nil {
+	if client, ok := cache.Client.(*redis.Client); ok {
 		sentinelInfo := client.Info(cache.ctx, "replication").String()
 		fmt.Println("===== Redis哨兵信息 =====")
 		fmt.Println(sentinelInfo)
 		return
 	}
-	slog.Error("Redis server not started", "error", ErrRedisCacheNotInit)
+	slog.Warn("无法显示哨兵信息，客户端类型不支持")
 }
 
 func (cache *RedisCache) CheckOpError(err error) error {
@@ -125,7 +105,7 @@ func (cache *RedisCache) Retry() {
 		if cache.online.Load() == true {
 			return
 		}
-		if err := cache.Reconnect(); err != nil {
+		if err := cache.Ping(); err != nil {
 			slog.Error("Redis重连失败", "error", err)
 			time.Sleep(cache.ReconnectInterval)
 			continue
@@ -135,11 +115,4 @@ func (cache *RedisCache) Retry() {
 		cache.online.Store(true)
 		return
 	}
-}
-
-// HealthCheck 检查Redis连接是否正常
-func (cache *RedisCache) Reconnect() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	return cache.Client.Ping(ctx).Err()
 }
