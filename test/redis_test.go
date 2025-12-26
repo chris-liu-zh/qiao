@@ -13,12 +13,12 @@ func GetRedisConfig() *redisCache.FailoverOptions {
 	return &redisCache.FailoverOptions{
 		Opt: &redis.FailoverOptions{
 			MasterName:      "mymaster", // Redis地址
-			SentinelAddrs:   []string{},
-			Password:        "", // Redis密码
-			DB:              0,  // Redis库
-			PoolSize:        10, // Redis连接池大小
-			MinIdleConns:    5,  // 最小空闲连接数
-			MaxRetries:      3,  // 最大重试次数（重连后重试）
+			SentinelAddrs:   []string{}, // 哨兵地址
+			Password:        "",         // Redis密码
+			DB:              0,          // Redis库
+			PoolSize:        10,         // Redis连接池大小
+			MinIdleConns:    5,          // 最小空闲连接数
+			MaxRetries:      3,          // 最大重试次数（重连后重试）
 			MinRetryBackoff: 100 * time.Millisecond,
 			DialTimeout:     5 * time.Second, // 连接超时时间
 			ReadTimeout:     3 * time.Second, // 读超时
@@ -33,22 +33,18 @@ func GetRedisConfig() *redisCache.FailoverOptions {
 }
 
 func TestRedisClient(t *testing.T) {
-	if err := redisCache.NewFailoverClient(GetRedisConfig()); err != nil {
-		t.Errorf("Failed to create Redis client: %v", err)
-	}
-	fmt.Println("===== Redis Sentinel Info =====")
-	info, err := redisCache.NewCache().ShowSentinelInfo()
+	cache, err := redisCache.NewFailoverClient(GetRedisConfig())
 	if err != nil {
-		t.Errorf("Failed to get Sentinel info: %v", err)
+		t.Errorf("Failed to create Redis client: %v", err)
+		return
 	}
-	fmt.Println(info)
-	fmt.Println("===== Redis pool stats  =====")
-	redisCache.NewCache().ShowPoolStats()
-	if cmd := redisCache.NewCache().Set("test_key", 123456, 1*time.Hour); cmd.Err() != nil {
+	cache.ShowSentinelInfo()
+	cache.ShowPoolStats()
+	if cmd := cache.Set("test_key", 123456, 1*time.Hour); cmd.Err() != nil {
 		t.Errorf("Failed to set key: %v", err)
 	}
 	var data int
-	if err = redisCache.NewCache().Get("test_key").Scan(&data); err != nil {
+	if err = cache.Get("test_key").Scan(&data); err != nil {
 		t.Errorf("Failed to get key: %v", err)
 	}
 	fmt.Printf("\nRetrieved from Redis: %v\n", data)

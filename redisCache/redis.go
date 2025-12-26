@@ -15,14 +15,12 @@ import (
 var ErrRedisCacheOffline = errors.New("redis cache offline")
 var ErrRedisCacheNotInit = errors.New("redis cache not init")
 
-var cache *RedisCache
-
 type RedisCache struct {
-	client            redis.Cmdable
+	Client            redis.Cmdable
 	ctx               context.Context
 	retryIng          bool
 	sign              string
-	Online            atomic.Bool
+	online            atomic.Bool
 	ReconnectNum      int           //重连次数
 	ReconnectInterval time.Duration //重连间隔时间
 }
@@ -34,58 +32,45 @@ func ping(client *redis.Client) error {
 }
 
 // NewStandaloneClient 创建单机Redis客户端
-func NewStandaloneClient(options *RedisOptions) error {
+func NewStandaloneClient(options *RedisOptions) (*RedisCache, error) {
 	client := redis.NewClient(options.Opt)
 	if err := ping(client); err != nil {
-		return err
+		return nil, err
 	}
-	cache = &RedisCache{
-		client:            client,
+	cache := &RedisCache{
+		Client:            client,
 		ctx:               context.Background(),
 		sign:              options.Base.Sign + ":",
 		ReconnectNum:      options.Base.ReconnectNum,
 		ReconnectInterval: options.Base.ReconnectInterval,
 	}
-	cache.Online.Store(true)
-	return nil
+	cache.online.Store(true)
+	return cache, nil
 }
 
 // NewFailoverClient 创建主从Redis客户端
-func NewFailoverClient(options *FailoverOptions) error {
+func NewFailoverClient(options *FailoverOptions) (*RedisCache, error) {
 	client := redis.NewFailoverClient(options.Opt)
 	if err := ping(client); err != nil {
-		return err
+		return nil, err
 	}
-	cache = &RedisCache{
-		client:            client,
+	cache := &RedisCache{
+		Client:            client,
 		ctx:               context.Background(),
 		sign:              options.Base.Sign + ":",
 		ReconnectNum:      options.Base.ReconnectNum,
 		ReconnectInterval: options.Base.ReconnectInterval,
 	}
-	cache.Online.Store(true)
-	return nil
-}
-
-func NewCache() *RedisCache {
-	if cache == nil {
-		return &RedisCache{
-			client:            nil,
-			ctx:               context.Background(),
-			sign:              "",
-			ReconnectNum:      0,
-			ReconnectInterval: 0,
-		}
-	}
-	return cache
+	cache.online.Store(true)
+	return cache, nil
 }
 
 func (cache *RedisCache) getClient() *redis.Client {
-	if cache.client == nil {
+	if cache.Client == nil {
 		slog.Error("Redis server not started", "error", ErrRedisCacheNotInit)
 		return nil
 	}
-	if client, ok := cache.client.(*redis.Client); ok {
+	if client, ok := cache.Client.(*redis.Client); ok {
 		return client
 	}
 	return nil
@@ -109,17 +94,20 @@ func (cache *RedisCache) ShowPoolStats() {
 	slog.Error("Redis server not started", "error", ErrRedisCacheNotInit)
 }
 
-func (cache *RedisCache) ShowSentinelInfo() (string, error) {
+func (cache *RedisCache) ShowSentinelInfo() {
 	if client := cache.getClient(); client != nil {
-		return client.Info(cache.ctx, "replication").Result()
+		sentinelInfo := client.Info(cache.ctx, "replication").String()
+		fmt.Println("===== Redis哨兵信息 =====")
+		fmt.Println(sentinelInfo)
+		return
 	}
-	return "", ErrRedisCacheNotInit
+	slog.Error("Redis server not started", "error", ErrRedisCacheNotInit)
 }
 
 func (cache *RedisCache) CheckOpError(err error) error {
 	var netErr *net.OpError
 	if errors.As(err, &netErr) {
-		cache.Online.Store(false)
+		cache.online.Store(false)
 		slog.Error("Redis连接异常", "error", err)
 		go cache.Retry()
 		return ErrRedisCacheOffline
@@ -134,7 +122,7 @@ func (cache *RedisCache) Retry() {
 	cache.retryIng = true
 	defer func() { cache.retryIng = false }()
 	for range cache.ReconnectNum {
-		if cache.Online.Load() == true {
+		if cache.online.Load() == true {
 			return
 		}
 		if err := cache.Reconnect(); err != nil {
@@ -144,7 +132,7 @@ func (cache *RedisCache) Retry() {
 		}
 
 		slog.Info("Redis重连成功", "sign", cache.sign)
-		cache.Online.Store(true)
+		cache.online.Store(true)
 		return
 	}
 }
@@ -153,5 +141,5 @@ func (cache *RedisCache) Retry() {
 func (cache *RedisCache) Reconnect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	return cache.client.Ping(ctx).Err()
+	return cache.Client.Ping(ctx).Err()
 }
