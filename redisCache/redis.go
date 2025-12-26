@@ -25,7 +25,7 @@ type RedisCache struct {
 }
 
 // NewStandaloneClient 创建单机Redis客户端
-func NewStandaloneClient(options *RedisOptions) (*RedisCache, error) {
+func NewStandaloneClient(options *RedisOptions) *RedisCache {
 	cache := &RedisCache{
 		Client:            redis.NewClient(options.Opt),
 		ctx:               context.Background(),
@@ -38,7 +38,7 @@ func NewStandaloneClient(options *RedisOptions) (*RedisCache, error) {
 }
 
 // NewFailoverClient 创建主从Redis客户端
-func NewFailoverClient(options *FailoverOptions) (*RedisCache, error) {
+func NewFailoverClient(options *FailoverOptions) *RedisCache {
 	cache := &RedisCache{
 		Client:            redis.NewFailoverClient(options.Opt),
 		ctx:               context.Background(),
