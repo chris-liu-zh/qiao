@@ -34,7 +34,7 @@ func NewStandaloneClient(options *RedisOptions) *RedisCache {
 		ReconnectInterval: options.Base.ReconnectInterval,
 	}
 	cache.online.Store(true)
-	return cache, nil
+	return cache
 }
 
 // NewFailoverClient 创建主从Redis客户端
@@ -47,7 +47,7 @@ func NewFailoverClient(options *FailoverOptions) *RedisCache {
 		ReconnectInterval: options.Base.ReconnectInterval,
 	}
 	cache.online.Store(true)
-	return cache, nil
+	return cache
 }
 
 func (cache *RedisCache) Ping() error {

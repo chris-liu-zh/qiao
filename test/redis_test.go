@@ -33,18 +33,18 @@ func GetRedisConfig() *redisCache.FailoverOptions {
 }
 
 func TestRedisClient(t *testing.T) {
-	cache, err := redisCache.NewFailoverClient(GetRedisConfig())
-	if err != nil {
-		t.Errorf("Failed to create Redis client: %v", err)
+	cache := redisCache.NewFailoverClient(GetRedisConfig())
+	if err := cache.Ping(); err != nil {
+		t.Errorf("Failed to connect to Redis: %v", err)
 		return
 	}
 	cache.ShowSentinelInfo()
 	cache.ShowPoolStats()
 	if cmd := cache.Set("test_key", 123456, 1*time.Hour); cmd.Err() != nil {
-		t.Errorf("Failed to set key: %v", err)
+		t.Errorf("Failed to set key: %v", cmd.Err())
 	}
 	var data int
-	if err = cache.Get("test_key").Scan(&data); err != nil {
+	if err := cache.Get("test_key").Scan(&data); err != nil {
 		t.Errorf("Failed to get key: %v", err)
 	}
 	fmt.Printf("\nRetrieved from Redis: %v\n", data)
