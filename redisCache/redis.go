@@ -33,6 +33,11 @@ func NewStandaloneClient(options *RedisOptions) *RedisCache {
 		ReconnectNum:      options.Base.ReconnectNum,
 		ReconnectInterval: options.Base.ReconnectInterval,
 	}
+	if err := cache.Ping(); err != nil {
+		cache.online.Store(false)
+		slog.Error("Redis连接失败", "error", err)
+		return cache
+	}
 	cache.online.Store(true)
 	return cache
 }
@@ -45,6 +50,11 @@ func NewFailoverClient(options *FailoverOptions) *RedisCache {
 		sign:              options.Base.Sign + ":",
 		ReconnectNum:      options.Base.ReconnectNum,
 		ReconnectInterval: options.Base.ReconnectInterval,
+	}
+	if err := cache.Ping(); err != nil {
+		cache.online.Store(false)
+		slog.Error("Redis连接失败", "error", err)
+		return cache
 	}
 	cache.online.Store(true)
 	return cache

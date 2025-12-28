@@ -18,11 +18,16 @@ import (
 
 func initdb() error {
 	db := &DB.Config{
-		Title: "test",
-		Role:  "master",
-		Type:  "mssql",
-		Open:  true,
-		Dsn:   "sqlserver://api:CF18.COM@chris.com:1433?database=cf2024a&encrypt=disable&parseTime=true",
+		Title:   "test",
+		Role:    "master",
+		Type:    "mysql",
+		Open:    true,
+		Host:    "",
+		Port:    3306,
+		User:    "",
+		Pwd:     "",
+		TimeOut: 5,
+		DBName:  "",
 	}
 	if err := db.NewDB(); err != nil {
 		return qiao.Err("数据库设置错误", err)

@@ -5,19 +5,18 @@ import (
 	"errors"
 	"reflect"
 	"strings"
-	"sync"
 )
 
 var (
-	rlock        sync.RWMutex
+	// rlock        sync.RWMutex
 	ErrNotPtr    = errors.New("type is not reflect.Pointer")
 	ErrNotStruct = errors.New("type is not reflect.Struct")
 	ErrNotSlice  = errors.New("type is not reflect.Slice")
 )
 
 func (mapper *Mapper) ScanRowMap() (row map[string]any, err error) {
-	rlock.Lock()
-	defer rlock.Unlock()
+	// rlock.Lock()
+	// defer rlock.Unlock()
 	defer mapper.sqlRows.Close()
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
@@ -46,8 +45,8 @@ func (mapper *Mapper) ScanRowMap() (row map[string]any, err error) {
 }
 
 func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
-	rlock.Lock()
-	defer rlock.Unlock()
+	// rlock.Lock()
+	// defer rlock.Unlock()
 	defer mapper.sqlRows.Close()
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
@@ -87,8 +86,8 @@ func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
 //------GetList-----------------------------------------------------------------------------------------------//
 
 func (mapper *Mapper) ScanListMap() (list []map[string]any, err error) {
-	rlock.Lock()
-	defer rlock.Unlock()
+	// rlock.Lock()
+	// defer rlock.Unlock()
 	defer mapper.sqlRows.Close()
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
@@ -112,8 +111,8 @@ func (mapper *Mapper) ScanListMap() (list []map[string]any, err error) {
 }
 
 func (mapper *Mapper) ScanListStruct(_struct any) (err error) {
-	rlock.Lock()
-	defer rlock.Unlock()
+	// rlock.Lock()
+	// defer rlock.Unlock()
 	defer mapper.sqlRows.Close()
 
 	reflectT := reflect.TypeOf(_struct)
