@@ -6,13 +6,13 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-func DNS01Challenge(dnsProvider DNSProvider, domains []string, cacheDir, mail, checkTime string) (*tls.Config, error) {
+func DNS01Challenge(dnsProvider DNSProvider, domains []string, cacheDir, mail, checkTime string, lessDayRenew int) (*tls.Config, error) {
 	DCM, err := NewDNSCertManager(dnsProvider, mail, domains, cacheDir)
 	if err != nil {
 		return nil, err
 	}
 	if checkTime != "" {
-		go DCM.StartCertificateExpiryMonitor(checkTime)
+		go DCM.StartCertificateExpiryMonitor(checkTime, lessDayRenew)
 	}
 	// 配置TLS使用DNS证书管理器
 	tlsConfig := &tls.Config{

@@ -359,34 +359,38 @@ func (m *DNSCertManager) RenewCertificate(domain string) error {
 }
 
 // CheckAndRenewCertificates 检查所有域名的证书并在需要时续期
-func (m *DNSCertManager) CheckAndRenewCertificates() error {
+func (m *DNSCertManager) CheckAndRenewCertificates(lessDayRenew int) error {
 	log.Println("开始检查证书到期状态...")
 
 	for _, domain := range m.domains {
 		expiring, err := m.IsCertificateExpiringSoon(domain)
 		if err != nil {
 			log.Printf("检查证书 %s 到期状态失败: %v", domain, err)
-			continue
+			return err
 		}
 
-		if expiring {
-			if err := m.RenewCertificate(domain); err != nil {
-				log.Printf("续期证书 %s 失败: %v", domain, err)
-			} else {
-				log.Printf("证书 %s 续期成功", domain)
-			}
+		daysLeft, err := m.CheckCertificateExpiry(domain)
+		if err != nil {
+			log.Printf("检查证书 %s 剩余天数失败: %v", domain, err)
+			return err
 		} else {
-			daysLeft, _ := m.CheckCertificateExpiry(domain)
 			log.Printf("证书 %s 状态正常 (剩余 %d 天)", domain, daysLeft)
 		}
-	}
 
+		if expiring || daysLeft <= 20 {
+			if err := m.RenewCertificate(domain); err != nil {
+				log.Printf("续期证书 %s 失败: %v", domain, err)
+				return err
+			}
+			log.Printf("证书 %s 续期成功", domain)
+		}
+	}
 	log.Println("证书检查完成")
 	return nil
 }
 
 // startCertificateExpiryMonitor 启动证书到期检测监控协程
-func (m *DNSCertManager) StartCertificateExpiryMonitor(checkTime string) {
+func (m *DNSCertManager) StartCertificateExpiryMonitor(checkTime string, lessDayRenew int) {
 	log.Printf("📅 启动证书到期检测监控 (检查时间: %s)...", checkTime)
 
 	// 解析检查时间
@@ -397,7 +401,7 @@ func (m *DNSCertManager) StartCertificateExpiryMonitor(checkTime string) {
 
 	// 立即执行一次证书检查
 	log.Println("执行首次证书检查...")
-	if err := m.CheckAndRenewCertificates(); err != nil {
+	if err := m.CheckAndRenewCertificates(lessDayRenew); err != nil {
 		log.Printf("首次证书检查失败: %v", err)
 	}
 
@@ -423,7 +427,7 @@ func (m *DNSCertManager) StartCertificateExpiryMonitor(checkTime string) {
 
 	for range ticker.C {
 		log.Println("🔄 执行每日证书到期检查...")
-		if err := m.CheckAndRenewCertificates(); err != nil {
+		if err := m.CheckAndRenewCertificates(lessDayRenew); err != nil {
 			log.Printf("证书检查失败: %v", err)
 		}
 	}
