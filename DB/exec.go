@@ -131,8 +131,9 @@ func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	return
 }
 
-func (mapper *Mapper) ExecSql(sql string) (r sql.Result, err error) {
+func (mapper *Mapper) ExecSql(sql string, args ...any) (r sql.Result, err error) {
 	mapper.Complete.Sql = sql
+	mapper.Complete.Args = args
 	mapper.debug("ExecSql")
 	if r, err = mapper.Write().Exec(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
