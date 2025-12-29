@@ -35,13 +35,16 @@ func (cache *RedisCache) Get(key string) *redis.StringCmd {
 }
 
 // Delete 删除键值对
-func (cache *RedisCache) Delete(key string) *redis.IntCmd {
+func (cache *RedisCache) Delete(keys ...string) *redis.IntCmd {
 	cmd := &redis.IntCmd{}
 	if !cache.online.Load() {
 		cmd.SetErr(ErrRedisCacheOffline)
 		return cmd
 	}
-	cmd = cache.Client.Del(cache.ctx, cache.sign+key)
+	for i := range keys {
+		keys[i] = cache.sign + keys[i]
+	}
+	cmd = cache.Client.Del(cache.ctx, keys...)
 	if err := cmd.Err(); err != nil {
 		cmd.SetErr(cache.CheckOpError(err))
 	}
@@ -49,13 +52,16 @@ func (cache *RedisCache) Delete(key string) *redis.IntCmd {
 }
 
 // Exists 检查键是否存在
-func (cache *RedisCache) Exists(key string) *redis.IntCmd {
+func (cache *RedisCache) Exists(keys ...string) *redis.IntCmd {
 	cmd := &redis.IntCmd{}
 	if !cache.online.Load() {
 		cmd.SetErr(ErrRedisCacheOffline)
 		return cmd
 	}
-	cmd = cache.Client.Exists(cache.ctx, cache.sign+key)
+	for i := range keys {
+		keys[i] = cache.sign + keys[i]
+	}
+	cmd = cache.Client.Exists(cache.ctx, keys...)
 	if err := cmd.Err(); err != nil {
 		cmd.SetErr(cache.CheckOpError(err))
 	}
