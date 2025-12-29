@@ -30,6 +30,7 @@ type DNSCertManager struct {
 	domains     []string
 	cacheDir    string
 	privateKey  crypto.PrivateKey
+	renew       bool
 }
 
 type DNSProvider interface {
@@ -349,11 +350,12 @@ func (m *DNSCertManager) RenewCertificate(domain string) error {
 	}
 
 	// 调用GetCertificate方法获取新证书
+	m.renew = true
 	_, err := m.GetCertificate(hello)
 	if err != nil {
 		return fmt.Errorf("续期证书失败: %v", err)
 	}
-
+	m.renew = false
 	log.Printf("证书续期成功: %s", domain)
 	return nil
 }
