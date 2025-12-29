@@ -10,6 +10,7 @@ package qiao
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"runtime"
 )
 
@@ -30,6 +31,7 @@ func Err(msg string, err error, other ...any) error {
 	if ok := errors.As(err, &qe); ok && qe.Id == errId {
 		return err
 	}
+	slog.Error("qiao error", "msg", msg, "file", qe.File, "line", qe.Line, "err", err, "other", other)
 
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		errId = UUIDV7().String()
