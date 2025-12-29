@@ -377,7 +377,7 @@ func (m *DNSCertManager) CheckAndRenewCertificates(lessDayRenew int) error {
 			log.Printf("证书 %s 状态正常 (剩余 %d 天)", domain, daysLeft)
 		}
 
-		if expiring || daysLeft <= 20 {
+		if expiring || daysLeft <= lessDayRenew {
 			if err := m.RenewCertificate(domain); err != nil {
 				log.Printf("续期证书 %s 失败: %v", domain, err)
 				return err
