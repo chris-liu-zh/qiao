@@ -133,7 +133,7 @@ func PGpage(mapper *Mapper, size, page int) *Mapper {
 }
 
 func MYpage(mapper *Mapper, size, page int) *Mapper {
-	mapper.SqlTpl = fmt.Sprintf("%s LIMIT %d , %d", Select, page-1, size)
+	mapper.SqlTpl = fmt.Sprintf("%s LIMIT %d , %d", Select, (page-1)*size, size)
 	return mapper
 }
 
