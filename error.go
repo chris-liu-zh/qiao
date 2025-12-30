@@ -16,7 +16,7 @@ import (
 
 type qiaoError struct {
 	Msg      string `json:"msg,omitempty"`
-	Err      string `json:"err,omitempty"`
+	Err      error  `json:"err,omitempty"`
 	File     string `json:"file,omitempty"`
 	Line     int    `json:"line,omitempty"`
 	Id       string `json:"id,omitempty"`
@@ -34,10 +34,10 @@ func Err(msg string, err error, other ...any) error {
 
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		errId = UUIDV7().String()
-		slog.Error(msg, "file", file, "line", line, "err", err, "other", other)
+		slog.Error(msg, "file", file, "line", line, "err", err.Error(), "other", other)
 		return &qiaoError{
 			Msg:      msg,
-			Err:      err.Error(),
+			Err:      err,
 			File:     file,
 			Line:     line,
 			Other:    other,
@@ -51,4 +51,8 @@ func Err(msg string, err error, other ...any) error {
 func (e *qiaoError) Error() string {
 	jsonErr, _ := json.Marshal(e)
 	return string(jsonErr)
+}
+
+func (e *qiaoError) Unwrap() error {
+	return e.Err
 }
