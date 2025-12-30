@@ -34,7 +34,10 @@ func Err(msg string, err error, other ...any) error {
 
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		errId = UUIDV7().String()
-		slog.Error(msg, "file", file, "line", line, "err", err.Error(), "other", other)
+		if err != nil {
+			slog.Error(msg, "file", file, "line", line, "err", err.Error(), "other", other)
+		}
+
 		return &qiaoError{
 			Msg:      msg,
 			Err:      err,
