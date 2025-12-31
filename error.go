@@ -8,6 +8,7 @@
 package qiao
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -26,7 +27,7 @@ type qiaoError struct {
 
 var errId string
 
-func Err(msg string, err error, other ...any) error {
+func Err(msg string, err error, level slog.Level, other ...any) error {
 	var qe *qiaoError
 	if ok := errors.As(err, &qe); ok && qe.Id == errId {
 		return err
@@ -35,7 +36,7 @@ func Err(msg string, err error, other ...any) error {
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		errId = UUIDV7().String()
 		if err != nil {
-			slog.Error(msg, "file", file, "line", line, "err", err.Error(), "other", other)
+			slog.Log(context.Background(), slog.LevelError, msg, slog.String("file", file), slog.Int("line", line), slog.String("err", err.Error()), slog.Any("other", other))
 		}
 
 		return &qiaoError{
