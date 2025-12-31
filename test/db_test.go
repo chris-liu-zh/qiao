@@ -30,14 +30,14 @@ func initdb() error {
 		DBName:  "",
 	}
 	if err := db.NewDB(); err != nil {
-		return qiao.Err("数据库设置错误", err, slog.LevelError)
+		return qiao.Err("数据库设置错误", err, qiao.SetLevel(slog.LevelError))
 	}
 	return nil
 }
 
 func initialize() (err error) {
 	if err = initdb(); err != nil {
-		return qiao.Err("", err, slog.LevelError)
+		return qiao.Err("", err)
 	}
 
 	return
