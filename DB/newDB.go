@@ -69,9 +69,9 @@ type Return struct {
 	Affected    GetReturn
 }
 
-type Page func(*Mapper, int, int) *Mapper
+type Page func(*Mapper, ...int) *Mapper
 
-type GetReturn func(string, ...any) (int64, error)
+type GetReturn func(*Mapper) (int64, error)
 
 func init() {
 	if Pool.Master == nil {
@@ -127,18 +127,48 @@ func Reconnect(role string, id int) {
 	fmt.Println("没有找到对应的数据库连接")
 }
 
-func PGpage(mapper *Mapper, size, page int) *Mapper {
-	mapper.SqlTpl = fmt.Sprintf("%s LIMIT %d OFFSET %d", Select, size, page)
+func PGpage(mapper *Mapper, sizePage ...int) *Mapper {
+	sp := len(sizePage)
+	if sp == 1 {
+		mapper.SqlTpl = `select ${field} from ${table} ${where} ${order} ${group} LIMIT ?`
+		mapper.Complete.Args = append(mapper.Complete.Args, sizePage)
+	}
+	if sp > 1 {
+		size := sizePage[0]
+		page := sizePage[1]
+		mapper.SqlTpl = `select ${field} from ${table} ${where} ${order} ${group} LIMIT ? OFFSET ?`
+		mapper.Complete.Args = append(mapper.Complete.Args, size, (page-1)*size)
+	}
 	return mapper
 }
 
-func MYpage(mapper *Mapper, size, page int) *Mapper {
-	mapper.SqlTpl = fmt.Sprintf("%s LIMIT %d , %d", Select, (page-1)*size, size)
+func MYpage(mapper *Mapper, sizePage ...int) *Mapper {
+	sp := len(sizePage)
+	if sp == 1 {
+		mapper.SqlTpl = `select ${field} from ${table} ${where} ${order} ${group} LIMIT ?`
+		mapper.Complete.Args = append(mapper.Complete.Args, sizePage)
+	}
+	if sp > 1 {
+		size := sizePage[0]
+		page := sizePage[1]
+		mapper.SqlTpl = `select ${field} from ${table} ${where} ${order} ${group} LIMIT ?,?`
+		mapper.Complete.Args = append(mapper.Complete.Args, (page-1)*size, size)
+	}
 	return mapper
 }
 
-func MSpage(mapper *Mapper, size, page int) *Mapper {
-	mapper.SqlTpl = fmt.Sprintf(`select top %d ${field} from (select row_number() over(${order}) as rownumber,${joinfield} from ${table} ${join} ${where}) temp_row where rownumber > %d;`, size, page*size-size)
+func MSpage(mapper *Mapper, sizePage ...int) *Mapper {
+	sp := len(sizePage)
+	if sp == 1 {
+		mapper.SqlTpl = `select top ? ${field} from ${table} ${join} ${where}`
+		mapper.Complete.Args = append(mapper.Complete.Args, sizePage[0])
+	}
+	if sp > 1 {
+		size := sizePage[0]
+		page := sizePage[1]
+		mapper.SqlTpl = `select top ? ${field} from (select row_number() over(${order}) as rownumber,${joinfield} from ${table} ${join} ${where}) temp_row where rownumber > ?;`
+		mapper.Complete.Args = append(mapper.Complete.Args, size, page*size-size)
+	}
 	return mapper
 }
 
@@ -182,7 +212,7 @@ func (conf Config) NewDB() (err error) {
 	case "pgsql":
 		conndb.Sign = "$"
 		conndb.DBFunc.Page = PGpage
-		conndb.DBFunc.AddReturnId = QiaoDB().PgsqlAddReturnId
+		conndb.DBFunc.AddReturnId = PgsqlAddReturnId
 		conndb.drive = "postgres"
 		if conndb.Conf.Dsn == "" {
 			conndb.Conf.Dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable connect_timeout=%d", conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.DBName, conndb.Conf.TimeOut)
@@ -190,7 +220,7 @@ func (conf Config) NewDB() (err error) {
 	case "mysql":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
-		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
+		conndb.DBFunc.AddReturnId = MysqlAddReturnId
 		conndb.drive = "mysql"
 		if conndb.Conf.Dsn == "" {
 			conndb.Conf.Dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?timeout=%ds&parseTime=true&loc=Local", conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.DBName, conndb.Conf.TimeOut)
@@ -198,12 +228,12 @@ func (conf Config) NewDB() (err error) {
 	case "sqlite":
 		conndb.Sign = "?"
 		conndb.DBFunc.Page = MYpage
-		conndb.DBFunc.AddReturnId = QiaoDB().MysqlAddReturnId
+		conndb.DBFunc.AddReturnId = MysqlAddReturnId
 		conndb.drive = "sqlite3"
 	case "mssql":
 		conndb.Sign = "@p"
 		conndb.DBFunc.Page = MSpage
-		conndb.DBFunc.AddReturnId = QiaoDB().MssqlAddReturnId
+		conndb.DBFunc.AddReturnId = MssqlAddReturnId
 		conndb.drive = "sqlserver"
 		if conndb.Conf.Dsn == "" {
 			conndb.Conf.Dsn = fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s&dial+timeout=%d&encrypt=disable&parseTime=true", conndb.Conf.User, conndb.Conf.Pwd, conndb.Conf.Host, conndb.Conf.Port, conndb.Conf.DBName, conndb.Conf.TimeOut)

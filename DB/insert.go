@@ -30,7 +30,7 @@ func (mapper *Mapper) LastAddId(data any) (int64, error) {
 
 func (mapper *Mapper) getInsert(data any) *Mapper {
 	v := reflect.ValueOf(data)
-	var field string
+	var field strings.Builder
 	var l int
 	if v.Kind() == reflect.Pointer {
 		elem := v.Elem()
@@ -47,9 +47,9 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 			fields := strings.Split(elem.Type().Field(i).Tag.Get("db"), ";")
 			if WritableField(fields) {
 				if c := getColumn(fields); c != "" {
-					field += c + `,`
+					field.WriteString(c + `,`)
 				} else {
-					field += qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`
+					field.WriteString(qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`)
 				}
 
 				mapper.Complete.Args = append(mapper.Complete.Args, elem.Field(i).Interface())
@@ -60,13 +60,13 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 
 	if v.Kind() == reflect.Map {
 		for k, v := range data.(map[string]any) {
-			field += qiao.CamelCaseToUdnderscore(k) + `,`
+			field.WriteString(qiao.CamelCaseToUdnderscore(k) + `,`)
 			mapper.Complete.Args = append(mapper.Complete.Args, v)
 		}
 	}
 
 	mapper.Debris.sign = Placeholders(l)
-	mapper.Debris.field = strings.TrimRight(field, ",")
+	mapper.Debris.field = strings.TrimRight(field.String(), ",")
 	mapper.SqlTpl = Insert
 	return mapper
 }
@@ -77,7 +77,7 @@ func (mapper *Mapper) lastInsertId() (insertId int64, err error) {
 		return
 	}
 	mapper.debug("lastInsertId")
-	if insertId, err = mapper.Write().DBFunc.AddReturnId(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
+	if insertId, err = mapper.Write().DBFunc.AddReturnId(mapper); err != nil {
 		return
 	}
 	return

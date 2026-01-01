@@ -53,13 +53,14 @@ func (db *ConnDB) Affected(sqlStr string, arg ...any) (Affected int64, err error
 	return
 }
 
-func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
+func MysqlAddReturnId(mapper *Mapper) (insertId int64, err error) {
 	db := mapper.Write()
 	if db == nil {
 		return 0, ErrNoConn
 	}
-	args := handleNull(arg...)
+	args := handleNull(mapper.Complete.Args...)
 	var result sql.Result
+	sqlStr := mapper.Complete.Sql + " RETURNING id"
 	query := Replace(sqlStr, "?", db.Sign)
 	db.log("MysqlAddReturnId", query, args...).logDEBUG()
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
@@ -79,13 +80,13 @@ func (mapper *Mapper) MysqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	return
 }
 
-func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
+func PgsqlAddReturnId(mapper *Mapper) (insertId int64, err error) {
 	db := mapper.Write()
 	if db == nil {
 		return 0, ErrNoConn
 	}
-	args := handleNull(arg...)
-	sqlStr = sqlStr + " RETURNING id"
+	args := handleNull(mapper.Complete.Args...)
+	sqlStr := mapper.Complete.Sql + " RETURNING id"
 	query := Replace(sqlStr, "?", db.Sign)
 	db.log("PgsqlAddReturnId", query, args...).logDEBUG()
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {
@@ -105,13 +106,13 @@ func (mapper *Mapper) PgsqlAddReturnId(sqlStr string, arg ...any) (insertId int6
 	return
 }
 
-func (mapper *Mapper) MssqlAddReturnId(sqlStr string, arg ...any) (insertId int64, err error) {
+func MssqlAddReturnId(mapper *Mapper) (insertId int64, err error) {
 	db := mapper.Write()
 	if db == nil {
 		return 0, ErrNoConn
 	}
-	args := handleNull(arg...)
-	sqlStr = sqlStr + " ;SELECT SCOPE_IDENTITY();"
+	args := handleNull(mapper.Complete.Args...)
+	sqlStr := mapper.Complete.Sql + " ;SELECT SCOPE_IDENTITY();"
 	query := Replace(sqlStr, "?", db.Sign)
 	db.log("MssqlAddReturnId", query, args...).logDEBUG()
 	if err = db.DBFunc.Conn.QueryRow(query, args...).Scan(&insertId); err == nil {

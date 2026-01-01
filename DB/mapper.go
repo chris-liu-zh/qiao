@@ -116,7 +116,7 @@ func (mapper *Mapper) Set(set any, args ...any) *Mapper {
 }
 
 // Group 设置分组
-func (mapper *Mapper) Group(group string) *Mapper {
+func (mapper *Mapper) GroupBy(group string) *Mapper {
 	mapper.Debris.group = "group by " + group
 	return mapper
 }
@@ -130,7 +130,7 @@ func (mapper *Mapper) Table(tableName string) *Mapper {
 /*
 Order	设置排序
 */
-func (mapper *Mapper) Order(order string) *Mapper {
+func (mapper *Mapper) OrderBy(order string) *Mapper {
 	if order == "" {
 		return mapper
 	}
@@ -150,6 +150,6 @@ Limit	设置分页
 	@size int;-- 页面大小
 	@page int;-- 当前页
 */
-func (mapper *Mapper) Limit(size, page int) *Mapper {
-	return mapper.Read().DBFunc.Page(mapper, size, page)
+func (mapper *Mapper) Limit(sizepage ...int) *Mapper {
+	return mapper.Read().DBFunc.Page(mapper, sizepage...)
 }

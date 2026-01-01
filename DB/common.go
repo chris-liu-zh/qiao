@@ -153,10 +153,6 @@ func handleNull(args ...any) (anydata []any) {
 	return
 }
 
-func (tx *Begin) log(msg string) *sqlLog {
-	return &sqlLog{Message: msg, Sqlstr: tx.Mapper.Complete.Sql, Args: tx.Mapper.Complete.Args, Title: tx.Title}
-}
-
 func (mapper *Mapper) log(msg string) *sqlLog {
 	return &sqlLog{Message: msg, Sqlstr: mapper.Complete.Sql, Args: mapper.Complete.Args}
 }

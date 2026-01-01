@@ -105,7 +105,7 @@ WhereMap map条件查询
 	map[column:where]v
 */
 func (mapper *Mapper) whereMap(params map[string]any) *Mapper {
-	var fields string
+	var fields strings.Builder
 	var args []any
 	for k, v := range params {
 		column := strings.Split(k, ":")
@@ -114,11 +114,11 @@ func (mapper *Mapper) whereMap(params map[string]any) *Mapper {
 			find = column[1]
 		}
 		field, arg := getfind(qiao.CamelCaseToUdnderscore(column[0]), find, v)
-		fields += fmt.Sprintf(" %s", field)
+		fmt.Fprintf(&fields, " %s", field)
 
 		args = append(args, arg...)
 	}
-	return mapper.where(fields, args...)
+	return mapper.where(fields.String(), args...)
 }
 
 func getfind(column, find string, val any) (where string, args []any) {

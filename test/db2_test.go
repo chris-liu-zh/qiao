@@ -39,7 +39,7 @@ func Test_db(t *testing.T) {
 
 func query(t *testing.T) {
 	var p []Project
-	if err := DB.QiaoDB().Order("startTime").GetList(&p); err != nil {
+	if err := DB.QiaoDB().OrderBy("startTime").GetList(&p); err != nil {
 		t.Fatalf("%v", err)
 		return
 	}
