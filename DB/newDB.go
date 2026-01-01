@@ -131,7 +131,7 @@ func PGpage(mapper *Mapper, sizePage ...int) *Mapper {
 	sp := len(sizePage)
 	if sp == 1 {
 		mapper.SqlTpl = `select ${field} from ${table} ${where} ${order} ${group} LIMIT ?`
-		mapper.Complete.Args = append(mapper.Complete.Args, sizePage)
+		mapper.Complete.Args = append(mapper.Complete.Args, sizePage[0])
 	}
 	if sp > 1 {
 		size := sizePage[0]
@@ -146,7 +146,7 @@ func MYpage(mapper *Mapper, sizePage ...int) *Mapper {
 	sp := len(sizePage)
 	if sp == 1 {
 		mapper.SqlTpl = `select ${field} from ${table} ${where} ${order} ${group} LIMIT ?`
-		mapper.Complete.Args = append(mapper.Complete.Args, sizePage)
+		mapper.Complete.Args = append(mapper.Complete.Args, sizePage[0])
 	}
 	if sp > 1 {
 		size := sizePage[0]
