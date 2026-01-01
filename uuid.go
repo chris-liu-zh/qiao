@@ -10,11 +10,11 @@ import (
 
 type UUIDVariant byte
 
-// UUID变体常量定义
+// UUID 变体常量定义
 const (
 	VariantNCS       UUIDVariant = iota // 保留用于向后兼容
 	VariantRFC9562   UUIDVariant = iota // RFC 4122标准定义的UUID布局
-	VariantMicrosoft UUIDVariant = iota // 保留用于Microsoft兼容
+	VariantMicrosoft UUIDVariant = iota // 保留用于 Microsoft 兼容
 	VariantFuture    UUIDVariant = iota // 保留供未来使用
 )
 

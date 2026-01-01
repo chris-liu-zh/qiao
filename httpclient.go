@@ -1,10 +1,3 @@
-/*
- * @Author: Chris
- * @Date: 2022-12-07 15:28:22
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-09 00:17:36
- * @Description: 请填写简介
- */
 package qiao
 
 import (
@@ -15,7 +8,7 @@ import (
 	"net/http"
 )
 
-type httpClient struct {
+type HttpClient struct {
 	req     *http.Request
 	Url     string
 	Method  string
@@ -23,40 +16,40 @@ type httpClient struct {
 	err     error
 }
 
-func NewHttpClient(url string) *httpClient {
-	return &httpClient{
+func NewHttpClient(url string) *HttpClient {
+	return &HttpClient{
 		Url: url,
 	}
 }
 
-func (client *httpClient) Cookie(cookies []*http.Cookie) *httpClient {
+func (client *HttpClient) Cookie(cookies []*http.Cookie) *HttpClient {
 	client.Cookies = cookies
 	return client
 }
 
-func (client *httpClient) Post() *httpClient {
+func (client *HttpClient) Post() *HttpClient {
 	client.Method = "POST"
 	return client
 }
 
-func (client *httpClient) Get() *httpClient {
+func (client *HttpClient) Get() *HttpClient {
 	if client.req, client.err = http.NewRequest("GET", client.Url, nil); client.err != nil {
 		return client
 	}
 	return client
 }
 
-func (client *httpClient) Delete() *httpClient {
+func (client *HttpClient) Delete() *HttpClient {
 	client.Method = "DELETE"
 	return client
 }
 
-func (client *httpClient) Put() *httpClient {
+func (client *HttpClient) Put() *HttpClient {
 	client.Method = "PUT"
 	return client
 }
 
-func (client *httpClient) DoJson(bodyJson []byte) *httpClient {
+func (client *HttpClient) DoJson(bodyJson []byte) *HttpClient {
 	reqBody := io.NopCloser(bytes.NewReader(bodyJson))
 	if client.req, client.err = http.NewRequest(client.Method, client.Url, reqBody); client.err != nil {
 		return client
@@ -67,7 +60,7 @@ func (client *httpClient) DoJson(bodyJson []byte) *httpClient {
 	return client
 }
 
-func (client *httpClient) HeaderAdd(header map[string]string) *httpClient {
+func (client *HttpClient) HeaderAdd(header map[string]string) *HttpClient {
 	if client.err != nil {
 		return client
 	}
@@ -77,27 +70,7 @@ func (client *httpClient) HeaderAdd(header map[string]string) *httpClient {
 	return client
 }
 
-// func (client *httpClient) DoBody(bodys map[string]string) *httpClient {
-// 	payload := &bytes.Buffer{}
-// 	writer := multipart.NewWriter(payload)
-// 	for k, v := range bodys {
-// 		_ = writer.WriteField(k, v)
-// 	}
-// 	if client.err = writer.Close(); client.err != nil {
-// 		return client
-// 	}
-// 	if client.req, client.err = http.NewRequest(client.Method, client.Url, payload); client.err != nil {
-// 		return client
-// 	}
-// 	for _, c := range client.Cookies {
-// 		client.req.AddCookie(&http.Cookie{Name: c.Name, Value: c.Value, HttpOnly: c.HttpOnly})
-// 	}
-// 	client.req.Header.Add("X-Requested-With", "XMLHttpRequest")
-// 	client.req.Header.Set("Content-Type", writer.FormDataContentType())
-// 	return client
-// }
-
-func (client *httpClient) Respond() (body []byte, cookies []*http.Cookie, err error) {
+func (client *HttpClient) Respond() (body []byte, cookies []*http.Cookie, err error) {
 	if client.err != nil {
 		err = client.err
 		return
@@ -111,7 +84,7 @@ func (client *httpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 		return
 	}
 	cookies = resp.Cookies()
-	defer resp.Body.Close()
+	defer DeferErr(&err, resp.Body.Close)
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("method:%v url: %v code:%d", client.Method, client.Url, resp.StatusCode)
 		return

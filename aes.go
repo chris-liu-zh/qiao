@@ -6,12 +6,7 @@ import (
 	"errors"
 )
 
-/**
- * @description:加密
- * @param {*} encryptString
- * @param {string} aesKey
- * @return {*}
- */
+// AESEncrypt 加密
 func AESEncrypt(encryptString, aesKey string) (encrypted string, err error) {
 	key := []byte(aesKey)
 	src := []byte(encryptString)
@@ -34,7 +29,7 @@ func AESEncrypt(encryptString, aesKey string) (encrypted string, err error) {
 	return
 }
 
-// 解密
+// AESDecrypt 解密
 func AESDecrypt(decodeString, aesKey string) (decrypted string, err error) {
 	key := []byte(aesKey)
 	decryptCode, err := base64.StdEncoding.DecodeString(decodeString)

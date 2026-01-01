@@ -10,28 +10,28 @@ package qiao
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"runtime"
 )
 
 type qiaoError struct {
-	Msg      string     `json:"msg,omitempty"`
-	Err      error      `json:"err,omitempty"`
-	File     string     `json:"file,omitempty"`
-	Line     int        `json:"line,omitempty"`
-	Id       string     `json:"id,omitempty"`
-	Level    slog.Level `json:"level,omitempty"`
-	FuncName string     `json:"funcName,omitempty"`
-	Other    any        `json:"other,omitempty"`
+	Msg      string `json:"msg,omitempty"`
+	Err      error  `json:"err,omitempty"`
+	File     string `json:"file,omitempty"`
+	Line     int    `json:"line,omitempty"`
+	Id       string `json:"id,omitempty"`
+	FuncName string `json:"funcName,omitempty"`
+	Other    any    `json:"other,omitempty"`
+	level    slog.Level
+	printLog bool
 }
-
-var errId string
 
 type options func(*qiaoError)
 
 func SetLevel(level slog.Level) options {
 	return func(qe *qiaoError) {
-		qe.Level = level
+		qe.level = level
 	}
 }
 
@@ -41,11 +41,21 @@ func SetOther(other any) options {
 	}
 }
 
-func Err(msg string, err error, opt ...options) error {
-	qe := &qiaoError{
-		Level: slog.LevelError,
+func SetPrintLog(printLog bool) options {
+	return func(qe *qiaoError) {
+		qe.printLog = printLog
 	}
-	if ok := errors.As(err, &qe); ok && qe.Id == errId {
+}
+
+func Err(msg string, err error, opt ...options) error {
+	if err == nil {
+		return err
+	}
+	qe := &qiaoError{
+		level:    slog.LevelError,
+		printLog: true,
+	}
+	if ok := errors.As(err, &qe); ok {
 		return err
 	}
 
@@ -54,11 +64,17 @@ func Err(msg string, err error, opt ...options) error {
 	}
 
 	if funcName, file, line, ok := runtime.Caller(1); ok {
-		errId = UUIDV7().String()
-
-		if err != nil {
-			slog.Log(context.Background(), qe.Level, msg, slog.String("file", file), slog.Int("line", line), slog.String("err", err.Error()), slog.Any("other", qe.Other))
+		errId := UUIDV7().String()
+		if qe.printLog {
+			go slog.Log(
+				context.Background(), qe.level, msg,
+				slog.String("id", errId),
+				slog.String("file", fmt.Sprintf("%s:%d", file, line)),
+				slog.String("err", err.Error()),
+				slog.Any("other", qe.Other),
+			)
 		}
+
 		qe.Err = err
 		qe.Msg = msg
 		qe.File = file
@@ -67,7 +83,7 @@ func Err(msg string, err error, opt ...options) error {
 		qe.FuncName = runtime.FuncForPC(funcName).Name()
 		return qe
 	}
-	return nil
+	return qe
 }
 
 func (qe *qiaoError) Error() string {

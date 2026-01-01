@@ -1,0 +1,170 @@
+{"time":"2026-01-01T02:07:25.634233+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634649+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634695+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634727+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634769+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634802+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634831+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634866+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634896+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:07:25.634928+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:12:22","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:06","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:13:31","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01 02:14:13","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.664878+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.665155+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.665221+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.66518+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.665235+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.665251+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.665717+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.665297+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.66528+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:14:48.665386+08:00","level":"DEBUG","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964396+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964357+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964348+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964372+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964379+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.96445+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964461+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964364+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964419+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:15:08.964348+08:00","level":"DEBUG","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T02:16:11.692459+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error3","other":null}
+{"time":"2026-01-01T02:16:11.692004+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error1","other":null}
+{"time":"2026-01-01T02:16:11.691933+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error9","other":null}
+{"time":"2026-01-01T02:16:11.692589+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error8","other":null}
+{"time":"2026-01-01T02:16:11.692587+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error0","other":null}
+{"time":"2026-01-01T02:16:11.692482+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error4","other":null}
+{"time":"2026-01-01T02:16:11.692647+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error2","other":null}
+{"time":"2026-01-01T02:16:11.691987+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error6","other":null}
+{"time":"2026-01-01T02:16:11.692714+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error5","other":null}
+{"time":"2026-01-01T02:16:11.693185+08:00","level":"ERROR","msg":"error test","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","err":"test error7","other":null}
+{"time":"2026-01-01T02:16:36.291282+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error9","other":null}
+{"time":"2026-01-01T02:16:36.291282+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error4","other":null}
+{"time":"2026-01-01T02:16:36.291384+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error6","other":null}
+{"time":"2026-01-01T02:16:36.291579+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error8","other":null}
+{"time":"2026-01-01T02:16:36.291362+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error3","other":null}
+{"time":"2026-01-01T02:16:36.291356+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error2","other":null}
+{"time":"2026-01-01T02:16:36.291309+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error1","other":null}
+{"time":"2026-01-01T02:16:36.291429+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error0","other":null}
+{"time":"2026-01-01T02:16:36.291438+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error7","other":null}
+{"time":"2026-01-01T02:16:36.291506+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error5","other":null}
+{"time":"2026-01-01T02:17:54.149293+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error9"}
+{"time":"2026-01-01T02:17:54.149466+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error0"}
+{"time":"2026-01-01T02:17:54.149463+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error2"}
+{"time":"2026-01-01T02:17:54.149341+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error4"}
+{"time":"2026-01-01T02:17:54.149504+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error8"}
+{"time":"2026-01-01T02:17:54.149471+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error3"}
+{"time":"2026-01-01T02:17:54.149344+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error6"}
+{"time":"2026-01-01T02:17:54.149449+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error5"}
+{"time":"2026-01-01T02:17:54.149593+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error7"}
+{"time":"2026-01-01T02:17:54.149582+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error1"}
+{"time":"2026-01-01T02:18:42.635512+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error3"}
+{"time":"2026-01-01T02:18:42.635584+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error7"}
+{"time":"2026-01-01T02:18:42.635599+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error0"}
+{"time":"2026-01-01T02:18:42.635615+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error4"}
+{"time":"2026-01-01T02:18:42.635575+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error9"}
+{"time":"2026-01-01T02:18:42.635581+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error5"}
+{"time":"2026-01-01T02:18:42.635589+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error8"}
+{"time":"2026-01-01T02:18:42.6356+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error1"}
+{"time":"2026-01-01T02:18:42.635548+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error6"}
+{"time":"2026-01-01T02:18:42.635717+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error2"}
+{"time":"2026-01-01T02:20:48.136669+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error9"}
+{"time":"2026-01-01T02:20:48.136964+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error3"}
+{"time":"2026-01-01T02:20:48.137022+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error4"}
+{"time":"2026-01-01T02:20:48.136627+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error1"}
+{"time":"2026-01-01T02:20:48.136705+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error0"}
+{"time":"2026-01-01T02:20:48.136745+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error7"}
+{"time":"2026-01-01T02:20:48.136674+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error5"}
+{"time":"2026-01-01T02:20:48.136885+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error8"}
+{"time":"2026-01-01T02:20:48.136881+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error2"}
+{"time":"2026-01-01T02:20:48.136777+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error6"}
+{"time":"2026-01-01T02:21:40.552755+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error9"}
+{"time":"2026-01-01T02:21:40.552826+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error2"}
+{"time":"2026-01-01T02:21:40.552796+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error6"}
+{"time":"2026-01-01T02:21:40.552863+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error7"}
+{"time":"2026-01-01T02:21:40.552783+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error4"}
+{"time":"2026-01-01T02:21:40.552938+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error5"}
+{"time":"2026-01-01T02:21:40.552948+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error0"}
+{"time":"2026-01-01T02:21:40.55287+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error1"}
+{"time":"2026-01-01T02:21:40.553083+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error3"}
+{"time":"2026-01-01T02:21:40.55292+08:00","level":"ERROR","msg":"error test","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","other":"test error8"}
+{"time":"2026-01-01T02:26:04.258912+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-7d19-b143-25f20c661a02","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error9","other":null}
+{"time":"2026-01-01T02:26:04.258952+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-74bc-a0d6-23d7ed8e6212","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error6","other":null}
+{"time":"2026-01-01T02:26:04.258946+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-7bff-bfd8-5e973f087c51","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error4","other":null}
+{"time":"2026-01-01T02:26:04.259149+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-74e5-87c5-b32ddc8d76b2","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error0","other":null}
+{"time":"2026-01-01T02:26:04.259014+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-7b54-90f8-ca424884dba3","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error7","other":null}
+{"time":"2026-01-01T02:26:04.259155+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-785f-8a25-dbd8fc11680e","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error8","other":null}
+{"time":"2026-01-01T02:26:04.25913+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-756c-ab54-ced9c3b8f7c3","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error2","other":null}
+{"time":"2026-01-01T02:26:04.259133+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-7887-86e1-096cf8709df7","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error3","other":null}
+{"time":"2026-01-01T02:26:04.259017+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-7e3b-869a-be008cbdf9d7","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error5","other":null}
+{"time":"2026-01-01T02:26:04.259233+08:00","level":"ERROR","msg":"error test","id":"019b75a8-ef62-723b-bf11-ea45cfa19d6c","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error1","other":null}
+{"time":"2026-01-01T10:06:44.057674+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-7a1d-8a53-5178e75427ee","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error9","other":null}
+{"time":"2026-01-01T10:06:44.057586+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-740d-ba5a-22254cb46ac3","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error1","other":null}
+{"time":"2026-01-01T10:06:44.057633+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-76eb-b7db-a6ae27275349","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error4","other":null}
+{"time":"2026-01-01T10:06:44.057655+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-78fe-908a-291cfbcaf3b9","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error6","other":null}
+{"time":"2026-01-01T10:06:44.057579+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-7aae-9c5f-1c80149b62e6","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error0","other":null}
+{"time":"2026-01-01T10:06:44.057685+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-7455-9055-407e9be91b98","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error5","other":null}
+{"time":"2026-01-01T10:06:44.057579+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-74bb-abd2-6931ef57ae6c","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error2","other":null}
+{"time":"2026-01-01T10:06:44.057865+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-7c9d-9e6f-cce7c1c5f1b4","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error8","other":null}
+{"time":"2026-01-01T10:06:44.057865+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-73a5-91fa-2fefbd6d1a91","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error3","other":null}
+{"time":"2026-01-01T10:06:44.057651+08:00","level":"ERROR","msg":"error test","id":"019b774e-af59-71d3-8477-5da7800ce306","file":"/Users/chris/Works/project/qiao/test/error_test.go:16","err":"test error7","other":null}
+{"time":"2026-01-01T10:22:32.598571+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.599108+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.59896+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.598961+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.59902+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.599048+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.600023+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.599143+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.600077+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:22:32.600061+08:00","level":"WARN","msg":"this is debug log","file":"/usr/local/go/src/runtime/asm_amd64.s:1693","func":"runtime.goexit","key2":"value2"}
+{"time":"2026-01-01T10:23:00.544706+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.544727+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.545123+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.544712+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.545136+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.54516+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.544814+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.544706+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.544779+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}
+{"time":"2026-01-01T10:23:00.545251+08:00","level":"WARN","msg":"this is debug log","file":"/Users/chris/Works/project/qiao/test/logger_test.go:16","func":"github.com/chris-liu-zh/qiao/test.TestLogger","key2":"value2"}

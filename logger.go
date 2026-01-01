@@ -1,16 +1,12 @@
-/*
- * @Author: Chris
- * @Date: 2024-05-16 22:38:04
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-10 11:47:24
- * @Description: 请填写简介
- */
 package qiao
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"runtime"
 )
 
 /*
@@ -108,4 +104,36 @@ func (opt *LogOption) SetDefault() error {
 	// 设置默认日志记录器
 	slog.SetDefault(slog.New(handler))
 	return nil
+}
+
+// LogError 记录错误日志
+func LogError(msg string, args ...any) {
+	if funcName, file, line, ok := runtime.Caller(1); ok {
+		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
+		go slog.Log(context.Background(), slog.LevelError, msg, args...)
+	}
+}
+
+// LogInfo 记录信息日志
+func LogInfo(msg string, args ...any) {
+	if funcName, file, line, ok := runtime.Caller(1); ok {
+		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
+		go slog.Log(context.Background(), slog.LevelInfo, msg, args...)
+	}
+}
+
+// LogDebug 记录调试日志
+func LogDebug(msg string, args ...any) {
+	if funcName, file, line, ok := runtime.Caller(1); ok {
+		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
+		go slog.Log(context.Background(), slog.LevelDebug, msg, args...)
+	}
+}
+
+// LogWarn 记录警告日志
+func LogWarn(msg string, args ...any) {
+	if funcName, file, line, ok := runtime.Caller(1); ok {
+		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
+		go slog.Log(context.Background(), slog.LevelWarn, msg, args...)
+	}
 }

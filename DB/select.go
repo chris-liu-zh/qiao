@@ -71,7 +71,7 @@ func (mapper *Mapper) GetListMap() (list []map[string]any, err error) {
 	if mapper.sqlRows, err = mapper.Read().Query(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
-	if list, err = mapper.ScanListMap(); err != nil {
+	if list, err = mapper.scanListMap(); err != nil {
 		mapper.log("scan list map").logERROR(err)
 		return
 	}
@@ -141,7 +141,7 @@ func (mapper *Mapper) GetList(_struct any) (err error) {
 	if mapper.sqlRows, err = mapper.Read().Query(mapper.Complete.Sql, mapper.Complete.Args...); err != nil {
 		return
 	}
-	if err = mapper.ScanListStruct(_struct); err != nil {
+	if err = mapper.scanListStruct(_struct); err != nil {
 		mapper.log("scan list struct error").logERROR(err)
 		return
 	}

@@ -5,19 +5,18 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+
+	"github.com/chris-liu-zh/qiao"
 )
 
 var (
-	// rlock        sync.RWMutex
 	ErrNotPtr    = errors.New("type is not reflect.Pointer")
 	ErrNotStruct = errors.New("type is not reflect.Struct")
 	ErrNotSlice  = errors.New("type is not reflect.Slice")
 )
 
 func (mapper *Mapper) ScanRowMap() (row map[string]any, err error) {
-	// rlock.Lock()
-	// defer rlock.Unlock()
-	defer mapper.sqlRows.Close()
+	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
@@ -45,9 +44,7 @@ func (mapper *Mapper) ScanRowMap() (row map[string]any, err error) {
 }
 
 func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
-	// rlock.Lock()
-	// defer rlock.Unlock()
-	defer mapper.sqlRows.Close()
+	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
@@ -83,12 +80,8 @@ func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
 	return
 }
 
-//------GetList-----------------------------------------------------------------------------------------------//
-
-func (mapper *Mapper) ScanListMap() (list []map[string]any, err error) {
-	// rlock.Lock()
-	// defer rlock.Unlock()
-	defer mapper.sqlRows.Close()
+func (mapper *Mapper) scanListMap() (list []map[string]any, err error) {
+	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
@@ -110,11 +103,8 @@ func (mapper *Mapper) ScanListMap() (list []map[string]any, err error) {
 	return
 }
 
-func (mapper *Mapper) ScanListStruct(_struct any) (err error) {
-	// rlock.Lock()
-	// defer rlock.Unlock()
-	defer mapper.sqlRows.Close()
-
+func (mapper *Mapper) scanListStruct(_struct any) (err error) {
+	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
 	reflectT := reflect.TypeOf(_struct)
 	if reflectT.Kind() != reflect.Pointer {
 		return ErrNotPtr

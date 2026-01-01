@@ -1,8 +1,11 @@
 package qiao
 
-import "unicode"
+import (
+	"errors"
+	"unicode"
+)
 
-// 驼峰单词转下划线单词  "StudentName to student_name"
+// CamelCaseToUdnderscore 驼峰单词转下划线单词
 func CamelCaseToUdnderscore(s string) string {
 	var output []rune
 	for i, r := range s {
@@ -17,4 +20,14 @@ func CamelCaseToUdnderscore(s string) string {
 		}
 	}
 	return string(output)
+}
+
+func DeferErr(src *error, f func() error) {
+	if err := f(); err != nil {
+		if *src == nil {
+			*src = err
+			return
+		}
+		*src = errors.Join(*src, err)
+	}
 }

@@ -42,7 +42,7 @@ y682X1+R1lRK8D+vmQIDAQAB
 
 var block *pem.Block
 
-// 加密
+// RsaEncrypt 加密
 func RsaEncrypt(origData []byte) (Encrypt string, err error) {
 	if block, _ = pem.Decode(publicKey); block == nil {
 		return "", errors.New("public key error")
@@ -60,7 +60,7 @@ func RsaEncrypt(origData []byte) (Encrypt string, err error) {
 	return
 }
 
-// 解密
+// RsaDecrypt 解密
 func RsaDecrypt(ciphertext []byte) (Decrypt string, err error) {
 	if block, _ = pem.Decode(privateKey); block == nil {
 		return "", errors.New("private key error！")

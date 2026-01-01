@@ -9,6 +9,8 @@ package DB
 
 import (
 	"database/sql"
+
+	"github.com/chris-liu-zh/qiao"
 )
 
 type Begin struct {
@@ -31,14 +33,12 @@ func (mapper *Mapper) Begin() *Begin {
 	}
 	tx.Title = db.Conf.Title
 	if tx.Tx, tx.Err = db.DBFunc.Conn.Begin(); tx.Err == nil {
-		tx.Mapper.debug("Begin")
 		return tx
 	}
 	return tx
 }
 
 func (tx *Begin) Prepare(sqlStr string) *Begin {
-	tx.Mapper.debug("Begin Prepare")
 	if tx.Err != nil {
 		return tx
 	}
@@ -47,7 +47,6 @@ func (tx *Begin) Prepare(sqlStr string) *Begin {
 }
 
 func (tx *Begin) StmtExec(args ...any) *Begin {
-	tx.Mapper.debug("Begin StmtExec")
 	if tx.Err != nil {
 		return tx
 	}
@@ -59,7 +58,6 @@ func (tx *Begin) StmtExec(args ...any) *Begin {
 }
 
 func (tx *Begin) Exec(args ...any) *Begin {
-	tx.Mapper.debug("Begin Exec")
 	if tx.Err != nil {
 		return tx
 	}
@@ -74,18 +72,21 @@ func (tx *Begin) Exec(args ...any) *Begin {
 	return tx
 }
 
-func (tx *Begin) Rollback() error {
-	tx.Mapper.debug("Rollback")
-	defer tx.stmt.Close()
-	return tx.Tx.Rollback()
+func (tx *Begin) Rollback() (err error) {
+	defer qiao.DeferErr(&err, tx.stmt.Close)
+	if err = tx.Tx.Rollback(); err != nil {
+		return err
+	}
+	return
 }
 
-func (tx *Begin) Commit() error {
-	tx.Mapper.debug("Commit")
-	defer tx.stmt.Close()
-	if tx.Err != nil {
-		tx.log("Begin error").logERROR(tx.Err)
-		return tx.Err
+func (tx *Begin) Commit() (err error) {
+	defer qiao.DeferErr(&err, tx.stmt.Close)
+	if err = tx.Err; err != nil {
+		return err
 	}
-	return tx.Tx.Commit()
+	if err = tx.Tx.Commit(); err != nil {
+		return err
+	}
+	return
 }

@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type QiaoLogger struct {
+type QLogger struct {
 	filename   string     // 日志文件路径
 	maxSize    int        // 单个日志文件的最大大小（MB）
 	maxBackups int        // 保留的旧日志文件数量，-1代表不限制
@@ -21,14 +21,14 @@ type QiaoLogger struct {
 	mu         sync.Mutex // 互斥锁，确保并发安全
 }
 
-// NewLoggerRotate 创建一个新的 QiaoLogger 实例
-func NewLoggerRotate(filename string, maxSize, maxBackups, maxAge int, compress bool) (*QiaoLogger, error) {
+// NewLoggerRotate 创建一个新的 QLogger 实例
+func NewLoggerRotate(filename string, maxSize, maxBackups, maxAge int, compress bool) (*QLogger, error) {
 	dir := filepath.Dir(filename)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 
-	return &QiaoLogger{
+	return &QLogger{
 		filename:   filename,
 		maxSize:    maxSize,
 		maxBackups: maxBackups,
@@ -38,7 +38,7 @@ func NewLoggerRotate(filename string, maxSize, maxBackups, maxAge int, compress 
 }
 
 // Write 实现 io.Writer 接口，用于写入日志
-func (l *QiaoLogger) Write(p []byte) (n int, err error) {
+func (l *QLogger) Write(p []byte) (n int, err error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -63,7 +63,7 @@ func (l *QiaoLogger) Write(p []byte) (n int, err error) {
 }
 
 // openFile 打开日志文件
-func (l *QiaoLogger) openFile() error {
+func (l *QLogger) openFile() error {
 	file, err := os.OpenFile(l.filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (l *QiaoLogger) openFile() error {
 }
 
 // rotate 实现日志切割和轮转
-func (l *QiaoLogger) rotate() error {
+func (l *QLogger) rotate() error {
 	// 关闭当前日志文件
 	if l.file != nil {
 		if err := l.file.Close(); err != nil {
@@ -114,7 +114,7 @@ func getFileName(filename string) string {
 }
 
 // 清理过期的旧日志文件
-func (l *QiaoLogger) cleanupOldLogs() {
+func (l *QLogger) cleanupOldLogs() {
 	dirPath := filepath.Dir(l.filename)
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
@@ -162,24 +162,24 @@ func deleteOldLogs(filePath string, maxAge int) error {
 }
 
 // compressFile 压缩日志文件
-func compressFile(filename string) error {
+func compressFile(filename string) (err error) {
 	// 打开原始日志文件
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer DeferErr(&err, file.Close)
 
 	// 创建压缩文件
 	gzFile, err := os.Create(filename + ".gz")
 	if err != nil {
 		return err
 	}
-	defer gzFile.Close()
+	defer DeferErr(&err, gzFile.Close)
 
 	// 使用 gzip 压缩
 	gzWriter := gzip.NewWriter(gzFile)
-	defer gzWriter.Close()
+	defer DeferErr(&err, gzWriter.Close)
 
 	// 将原始文件内容写入压缩文件
 	if _, err := io.Copy(gzWriter, file); err != nil {
