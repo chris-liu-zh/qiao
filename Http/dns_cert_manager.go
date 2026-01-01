@@ -62,7 +62,9 @@ func NewDNSCertManager(dnsProvider DNSProvider, email string, domains []string, 
 	account := &acme.Account{
 		Contact: []string{"mailto:" + email},
 	}
-	if _, err = client.Register(context.Background(), account, acme.AcceptTOS); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, err = client.Register(ctx, account, acme.AcceptTOS); err != nil {
 		return nil, fmt.Errorf("账户注册失败: %v", err)
 	}
 	return &DNSCertManager{
