@@ -58,15 +58,6 @@ func NewDNSCertManager(dnsProvider DNSProvider, email string, domains []string, 
 		},
 	}
 
-	// 注册账户
-	account := &acme.Account{
-		Contact: []string{"mailto:" + email},
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if _, err = client.Register(ctx, account, acme.AcceptTOS); err != nil {
-		return nil, fmt.Errorf("账户注册失败: %v", err)
-	}
 	return &DNSCertManager{
 		client:      client,
 		dnsProvider: dnsProvider,
@@ -79,6 +70,15 @@ func NewDNSCertManager(dnsProvider DNSProvider, email string, domains []string, 
 
 // GetCertificate 实现tls.Config的GetCertificate方法
 func (m *DNSCertManager) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	// 注册账户
+	account := &acme.Account{
+		Contact: []string{"mailto:" + m.email},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, err := m.client.Register(ctx, account, acme.AcceptTOS); err != nil {
+		return nil, fmt.Errorf("账户注册失败: %v", err)
+	}
 	// 检查域名是否在允许列表中
 	allowed := slices.Contains(m.domains, hello.ServerName)
 	if !allowed {
