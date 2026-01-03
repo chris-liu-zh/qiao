@@ -60,8 +60,7 @@ func MysqlAddReturnId(mapper *Mapper) (insertId int64, err error) {
 	}
 	args := handleNull(mapper.Complete.Args...)
 	var result sql.Result
-	sqlStr := mapper.Complete.Sql + " RETURNING id"
-	query := Replace(sqlStr, "?", db.Sign)
+	query := Replace(mapper.Complete.Sql, "?", db.Sign)
 	db.log("MysqlAddReturnId", query, args...).logDEBUG()
 	if result, err = db.DBFunc.Conn.Exec(query, args...); err == nil {
 		return result.LastInsertId()
