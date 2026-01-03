@@ -16,10 +16,8 @@ import (
 )
 
 type timeoutWriter struct {
-	w http.ResponseWriter
-	h http.Header
-	// wbuf   bytes.Buffer
-	// req    *http.Request
+	w      http.ResponseWriter
+	h      http.Header
 	code   int
 	mu     sync.Mutex
 	closed bool
@@ -45,18 +43,16 @@ func (tw *timeoutWriter) Write(p []byte) (int, error) {
 func (tw *timeoutWriter) Header() http.Header { return tw.h }
 
 func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Request) {
-	ctx := router.ctx
-	if ctx == nil {
+	if router.ctx == nil {
 		var cancelCtx context.CancelFunc
-		ctx, cancelCtx = context.WithTimeout(r.Context(), router.timeout)
+		router.ctx, cancelCtx = context.WithTimeout(r.Context(), router.timeout)
 		defer cancelCtx()
 	}
-	// r = r.WithContext(ctx)
+	r = r.WithContext(router.ctx)
 	done := make(chan struct{})
 	tw := &timeoutWriter{
-		w: w,
-		h: w.Header(),
-		// req:  r,
+		w:    w,
+		h:    w.Header(),
 		code: http.StatusOK,
 	}
 	go func() {
@@ -67,8 +63,8 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	select {
 	case <-done:
 		//log.Println("request completed")
-	case <-ctx.Done():
-		switch err := ctx.Err(); {
+	case <-router.ctx.Done():
+		switch err := router.ctx.Err(); {
 		case errors.Is(err, context.DeadlineExceeded):
 			TimeoutFail(tw)
 			tw.closed = true
