@@ -43,12 +43,13 @@ func (tw *timeoutWriter) Write(p []byte) (int, error) {
 func (tw *timeoutWriter) Header() http.Header { return tw.h }
 
 func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Request) {
-	if router.ctx == nil {
+	ctx := router.ctx
+	if ctx == nil {
 		var cancelCtx context.CancelFunc
-		router.ctx, cancelCtx = context.WithTimeout(r.Context(), router.timeout)
+		ctx, cancelCtx = context.WithTimeout(r.Context(), router.timeout)
 		defer cancelCtx()
 	}
-	r = r.WithContext(router.ctx)
+	r = r.WithContext(ctx)
 	done := make(chan struct{})
 	tw := &timeoutWriter{
 		w:    w,
@@ -63,13 +64,10 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	select {
 	case <-done:
 		//log.Println("request completed")
-	case <-router.ctx.Done():
-		switch err := router.ctx.Err(); {
-		case errors.Is(err, context.DeadlineExceeded):
+	case <-ctx.Done():
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			TimeoutFail(tw)
 			tw.closed = true
-		default:
-			tw.WriteHeader(http.StatusServiceUnavailable)
 		}
 	}
 }
