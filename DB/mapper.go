@@ -151,5 +151,9 @@ Limit	设置分页
 	@page int;-- 当前页
 */
 func (mapper *Mapper) Limit(sizepage ...int) *Mapper {
-	return mapper.Read().DBFunc.Page(mapper, sizepage...)
+	dbconn := mapper.Read()
+	if dbconn == nil {
+		return mapper
+	}
+	return dbconn.DBFunc.Page(mapper, sizepage...)
 }
