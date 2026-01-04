@@ -8,6 +8,7 @@
 package Http
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/http"
@@ -16,19 +17,23 @@ import (
 )
 
 type timeoutWriter struct {
-	w      http.ResponseWriter
-	h      http.Header
-	code   int
-	mu     sync.Mutex
-	closed bool
+	w           http.ResponseWriter
+	h           http.Header
+	code        int
+	mu          sync.Mutex
+	closed      bool
+	buf         bytes.Buffer
+	wroteHeader bool
 }
 
 func (tw *timeoutWriter) WriteHeader(code int) {
+	tw.mu.Lock()
+	defer tw.mu.Unlock()
 	if tw.closed {
 		return
 	}
 	tw.code = code
-	tw.w.WriteHeader(code)
+	tw.wroteHeader = true
 }
 
 func (tw *timeoutWriter) Write(p []byte) (int, error) {
@@ -37,7 +42,7 @@ func (tw *timeoutWriter) Write(p []byte) (int, error) {
 	if tw.closed {
 		return 0, nil
 	}
-	return tw.w.Write(p)
+	return tw.buf.Write(p)
 }
 
 func (tw *timeoutWriter) Header() http.Header { return tw.h }
@@ -51,9 +56,15 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 	}
 	r = r.WithContext(ctx)
 	done := make(chan struct{})
+	// clone headers to avoid races
+	hdr := make(http.Header)
+	for k, v := range w.Header() {
+		hdr[k] = append([]string(nil), v...)
+	}
+
 	tw := &timeoutWriter{
 		w:    w,
-		h:    w.Header(),
+		h:    hdr,
 		code: http.StatusOK,
 	}
 	go func() {
@@ -63,11 +74,34 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 
 	select {
 	case <-done:
-		//log.Println("request completed")
+		// handler finished: flush buffered response to original writer
+		tw.mu.Lock()
+		buf := tw.buf.Bytes()
+		code := tw.code
+		wroteHeader := tw.wroteHeader
+		hdr := tw.h
+		tw.mu.Unlock()
+
+		// copy headers
+		for k, vals := range hdr {
+			for _, v := range vals {
+				w.Header().Add(k, v)
+			}
+		}
+
+		if wroteHeader {
+			w.WriteHeader(code)
+		}
+		if len(buf) > 0 {
+			w.Write(buf)
+		}
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			TimeoutFail(tw)
+			// handler may still be running but its writes were buffered; write timeout to original writer
+			TimeoutFail(w)
+			tw.mu.Lock()
 			tw.closed = true
+			tw.mu.Unlock()
 		}
 	}
 }
