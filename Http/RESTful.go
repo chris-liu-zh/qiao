@@ -80,7 +80,7 @@ func Unauthorized(w http.ResponseWriter, msg string, opt ...options) {
 
 func WriteJson(w http.ResponseWriter, code int, message string, data any, opt ...options) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	r := &RESTful{Code: code, Message: message, Data: data, writeHeader: true}
+	r := &RESTful{Code: code, Message: message, Data: data}
 	if code <= 400 {
 		r.Success = true
 	}
