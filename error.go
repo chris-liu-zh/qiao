@@ -47,6 +47,17 @@ func SetPrintLog(printLog bool) options {
 	}
 }
 
+func AsErr(err error) *qiaoError {
+	if err == nil {
+		return nil
+	}
+	var qe *qiaoError
+	if ok := errors.As(err, &qe); ok {
+		return qe
+	}
+	return nil
+}
+
 func Err(msg string, err error, opt ...options) error {
 	if err == nil {
 		return err
