@@ -30,6 +30,12 @@ func SetSuccess(success bool) options {
 	}
 }
 
+func SetWriteHeader(header bool) options {
+	return func(r *RESTful) {
+		r.writeHeader = header
+	}
+}
+
 func SetDebug(debug any) options {
 	return func(r *RESTful) {
 		r.Debug = debug
