@@ -14,58 +14,75 @@ import (
 )
 
 type RESTful struct {
-	Code    int    `json:"code"`
-	Message string `json:"msg"`
-	Data    any    `json:"data,omitempty"`
-	Debug   any    `json:"debug,omitempty"`
-	Success bool   `json:"success"`
+	Code        int    `json:"code"`
+	Message     string `json:"msg"`
+	Data        any    `json:"data,omitempty"`
+	Debug       any    `json:"debug,omitempty"`
+	Success     bool   `json:"success"`
+	writeHeader bool   `json:"-"`
 }
 
-func Success(w http.ResponseWriter, data any, debug ...any) {
-	WriteJson(w, http.StatusOK, "ok", data, debug...)
+type options func(*RESTful)
+
+func SetSuccess(success bool) options {
+	return func(r *RESTful) {
+		r.Success = success
+	}
 }
 
-func SuccessNoContent(w http.ResponseWriter, debug ...any) {
-	WriteJson(w, http.StatusNoContent, "no content", nil, debug...)
+func SetDebug(debug any) options {
+	return func(r *RESTful) {
+		r.Debug = debug
+	}
 }
 
-func SuccessCreated(w http.ResponseWriter, debug ...any) {
-	WriteJson(w, http.StatusCreated, "created", nil, debug...)
+func Success(w http.ResponseWriter, data any, opt ...options) {
+	WriteJson(w, http.StatusOK, "ok", data, opt...)
 }
 
-func Error(w http.ResponseWriter, code int, message string, debug ...any) {
-	WriteJson(w, code, message, nil, debug...)
+func SuccessNoContent(w http.ResponseWriter, opt ...options) {
+	WriteJson(w, http.StatusNoContent, "no content", nil, opt...)
 }
 
-func BadRequest(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusBadRequest, msg, nil, debug...)
+func SuccessCreated(w http.ResponseWriter, opt ...options) {
+	WriteJson(w, http.StatusCreated, "created", nil, opt...)
 }
 
-func Forbidden(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusForbidden, msg, nil, debug...)
+func Error(w http.ResponseWriter, code int, message string, opt ...options) {
+	WriteJson(w, code, message, nil, opt...)
 }
 
-func NotFound(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusNotFound, msg, nil, debug...)
+func BadRequest(w http.ResponseWriter, msg string, opt ...options) {
+	WriteJson(w, http.StatusBadRequest, msg, nil, opt...)
 }
 
-func TimeoutFail(w http.ResponseWriter, debug ...any) {
-	WriteJson(w, http.StatusRequestTimeout, "Request timeout", nil, debug...)
+func Forbidden(w http.ResponseWriter, msg string, opt ...options) {
+	WriteJson(w, http.StatusForbidden, msg, nil, opt...)
 }
 
-func Unauthorized(w http.ResponseWriter, msg string, debug ...any) {
-	WriteJson(w, http.StatusUnauthorized, msg, nil, debug...)
+func NotFound(w http.ResponseWriter, msg string, opt ...options) {
+	WriteJson(w, http.StatusNotFound, msg, nil, opt...)
 }
 
-func WriteJson(w http.ResponseWriter, code int, message string, data any, debug ...any) {
+func TimeoutFail(w http.ResponseWriter, opt ...options) {
+	WriteJson(w, http.StatusRequestTimeout, "Request timeout", nil, opt...)
+}
+
+func Unauthorized(w http.ResponseWriter, msg string, opt ...options) {
+	WriteJson(w, http.StatusUnauthorized, msg, nil, opt...)
+}
+
+func WriteJson(w http.ResponseWriter, code int, message string, data any, opt ...options) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(code)
-	r := &RESTful{Code: code, Message: message, Data: data}
+	r := &RESTful{Code: code, Message: message, Data: data, writeHeader: true}
 	if code <= 400 {
 		r.Success = true
 	}
-	if len(debug) > 0 {
-		r.Debug = debug
+	for _, o := range opt {
+		o(r)
+	}
+	if r.writeHeader {
+		w.WriteHeader(code)
 	}
 	json.NewEncoder(w).Encode(r)
 }
