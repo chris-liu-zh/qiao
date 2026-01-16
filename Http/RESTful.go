@@ -11,13 +11,15 @@ package Http
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/chris-liu-zh/qiao"
 )
 
 type RESTful struct {
 	Code        int    `json:"code"`
 	Message     string `json:"msg"`
 	Data        any    `json:"data,omitempty"`
-	Debug       any    `json:"debug,omitempty"`
+	Debug       error  `json:"debug,omitempty"`
 	Success     bool   `json:"success"`
 	writeHeader bool   `json:"-"`
 }
@@ -36,7 +38,7 @@ func SetWriteHeader(header bool) options {
 	}
 }
 
-func SetDebug(debug any) options {
+func SetDebug(debug error) options {
 	return func(r *RESTful) {
 		r.Debug = debug
 	}
@@ -81,11 +83,14 @@ func Unauthorized(w http.ResponseWriter, msg string, opt ...options) {
 func WriteJson(w http.ResponseWriter, code int, message string, data any, opt ...options) {
 	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	r := &RESTful{Code: code, Message: message, Data: data}
-	if code <= 400 {
+	if code < 400 {
 		r.Success = true
 	}
 	for _, o := range opt {
 		o(r)
+	}
+	if qiaoErr := qiao.AsErr(r.Debug); qiaoErr != nil {
+		r.Message = qiaoErr.Msg
 	}
 	if r.writeHeader {
 		w.WriteHeader(code)
