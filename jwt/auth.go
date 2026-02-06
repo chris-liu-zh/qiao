@@ -133,7 +133,26 @@ func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) {
 
 func GetCtxKey(issuer string) (Http.CtxKey, bool) {
 	auth, ok := authList[issuer]
+	if !ok {
+		return "", false
+	}
 	return auth.CtxKey, ok
+}
+
+func GetAccessExp(issuer string) (time.Duration, bool) {
+	auth, ok := authList[issuer]
+	if !ok {
+		return 0, false
+	}
+	return auth.accessExp, true
+}
+
+func GetRefreshExp(issuer string) (time.Duration, bool) {
+	auth, ok := authList[issuer]
+	if !ok {
+		return 0, false
+	}
+	return auth.refreshExp, true
 }
 
 // DefaultSign /**
