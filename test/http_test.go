@@ -97,20 +97,15 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 func GetVersion(w http.ResponseWriter, r *http.Request) {
 	var ver struct {
 		Version string `json:"version"`
-		Ip      string `json:"ip"`
 	}
 	ver.Version = "1.0.0"
-	ver.Ip = strings.Split(r.RemoteAddr, ":")[0]
-	time.Sleep(3 * time.Second)
-	w.Header().Set("content-type", "application/json;charset=UTF-8")
 	Http.Success(w, ver)
-	// Http.Html(w, "template/version/index", ver)
 }
 
 func sign(header map[string]string) error {
 	const (
-		key    = "ALYDDNS"
-		secret = "1D4JWUEGWWFK94JB74W1YGP9OF4L205F"
+		key    = ""
+		secret = ""
 	)
 	sign := strings.ToUpper(header["Sign"])
 	timestampStr := header["Timestamp"]
