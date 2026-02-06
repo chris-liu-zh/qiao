@@ -11,11 +11,8 @@ import (
 	"time"
 )
 
-const DateTime = "2006-01-02 15:04:05"
-const Date = "2006-01-02"
-
 func NowDateTime() string {
-	return time.Now().Format(DateTime)
+	return time.Now().Format(time.DateTime)
 }
 
 // TimeSecond 时间戳（秒）
@@ -35,12 +32,7 @@ func TimeNano() int64 {
 
 // DateTimeStamp 日期时间转时间截
 func DateTimeStamp(data string) (timestamp int64, err error) {
-	times, err := time.Parse(DateTime, data)
-	if err != nil {
-		return
-	}
-	timestamp = times.Unix()
-	return
+	return DateToStamp(time.DateTime, data)
 }
 
 // DateToStamp 时间转时间截
@@ -73,5 +65,5 @@ func BeforeTimestamp(y, m, d int) time.Time {
 
 // BeforeDate 获取以前日期
 func BeforeDate(y, m, d int) string {
-	return BeforeTimestamp(y, m, d).Format("2006-01-02 15:04:05")
+	return BeforeTimestamp(y, m, d).Format(time.DateTime)
 }
