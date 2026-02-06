@@ -171,6 +171,23 @@ func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Durati
 	return nil
 }
 
+func DefaultAuth(header map[string]string, issuer string, userinfo any) (contextKey Http.CtxKey, data any, err error) {
+	authHeader := header["Authorization"]
+	const prefix = "Bearer "
+	if !strings.HasPrefix(authHeader, prefix) {
+		return "", nil, errors.New("auth error")
+	}
+	token := authHeader[len(prefix):]
+	if err = CheckToken(issuer, token, &userinfo); err != nil {
+		return "", nil, err
+	}
+	ctxKey, ok := GetCtxKey(issuer)
+	if !ok {
+		return "", nil, errors.New("ctx key error")
+	}
+	return ctxKey, userinfo, nil
+}
+
 // CreateToken 创建新的 DefaultToken
 func CreateToken(issuer string, claimsOption ...ClaimsOption) (t DefaultToken, err error) {
 	if auth, ok := authList[issuer]; ok {
