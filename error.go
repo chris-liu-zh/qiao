@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"log/slog"
 	"runtime"
+
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 type qiaoError struct {
@@ -75,7 +77,7 @@ func Err(msg string, err error, opt ...options) error {
 	}
 
 	if funcName, file, line, ok := runtime.Caller(1); ok {
-		errId := UUIDV7().String()
+		errId := tools.UUIDV7().String()
 		if qe.printLog {
 			go slog.Log(
 				context.Background(), qe.level, msg,

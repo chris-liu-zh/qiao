@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 var Insert = "INSERT INTO ${table}(${field})VALUES (${sign})"
@@ -38,7 +38,7 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 			return mapper
 		}
 		if mapper.Debris.table == "" {
-			mapper.Debris.table = qiao.CamelCaseToUdnderscore(elem.Type().Name())
+			mapper.Debris.table = tools.CamelCaseToUdnderscore(elem.Type().Name())
 		}
 		for i := range elem.NumField() {
 			if !elem.Field(i).IsValid() || (elem.Field(i).Kind() == reflect.Pointer && elem.Field(i).IsNil()) || !elem.Field(i).CanInterface() {
@@ -49,7 +49,7 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 				if c := getColumn(fields); c != "" {
 					field.WriteString(c + `,`)
 				} else {
-					field.WriteString(qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`)
+					field.WriteString(tools.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`)
 				}
 
 				mapper.Complete.Args = append(mapper.Complete.Args, elem.Field(i).Interface())
@@ -60,7 +60,7 @@ func (mapper *Mapper) getInsert(data any) *Mapper {
 
 	if v.Kind() == reflect.Map {
 		for k, v := range data.(map[string]any) {
-			field.WriteString(qiao.CamelCaseToUdnderscore(k) + `,`)
+			field.WriteString(tools.CamelCaseToUdnderscore(k) + `,`)
 			mapper.Complete.Args = append(mapper.Complete.Args, v)
 		}
 	}

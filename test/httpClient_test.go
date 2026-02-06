@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 func TestDemo(t *testing.T) {
@@ -28,7 +28,7 @@ func TestDemo(t *testing.T) {
 
 func task(id int, wg *sync.WaitGroup) {
 	defer wg.Done()
-	_, _, err := qiao.NewHttpClient("http://127.0.0.1:8080/version").Get().Respond()
+	_, _, err := tools.NewHttpClient("http://127.0.0.1:8080/version").Get().Respond()
 	if err != nil {
 		fmt.Println(id, err)
 	}

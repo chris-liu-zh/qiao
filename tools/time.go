@@ -1,11 +1,4 @@
-/*
- * @Author: Chris
- * @Date: 2023-05-22 15:42:28
- * @LastEditors: Chris
- * @LastEditTime: 2025-03-09 23:16:06
- * @Description: 请填写简介
- */
-package qiao
+package tools
 
 import (
 	"time"

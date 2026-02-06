@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 const Select = "select ${field} from ${table} ${where} ${order} ${group}"
@@ -30,7 +30,7 @@ func (mapper *Mapper) Max(_struct any, field string) (max int, err error) {
 		return 0, ErrNotStruct
 	}
 	if mapper.Debris.table == "" {
-		mapper.Debris.table = qiao.CamelCaseToUdnderscore(elem.Type().Name())
+		mapper.Debris.table = tools.CamelCaseToUdnderscore(elem.Type().Name())
 	}
 	mapper.Debris.field = fmt.Sprintf("max(%s) as max", field)
 	if mapper.Complete.Sql, err = mapper.getSql(); err != nil {
@@ -118,7 +118,7 @@ func (mapper *Mapper) GetList(_struct any) (err error) {
 		return ErrNotStruct
 	}
 	if mapper.Debris.table == "" {
-		mapper.Debris.table = qiao.CamelCaseToUdnderscore(elem.Name())
+		mapper.Debris.table = tools.CamelCaseToUdnderscore(elem.Name())
 	}
 	if mapper.Debris.field == "" {
 		for i := range elem.NumField() {
@@ -127,7 +127,7 @@ func (mapper *Mapper) GetList(_struct any) (err error) {
 				if c := getColumn(columns); c != "" {
 					mapper.Debris.field += c + `,`
 				} else {
-					mapper.Debris.field += qiao.CamelCaseToUdnderscore(elem.Field(i).Name) + `,`
+					mapper.Debris.field += tools.CamelCaseToUdnderscore(elem.Field(i).Name) + `,`
 				}
 			}
 		}
@@ -174,7 +174,7 @@ func (mapper *Mapper) Count(_struct any, index string) (count int, err error) {
 
 func (mapper *Mapper) getMapper(elem reflect.Value) (*Mapper, error) {
 	if mapper.Debris.table == "" {
-		mapper.Debris.table = qiao.CamelCaseToUdnderscore(elem.Type().Name())
+		mapper.Debris.table = tools.CamelCaseToUdnderscore(elem.Type().Name())
 	}
 	if mapper.Debris.field == "" {
 		for i := range elem.NumField() {
@@ -183,7 +183,7 @@ func (mapper *Mapper) getMapper(elem reflect.Value) (*Mapper, error) {
 				if c := getColumn(fields); c != "" {
 					mapper.Debris.field += c + `,`
 				} else {
-					mapper.Debris.field += qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`
+					mapper.Debris.field += tools.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `,`
 				}
 			}
 		}

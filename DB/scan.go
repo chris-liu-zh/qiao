@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 )
 
 func (mapper *Mapper) ScanRowMap() (row map[string]any, err error) {
-	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
+	defer tools.DeferErr(&err, mapper.sqlRows.Close)
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
@@ -44,7 +44,7 @@ func (mapper *Mapper) ScanRowMap() (row map[string]any, err error) {
 }
 
 func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
-	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
+	defer tools.DeferErr(&err, mapper.sqlRows.Close)
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
@@ -81,7 +81,7 @@ func (mapper *Mapper) ScanRowStruct(_struct any) (err error) {
 }
 
 func (mapper *Mapper) scanListMap() (list []map[string]any, err error) {
-	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
+	defer tools.DeferErr(&err, mapper.sqlRows.Close)
 	columns, err := mapper.sqlRows.Columns()
 	if err != nil {
 		return
@@ -104,7 +104,7 @@ func (mapper *Mapper) scanListMap() (list []map[string]any, err error) {
 }
 
 func (mapper *Mapper) scanListStruct(_struct any) (err error) {
-	defer qiao.DeferErr(&err, mapper.sqlRows.Close)
+	defer tools.DeferErr(&err, mapper.sqlRows.Close)
 	reflectT := reflect.TypeOf(_struct)
 	if reflectT.Kind() != reflect.Pointer {
 		return ErrNotPtr

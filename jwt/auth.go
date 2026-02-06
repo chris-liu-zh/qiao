@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 type Auth struct {
@@ -74,7 +74,7 @@ func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Durati
 		return errors.New("beyond the valid time range")
 	}
 	s := fmt.Sprintf("%s%s%d", appKey, secret, ts.Unix())
-	localSign := strings.ToUpper(qiao.MD5(s))
+	localSign := strings.ToUpper(tools.MD5(s))
 
 	if localSign != sign {
 		return errors.New("sign error")
@@ -85,7 +85,7 @@ func DefaultSign(sign, appKey, secret string, ts time.Time, timeDiff time.Durati
 // CreateToken 创建新的 DefaultToken
 func CreateToken(issuer string, claimsOption ...ClaimsOption) (t DefaultToken, err error) {
 	if auth, ok := authList[issuer]; ok {
-		uuid := qiao.UUIDV7()
+		uuid := tools.UUIDV7()
 		ac := DefaultClaims{
 			RegisteredClaims: RegisteredClaims{
 				ExpiresAt: getNumericDate(auth.accessExp),

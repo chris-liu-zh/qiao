@@ -9,6 +9,8 @@ import (
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 type QLogger struct {
@@ -168,18 +170,18 @@ func compressFile(filename string) (err error) {
 	if err != nil {
 		return err
 	}
-	defer DeferErr(&err, file.Close)
+	defer tools.DeferErr(&err, file.Close)
 
 	// 创建压缩文件
 	gzFile, err := os.Create(filename + ".gz")
 	if err != nil {
 		return err
 	}
-	defer DeferErr(&err, gzFile.Close)
+	defer tools.DeferErr(&err, gzFile.Close)
 
 	// 使用 gzip 压缩
 	gzWriter := gzip.NewWriter(gzFile)
-	defer DeferErr(&err, gzWriter.Close)
+	defer tools.DeferErr(&err, gzWriter.Close)
 
 	// 将原始文件内容写入压缩文件
 	if _, err := io.Copy(gzWriter, file); err != nil {

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 type Order string
@@ -78,7 +78,7 @@ func (mapper *Mapper) Set(set any, args ...any) *Mapper {
 	}
 	if v.Kind() == reflect.Map {
 		for k, v := range set.(map[string]any) {
-			mapper.Debris.set += fmt.Sprintf(`%s = ?,`, qiao.CamelCaseToUdnderscore(k))
+			mapper.Debris.set += fmt.Sprintf(`%s = ?,`, tools.CamelCaseToUdnderscore(k))
 			mapper.Complete.Args = append(mapper.Complete.Args, v)
 		}
 		mapper.Debris.set = strings.TrimRight(mapper.Debris.set, ",")
@@ -88,7 +88,7 @@ func (mapper *Mapper) Set(set any, args ...any) *Mapper {
 	if v.Kind() == reflect.Pointer {
 		elem := v.Elem()
 		if mapper.Debris.table == "" {
-			mapper.Debris.table = qiao.CamelCaseToUdnderscore(elem.Type().Name())
+			mapper.Debris.table = tools.CamelCaseToUdnderscore(elem.Type().Name())
 		}
 		l := elem.NumField()
 		var column string
@@ -102,7 +102,7 @@ func (mapper *Mapper) Set(set any, args ...any) *Mapper {
 					if c := getColumn(fields); c != "" {
 						column += c + "=?,"
 					} else {
-						column += qiao.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `=?,`
+						column += tools.CamelCaseToUdnderscore(elem.Type().Field(i).Name) + `=?,`
 					}
 					mapper.Complete.Args = append(mapper.Complete.Args, elem.Field(i).Interface())
 				}

@@ -10,7 +10,7 @@ package DB
 import (
 	"database/sql"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 type Begin struct {
@@ -73,7 +73,7 @@ func (tx *Begin) Exec(args ...any) *Begin {
 }
 
 func (tx *Begin) Rollback() (err error) {
-	defer qiao.DeferErr(&err, tx.stmt.Close)
+	defer tools.DeferErr(&err, tx.stmt.Close)
 	if err = tx.Tx.Rollback(); err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (tx *Begin) Rollback() (err error) {
 }
 
 func (tx *Begin) Commit() (err error) {
-	defer qiao.DeferErr(&err, tx.stmt.Close)
+	defer tools.DeferErr(&err, tx.stmt.Close)
 	if err = tx.Err; err != nil {
 		return err
 	}

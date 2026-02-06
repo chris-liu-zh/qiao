@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chris-liu-zh/qiao"
+	"github.com/chris-liu-zh/qiao/tools"
 )
 
 func BodyTOStruct(r *http.Request, v any) error {
@@ -54,7 +54,7 @@ func parseRequestValues(v any, tagKey string, getter func(key string) string) er
 		// 获取字段对应的标签
 		tag := fieldType.Tag.Get(tagKey)
 		if tag == "" {
-			tag = qiao.CamelCaseToUdnderscore(fieldType.Name)
+			tag = tools.CamelCaseToUdnderscore(fieldType.Name)
 		}
 		// 跳过忽略标签（如 `query:"~"`）
 		if tag == "~" {
