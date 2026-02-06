@@ -2,15 +2,22 @@ package Http
 
 import (
 	"crypto/tls"
+	"os"
 
 	"golang.org/x/crypto/acme/autocert"
 )
 
 func DNS01Challenge(dnsProvider DNSProvider, domains []string, cacheDir, mail, checkTime string, lessDayRenew int) (*tls.Config, error) {
+	// 检查并创建缓存目录
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		return nil, err
+	}
+
 	DCM, err := NewDNSCertManager(dnsProvider, mail, domains, cacheDir)
 	if err != nil {
 		return nil, err
 	}
+
 	if checkTime != "" {
 		go DCM.StartCertificateExpiryMonitor(checkTime, lessDayRenew)
 	}

@@ -278,12 +278,25 @@ func (m *DNSCertManager) saveCertificate(domain string, cert *tls.Certificate) e
 	return os.WriteFile(keyFile, pem.EncodeToMemory(keyBlock), 0600)
 }
 
+func (m *DNSCertManager) CheckCertExists(domain string) error {
+	certFile := filepath.Join(m.cacheDir, domain+".crt")
+	keyFile := filepath.Join(m.cacheDir, domain+".key")
+
+	// 检查证书文件是否存在
+	if _, err := os.Stat(certFile); os.IsNotExist(err) {
+		return fmt.Errorf("证书文件不存在")
+	}
+	if _, err := os.Stat(keyFile); os.IsNotExist(err) {
+		return fmt.Errorf("私钥文件不存在")
+	}
+	return nil
+}
+
 // 从缓存加载证书
 func (m *DNSCertManager) loadCertificate(domain string) (*tls.Certificate, error) {
 	certFile := filepath.Join(m.cacheDir, domain+".crt")
 	keyFile := filepath.Join(m.cacheDir, domain+".key")
 
-	// 检查证书文件是否存在
 	if _, err := os.Stat(certFile); os.IsNotExist(err) {
 		return nil, fmt.Errorf("证书文件不存在")
 	}
@@ -364,6 +377,10 @@ func (m *DNSCertManager) CheckAndRenewCertificates(lessDayRenew int) error {
 	log.Println("开始检查证书到期状态...")
 
 	for _, domain := range m.domains {
+		// 如果证书文件不存在，尝试续期
+		if err := m.CheckCertExists(domain); err != nil {
+			return m.RenewCertificate(domain)
+		}
 		expiring, err := m.IsCertificateExpiringSoon(domain)
 		if err != nil {
 			log.Printf("检查证书 %s 到期状态失败: %v", domain, err)
