@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
+	"time"
 )
 
 type HttpClient struct {
@@ -14,6 +16,29 @@ type HttpClient struct {
 	Method  string
 	Cookies []*http.Cookie
 	err     error
+}
+
+// 全局HTTP客户端，带连接池和超时控制
+var (
+	defaultClient *http.Client
+	clientOnce    sync.Once
+)
+
+// 获取默认HTTP客户端（带连接池）
+func getDefaultClient() *http.Client {
+	clientOnce.Do(func() {
+		transport := &http.Transport{
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 10,
+			IdleConnTimeout:     90 * time.Second,
+		}
+		defaultClient = &http.Client{
+			Transport: transport,
+			Timeout:   30 * time.Second,
+		}
+	})
+	return defaultClient
 }
 
 func NewHttpClient(url string) *HttpClient {
@@ -75,10 +100,10 @@ func (client *HttpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 		err = client.err
 		return
 	}
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	c := &http.Client{Transport: tr}
+
+	// 使用带连接池的默认客户端
+	c := getDefaultClient()
+
 	var resp *http.Response
 	if resp, err = c.Do(client.req); err != nil {
 		return
@@ -93,4 +118,28 @@ func (client *HttpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 		return
 	}
 	return
+}
+
+// 带自定义超时的HTTP客户端
+func NewHttpClientWithTimeout(url string, timeout time.Duration) *HttpClient {
+	client := &HttpClient{
+		Url: url,
+	}
+
+	// 为这个特定客户端创建专用的传输层
+	transport := &http.Transport{
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+		MaxIdleConns:        50,
+		MaxIdleConnsPerHost: 5,
+		IdleConnTimeout:     60 * time.Second,
+	}
+
+	clientOnce.Do(func() {
+		defaultClient = &http.Client{
+			Transport: transport,
+			Timeout:   timeout,
+		}
+	})
+
+	return client
 }
