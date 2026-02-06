@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chris-liu-zh/qiao/Http"
 	"github.com/chris-liu-zh/qiao/tools"
 )
 
@@ -15,6 +16,7 @@ type Auth struct {
 	key        []byte
 	accessExp  time.Duration
 	refreshExp time.Duration
+	CtxKey     Http.CtxKey
 }
 
 type DefaultToken struct {
@@ -54,6 +56,68 @@ func getNumericDate(exp time.Duration) *NumericDate {
 	return NewNumericDate(time.Now())
 }
 
+const (
+	issuer                  = "app"
+	accessExp               = 10 * time.Minute
+	refreshExp              = 7 * 24 * time.Hour
+	defaultKey              = "2D5JWUEGWWFK05JB74W1YGP9OF4L205F"
+	tokenCtxKey Http.CtxKey = "token_info"
+)
+
+type AuthConfig struct {
+	Issuer     string
+	AccessExp  time.Duration
+	RefreshExp time.Duration
+	CtxKey     Http.CtxKey
+	key        string
+}
+
+type Options func(*AuthConfig)
+
+func WithIssuer(issuer string) Options {
+	return func(c *AuthConfig) {
+		c.Issuer = issuer
+	}
+}
+
+func WithAccessExp(exp time.Duration) Options {
+	return func(c *AuthConfig) {
+		c.AccessExp = exp
+	}
+}
+
+func WithRefreshExp(exp time.Duration) Options {
+	return func(c *AuthConfig) {
+		c.RefreshExp = exp
+	}
+}
+
+func WithCtxKey(tokenCtxKey Http.CtxKey) Options {
+	return func(c *AuthConfig) {
+		c.CtxKey = Http.CtxKey(tokenCtxKey)
+	}
+}
+
+func WithKey(key string) Options {
+	return func(c *AuthConfig) {
+		c.key = key
+	}
+}
+
+func NewIssuer(opts ...Options) {
+	ac := &AuthConfig{
+		Issuer:     issuer,
+		AccessExp:  accessExp,
+		RefreshExp: refreshExp,
+		CtxKey:     tokenCtxKey,
+		key:        defaultKey,
+	}
+	for _, opt := range opts {
+		opt(ac)
+	}
+	SetAuth(ac.Issuer, ac.AccessExp, ac.RefreshExp, ac.key)
+}
+
 func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) {
 	if _, ok := authList[issuer]; ok {
 		slog.Warn("issuer exist", "issuer", issuer)
@@ -63,7 +127,13 @@ func SetAuth(issuer string, accessExp, refreshExp time.Duration, key string) {
 		key:        []byte(key),
 		accessExp:  accessExp,
 		refreshExp: refreshExp,
+		CtxKey:     Http.CtxKey(issuer),
 	}
+}
+
+func GetCtxKey(issuer string) (Http.CtxKey, bool) {
+	auth, ok := authList[issuer]
+	return auth.CtxKey, ok
 }
 
 // DefaultSign /**
