@@ -235,7 +235,7 @@ func (info *sqlLog) logERROR(err error) {
 		info.formatLog("ERROR")
 		return
 	}
-	loggerPre["ERROR"].Error(info.Message, "sql", info.Sqlstr, "args", info.Args, "err", err, "DBTitle", info.Title)
+	loggerPre["ERROR"].Error(info.Message, "sql", info.Sqlstr, "args", info.Args, "err", err.Error(), "DBTitle", info.Title)
 }
 
 func (info *sqlLog) formatLog(types string) {
