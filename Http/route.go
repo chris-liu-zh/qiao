@@ -84,7 +84,7 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	key, userinfo, err := router.m.auth(r.URL.Path, header)
 	if err != nil {
-		Unauthorized(lw, err.Error())
+		Unauthorized(lw, err.Error(), SetWriteHeader(true))
 		LogError(r, lw.status, lw.bytesWritten, lw.msg)
 		return
 	}

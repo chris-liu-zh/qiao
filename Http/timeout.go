@@ -86,7 +86,7 @@ func (router *RouterHandle) requestTimeout(w http.ResponseWriter, r *http.Reques
 		}
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			TimeoutFail(w)
+			TimeoutFail(w, SetWriteHeader(true))
 			tw.closed = true
 		}
 	}
