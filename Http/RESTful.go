@@ -87,7 +87,9 @@ func WriteJson(w http.ResponseWriter, code int, message string, data any, opt ..
 		r.Success = true
 	}
 	for _, o := range opt {
-		o(r)
+		if o != nil {
+			o(r)
+		}
 	}
 	if qiaoErr := qiao.AsErr(r.Debug); qiaoErr != nil {
 		r.Message = qiaoErr.Msg
