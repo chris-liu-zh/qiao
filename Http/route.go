@@ -8,20 +8,23 @@
 package Http
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"time"
 )
 
 type RouterHandle struct {
-	m         middleware
-	Next      http.Handler
-	timeout   time.Duration
-	ctx       context.Context
-	mux       *http.ServeMux
-	onEvicted func(http.ResponseWriter, *http.Request) bool
+	m          middleware
+	Next       http.Handler
+	timeout    time.Duration
+	ctx        context.Context
+	mux        *http.ServeMux
+	GzipEnable bool
+	onEvicted  func(http.ResponseWriter, *http.Request) bool
 }
 
 type CtxKey string
@@ -52,6 +55,24 @@ func GetHeader(r *http.Request) map[string]string {
 		}
 	}
 	return h
+}
+
+// gzipResponseWriter 包装 http.ResponseWriter 以支持gzip压缩
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	gz *gzip.Writer
+}
+
+func (grw *gzipResponseWriter) Write(b []byte) (int, error) {
+	grw.Header().Set("Content-Encoding", "gzip")
+	grw.Header().Set("Vary", "Accept-Encoding")
+	return grw.gz.Write(b)
+}
+
+func (grw *gzipResponseWriter) WriteHeader(statusCode int) {
+	grw.Header().Set("Content-Encoding", "gzip")
+	grw.Header().Set("Vary", "Accept-Encoding")
+	grw.ResponseWriter.WriteHeader(statusCode)
 }
 
 func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -97,6 +118,13 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if router.m.contextSetter != nil {
 		r = router.m.contextSetter(r)
+	}
+
+	// 检查客户端是否支持gzip压缩
+	if slices.Contains(r.Header.Values("Accept-Encoding"), "gzip") && router.GzipEnable {
+		gz := gzip.NewWriter(lw)
+		defer gz.Close()
+		lw.ResponseWriter = &gzipResponseWriter{ResponseWriter: lw.ResponseWriter, gz: gz}
 	}
 
 	if router.timeout > 0 {
@@ -164,6 +192,10 @@ func SetContext(r *http.Request, key string, value any) *http.Request {
 
 func GetContext(r *http.Request, key string) any {
 	return r.Context().Value(CtxKey(key))
+}
+
+func (router *RouterHandle) OpenGzip() {
+	router.GzipEnable = true
 }
 
 func NewRouter() *RouterHandle {
