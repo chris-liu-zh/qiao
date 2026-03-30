@@ -83,9 +83,12 @@ func (m *DNSCertManager) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certif
 	}
 
 	// 首先尝试从缓存加载证书
-	if cachedCert, err := m.loadCertificate(hello.ServerName); err == nil {
-		return cachedCert, nil
+	if !m.renew {
+		if cachedCert, err := m.loadCertificate(hello.ServerName); err == nil {
+			return cachedCert, nil
+		}
 	}
+
 	// 为证书生成独立的密钥对（不能使用账户密钥）
 	certPrivateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
