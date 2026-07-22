@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -200,7 +201,15 @@ func (client *HttpClient) buildRequest() *http.Request {
 	return req
 }
 
-func (client *HttpClient) Byte() (body []byte, err error) {
+func (client *HttpClient) ToStruct(v any) error {
+	body, _, err := client.Respond()
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, v)
+}
+
+func (client *HttpClient) Bytes() (body []byte, err error) {
 	body, _, err = client.Respond()
 	return
 }
