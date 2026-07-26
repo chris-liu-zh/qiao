@@ -57,15 +57,12 @@ func (tx *Begin) StmtExec(args ...any) *Begin {
 	return tx
 }
 
-func (tx *Begin) Exec(args ...any) *Begin {
+func (tx *Begin) Exec(sqlStr string, args ...any) *Begin {
 	if tx.Err != nil {
 		return tx
 	}
-	if tx.Mapper.Complete.Sql, tx.Err = tx.Mapper.getSql(); tx.Err != nil {
-		return tx
-	}
 	txArgs := handleNull(args...)
-	query := Replace(tx.Mapper.Complete.Sql, "?", tx.Mapper.Debris.sign)
+	query := Replace(sqlStr, "?", tx.Mapper.Debris.sign)
 	if _, tx.Err = tx.Tx.Exec(query, txArgs...); tx.Err != nil {
 		return tx
 	}
