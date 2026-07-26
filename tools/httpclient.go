@@ -200,7 +200,7 @@ func (client *HttpClient) buildRequest() *http.Request {
 	return req
 }
 
-func (client *HttpClient) Byte() (body []byte, err error) {
+func (client *HttpClient) Bytes() (body []byte, err error) {
 	body, _, err = client.Respond()
 	return
 }
