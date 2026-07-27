@@ -13,72 +13,75 @@ import (
 
 type Begin struct {
 	Tx     *sql.Tx
+	db     *ConnDB
 	stmt   *sql.Stmt
 	Err    error
-	Title  string
 	Mapper *Mapper
 }
 
 // Begin 开始事务
 func (mapper *Mapper) Begin() *Begin {
-	tx := &Begin{
+	begin := &Begin{
 		Mapper: mapper,
 	}
 	db := mapper.Write()
 	if db == nil {
-		tx.Err = ErrNoConn
-		return tx
+		begin.Err = ErrNoConn
+		return begin
 	}
-	tx.Title = db.Conf.Title
-	if tx.Tx, tx.Err = db.DBFunc.Conn.Begin(); tx.Err == nil {
-		return tx
+	begin.db = db
+	if begin.Tx, begin.Err = db.DBFunc.Conn.Begin(); begin.Err == nil {
+		return begin
 	}
-	return tx
+	return begin
 }
 
-func (tx *Begin) Prepare(sqlStr string) *Begin {
-	if tx.Err != nil {
-		return tx
+func (begin *Begin) Prepare(sqlStr string) *Begin {
+	if begin.Err != nil {
+		return begin
 	}
-	tx.stmt, tx.Err = tx.Tx.Prepare(sqlStr)
-	return tx
+	query := Replace(sqlStr, "?", begin.db.Sign)
+	begin.db.log("Prepare exec", query).logDEBUG()
+	begin.stmt, begin.Err = begin.Tx.Prepare(query)
+	return begin
 }
 
-func (tx *Begin) StmtExec(args ...any) *Begin {
-	if tx.Err != nil {
-		return tx
+func (begin *Begin) StmtExec(args ...any) *Begin {
+	if begin.Err != nil {
+		return begin
 	}
 	txArgs := handleNull(args...)
-	if _, tx.Err = tx.stmt.Exec(txArgs...); tx.Err != nil {
-		return tx
+	if _, begin.Err = begin.stmt.Exec(txArgs...); begin.Err != nil {
+		return begin
 	}
-	return tx
+	return begin
 }
 
-func (tx *Begin) Exec(sqlStr string, args ...any) *Begin {
-	if tx.Err != nil {
-		return tx
+func (begin *Begin) Exec(sqlStr string, args ...any) *Begin {
+	if begin.Err != nil {
+		return begin
 	}
 	txArgs := handleNull(args...)
-	query := Replace(sqlStr, "?", tx.Mapper.Debris.sign)
-	if _, tx.Err = tx.Tx.Exec(query, txArgs...); tx.Err != nil {
-		return tx
+	query := Replace(sqlStr, "?", begin.db.Sign)
+	begin.db.log("Begin exec", query, args...).logDEBUG()
+	if _, begin.Err = begin.Tx.Exec(query, txArgs...); begin.Err != nil {
+		return begin
 	}
-	return tx
+	return begin
 }
 
-func (tx *Begin) Rollback() (err error) {
-	if err = tx.Tx.Rollback(); err != nil {
+func (begin *Begin) Rollback() (err error) {
+	if err = begin.Tx.Rollback(); err != nil {
 		return err
 	}
 	return
 }
 
-func (tx *Begin) Commit() (err error) {
-	if err = tx.Err; err != nil {
+func (begin *Begin) Commit() (err error) {
+	if err = begin.Err; err != nil {
 		return err
 	}
-	if err = tx.Tx.Commit(); err != nil {
+	if err = begin.Tx.Commit(); err != nil {
 		return err
 	}
 	return
