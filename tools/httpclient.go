@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -25,14 +26,38 @@ type HttpClient struct {
 	ctx           context.Context
 	err           error
 
-	maxRetries     int
-	retryDelay     time.Duration
-	retryableCodes []int
+	maxRetries     int           // 最大重试次数，默认 0（不重试）
+	retryDelay     time.Duration // 重试间隔时间，默认 1 秒
+	retryableCodes []int         // 需要重试的 HTTP 状态码列表，默认 5xx 错误
 	body           []byte
 }
 
-func NewHttpClient(url string) *HttpClient {
-	return &HttpClient{
+// Option HttpClient 可选配置项
+type Option func(*HttpClient)
+
+// WithMaxRetries 设置最大重试次数，默认 0（不重试）
+func WithMaxRetries(maxRetries int) Option {
+	return func(client *HttpClient) {
+		client.maxRetries = maxRetries
+	}
+}
+
+// WithRetryDelay 设置重试间隔时间，默认 1 秒
+func WithRetryDelay(retryDelay time.Duration) Option {
+	return func(client *HttpClient) {
+		client.retryDelay = retryDelay
+	}
+}
+
+// WithRetryableCodes 设置需要重试的 HTTP 状态码列表
+func WithRetryableCodes(codes []int) Option {
+	return func(client *HttpClient) {
+		client.retryableCodes = codes
+	}
+}
+
+func NewHttpClient(url string, opts ...Option) *HttpClient {
+	client := &HttpClient{
 		Url:     url,
 		headers: make(map[string][]string),
 		defaultClient: &http.Client{
@@ -46,8 +71,12 @@ func NewHttpClient(url string) *HttpClient {
 		},
 		maxRetries:     0,
 		retryDelay:     1 * time.Second,
-		retryableCodes: []int{http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout},
+		retryableCodes: []int{http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout, http.StatusRequestTimeout},
 	}
+	for _, opt := range opts {
+		opt(client)
+	}
+	return client
 }
 
 func (client *HttpClient) SetCookie(cookies []*http.Cookie) *HttpClient {
@@ -242,6 +271,7 @@ func (client *HttpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 			if attempt < client.maxRetries && client.isRetryableError(err) {
 				continue
 			}
+			slog.Debug("httpclient error: %v", err)
 			return
 		}
 
@@ -255,6 +285,7 @@ func (client *HttpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 		}
 
 		if resp.StatusCode >= 400 {
+			slog.Debug("httpclient error: %v", respBody)
 			if attempt < client.maxRetries && slices.Contains(client.retryableCodes, resp.StatusCode) {
 				continue
 			}
