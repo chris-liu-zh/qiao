@@ -22,6 +22,7 @@ type qiaoError struct {
 	Err      error  `json:"err,omitempty"`
 	File     string `json:"file,omitempty"`
 	Line     int    `json:"line,omitempty"`
+	Path     []any  `json:"path,omitempty"`
 	Id       string `json:"id,omitempty"`
 	FuncName string `json:"funcName,omitempty"`
 	Other    any    `json:"other,omitempty"`
@@ -68,26 +69,39 @@ func Err(msg string, err error, opt ...options) error {
 		level:    slog.LevelError,
 		printLog: true,
 	}
-	if ok := errors.As(err, &qe); ok {
-		return err
-	}
 
 	for _, o := range opt {
 		o(qe)
 	}
 
+	if ok := errors.As(err, &qe); ok {
+		if _, file, line, ok := runtime.Caller(1); ok {
+			if qe.printLog {
+				path := fmt.Sprintf("%s:%d", file, line)
+				qe.Path = append(qe.Path, path)
+				slog.Log(
+					context.Background(), qe.level, msg,
+					slog.String("id", qe.Id),
+					slog.Group("path", qe.Path...),
+				)
+			}
+			return err
+		}
+	}
+
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		errId := tools.UUIDV7().String()
+		path := fmt.Sprintf("%s:%d", file, line)
 		if qe.printLog {
-			go slog.Log(
+			slog.Log(
 				context.Background(), qe.level, msg,
 				slog.String("id", errId),
-				slog.String("file", fmt.Sprintf("%s:%d", file, line)),
+				slog.String("file", path),
 				slog.String("err", err.Error()),
 				slog.Any("other", qe.Other),
 			)
 		}
-
+		qe.Path = append(qe.Path, path)
 		qe.Err = err
 		qe.Msg = msg
 		qe.File = file
