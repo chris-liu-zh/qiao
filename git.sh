@@ -4,5 +4,5 @@ if [ "$1" = "-m" ]; then
 fi
 git commit -m "$message"
 git push -f origin main
-git tag v1.83
-git push origin v1.83
+git tag v0.1.83
+git push origin v0.1.83
