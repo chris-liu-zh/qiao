@@ -271,7 +271,7 @@ func (client *HttpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 			if attempt < client.maxRetries && client.isRetryableError(err) {
 				continue
 			}
-			slog.Debug("httpclient error: %v", err)
+			slog.Debug("httpclient error", "error", err.Error())
 			return
 		}
 
@@ -285,7 +285,7 @@ func (client *HttpClient) Respond() (body []byte, cookies []*http.Cookie, err er
 		}
 
 		if resp.StatusCode >= 400 {
-			slog.Debug("httpclient error: %v", respBody)
+			slog.Debug("httpclient error", "body", respBody)
 			if attempt < client.maxRetries && slices.Contains(client.retryableCodes, resp.StatusCode) {
 				continue
 			}

@@ -1,10 +1,32 @@
 package redisCache
 
 import (
+	"context"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
+
+type CachePipeliner struct {
+	RedisCache *RedisCache
+	txPipe     redis.Pipeliner
+}
+
+func (cache *RedisCache) TxPipeline(ctx context.Context) *CachePipeliner {
+	txPipe := cache.Client.TxPipeline()
+	return &CachePipeliner{
+		RedisCache: cache,
+		txPipe:     txPipe,
+	}
+}
+
+func (cache *CachePipeliner) Set(ctx context.Context, key string, value any, ttl time.Duration) *redis.StatusCmd {
+	return cache.txPipe.Set(ctx, cache.RedisCache.sign+key, value, ttl)
+}
+
+func (cache *CachePipeliner) Exec(ctx context.Context) ([]redis.Cmder, error) {
+	return cache.txPipe.Exec(ctx)
+}
 
 // Set 设置键值对
 func (cache *RedisCache) Set(key string, value any, ttl time.Duration) *redis.StatusCmd {
