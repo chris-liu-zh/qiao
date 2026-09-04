@@ -109,6 +109,7 @@ func (l *QLogger) rotate() error {
 	return nil
 }
 
+// getFileName 获取文件名（不包含路径和扩展名）
 func getFileName(filename string) string {
 	filenameWithExt := filepath.Base(filename)
 	ext := filepath.Ext(filename)

@@ -110,7 +110,7 @@ func (opt *LogOption) SetDefault() error {
 func LogError(msg string, args ...any) {
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
-		go slog.Log(context.Background(), slog.LevelError, msg, args...)
+		slog.Log(context.Background(), slog.LevelError, msg, args...)
 	}
 }
 
@@ -118,7 +118,7 @@ func LogError(msg string, args ...any) {
 func LogInfo(msg string, args ...any) {
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
-		go slog.Log(context.Background(), slog.LevelInfo, msg, args...)
+		slog.Log(context.Background(), slog.LevelInfo, msg, args...)
 	}
 }
 
@@ -126,7 +126,7 @@ func LogInfo(msg string, args ...any) {
 func LogDebug(msg string, args ...any) {
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
-		go slog.Log(context.Background(), slog.LevelDebug, msg, args...)
+		slog.Log(context.Background(), slog.LevelDebug, msg, args...)
 	}
 }
 
@@ -134,6 +134,6 @@ func LogDebug(msg string, args ...any) {
 func LogWarn(msg string, args ...any) {
 	if funcName, file, line, ok := runtime.Caller(1); ok {
 		args = append([]any{slog.String("file", fmt.Sprintf("%s:%d", file, line)), slog.String("func", runtime.FuncForPC(funcName).Name())}, args...)
-		go slog.Log(context.Background(), slog.LevelWarn, msg, args...)
+		slog.Log(context.Background(), slog.LevelWarn, msg, args...)
 	}
 }
