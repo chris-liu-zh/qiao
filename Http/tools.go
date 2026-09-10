@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/chris-liu-zh/qiao/tools"
 )
@@ -19,9 +18,11 @@ func BodyTOStruct(r *http.Request, v any) error {
 // GetQuery 解析 URL 查询参数到结构体
 // 支持标签 `query:"name"` 指定参数名，默认使用蛇形命名（如 UserName -> user_name）
 // 忽略标签 `query:"~"` 的字段
+// 支持多同名参数数组：is_sync[]=2&is_sync[]=0，支持 *[]int 指针切片
 func GetQuery(r *http.Request, v any) error {
-	return parseRequestValues(v, "query", func(key string) string {
-		return r.URL.Query().Get(key)
+	queryVals := r.URL.Query()
+	return parseRequestValues(v, "query", func(key string) []string {
+		return queryVals[key]
 	})
 }
 
@@ -29,168 +30,170 @@ func GetQuery(r *http.Request, v any) error {
 // 支持标签 `path:"name"` 指定参数名，默认使用蛇形命名（如 UserID -> user_id）
 // 忽略标签 `path:"~"` 的字段
 func PathValue(r *http.Request, v any) error {
-	return parseRequestValues(v, "path", func(key string) string {
-		return r.PathValue(key)
+	return parseRequestValues(v, "path", func(key string) []string {
+		val := r.PathValue(key)
+		if val == "" {
+			return nil
+		}
+		return []string{val}
 	})
 }
 
-func parseRequestValues(v any, tagKey string, getter func(key string) string) error {
-	// 检查 v 必须是非空结构体指针
+// parseRequestValues v必须是非空结构体指针
+// getter: 根据key返回字符串切片，适配单值/多值参数
+func parseRequestValues(v any, tagKey string, getter func(key string) []string) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Pointer || rv.IsNil() {
 		return errors.New("v must be a non-nil struct pointer")
 	}
-
 	elem := rv.Elem()
 	if elem.Kind() != reflect.Struct {
 		return errors.New("v must point to a struct")
 	}
 
-	// 遍历结构体字段
 	for i := 0; i < elem.NumField(); i++ {
 		field := elem.Field(i)
 		fieldType := elem.Type().Field(i)
 
-		// 获取字段对应的标签
 		tag := fieldType.Tag.Get(tagKey)
 		if tag == "" {
 			tag = tools.CamelCaseToUdnderscore(fieldType.Name)
 		}
-		// 跳过忽略标签（如 `query:"~"`）
 		if tag == "~" {
 			continue
 		}
-
-		// 检查字段是否可设置
 		if !field.CanSet() {
-			continue // 跳过未导出字段或不可设置的字段
+			continue
 		}
 
-		// 类型转换并设置字段值
-		if err := setFieldValue(field, tag, getter); err != nil {
+		vals := getter(tag)
+		if err := setFieldValue(field, vals); err != nil {
 			return fmt.Errorf("field %q: %w", fieldType.Name, err)
 		}
 	}
-
 	return nil
 }
 
-// setFieldValue 将字符串值转换为对应字段类型并设置
-func setFieldValue(field reflect.Value, tag string, getter func(key string) string) error {
-	switch field.Kind() {
-	// 字符串类型
-	case reflect.String:
-		val := getter(tag)
-		field.SetString(val)
-	case reflect.Slice:
-		// 支持逗号分隔的多个值
-		tags := strings.Split(tag, ",")
-		vals := []string{}
-		for _, v := range tags {
-			val := getter(v)
-			if val != "" {
-				vals = append(vals, val)
-			}
-		}
-
-		if len(vals) == 0 {
-			// 如果值为空，设置空切片
-			field.Set(reflect.MakeSlice(field.Type(), 0, 0))
-			return nil
-		}
-
-		// 分割逗号分隔的值
-		field.Set(reflect.ValueOf(vals))
-	// 有符号整数类型
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		val := getter(tag)
-		if val == "" {
-			// 空值设置为0
+// setFieldValue 将字符串切片转换为对应字段类型并设置
+// vals: 所有同名参数；单值类型取vals[0]，slice类型遍历全部vals
+// 支持普通类型、指针类型、*[]int指针切片
+func setFieldValue(field reflect.Value, vals []string) error {
+	// 空输入
+	if len(vals) == 0 {
+		switch field.Kind() {
+		case reflect.String:
+			field.SetString("")
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			field.SetInt(0)
-			return nil
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			field.SetUint(0)
+		case reflect.Bool:
+			field.SetBool(false)
+		case reflect.Float32, reflect.Float64:
+			field.SetFloat(0)
+		case reflect.Complex64, reflect.Complex128:
+			field.SetComplex(0)
+		case reflect.Slice:
+			field.Set(reflect.MakeSlice(field.Type(), 0, 0))
+		case reflect.Pointer:
+			// 指针类型无参数，置nil
+			field.Set(reflect.Zero(field.Type()))
 		}
-		iv, err := strconv.ParseInt(val, 10, field.Type().Bits())
+		return nil
+	}
+
+	// 取第一个值用于单值类型解析
+	firstVal := vals[0]
+
+	switch field.Kind() {
+	case reflect.String:
+		field.SetString(firstVal)
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		iv, err := strconv.ParseInt(firstVal, 10, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid int value %q: %w", val, err)
+			return fmt.Errorf("invalid int value %q: %w", firstVal, err)
 		}
 		field.SetInt(iv)
 
-	// 无符号整数类型
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		val := getter(tag)
-		if val == "" {
-			// 空值设置为0
-			field.SetUint(0)
-			return nil
-		}
-		uv, err := strconv.ParseUint(val, 10, field.Type().Bits())
+		uv, err := strconv.ParseUint(firstVal, 10, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid uint value %q: %w", val, err)
+			return fmt.Errorf("invalid uint value %q: %w", firstVal, err)
 		}
 		field.SetUint(uv)
 
-	// 布尔类型
 	case reflect.Bool:
-		val := getter(tag)
-		if val == "" {
-			// 空值设置为false
-			field.SetBool(false)
-			return nil
-		}
-		bv, err := strconv.ParseBool(val)
+		bv, err := strconv.ParseBool(firstVal)
 		if err != nil {
-			return fmt.Errorf("invalid bool value %q: %w", val, err)
+			return fmt.Errorf("invalid bool value %q: %w", firstVal, err)
 		}
 		field.SetBool(bv)
 
-	// 浮点类型
 	case reflect.Float32, reflect.Float64:
-		val := getter(tag)
-		if val == "" {
-			// 空值设置为0
-			field.SetFloat(0)
-			return nil
-		}
-		fv, err := strconv.ParseFloat(val, field.Type().Bits())
+		fv, err := strconv.ParseFloat(firstVal, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid float value %q: %w", val, err)
+			return fmt.Errorf("invalid float value %q: %w", firstVal, err)
 		}
 		field.SetFloat(fv)
 
-	// 复数类型
 	case reflect.Complex64, reflect.Complex128:
-		val := getter(tag)
-		if val == "" {
-			// 空值设置为0
-			field.SetComplex(0)
-			return nil
-		}
-		cv, err := strconv.ParseComplex(val, field.Type().Bits())
+		cv, err := strconv.ParseComplex(firstVal, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid complex value %q: %w", val, err)
+			return fmt.Errorf("invalid complex value %q: %w", firstVal, err)
 		}
 		field.SetComplex(cv)
-	case reflect.Pointer:
-		// 获取指针指向的元素类型
-		elemType := field.Type().Elem()
 
-		if elemType.Kind() != reflect.Slice {
-			val := getter(tag)
-			if val == "" {
-				field.Set(reflect.Zero(field.Type()))
-				return nil
+	case reflect.Slice:
+		sliceType := field.Type()
+		elemType := sliceType.Elem()
+		newSlice := reflect.MakeSlice(sliceType, 0, len(vals))
+
+		for _, s := range vals {
+			elemVal := reflect.New(elemType).Elem()
+			switch elemType.Kind() {
+			case reflect.String:
+				elemVal.SetString(s)
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				iv, err := strconv.ParseInt(s, 10, elemType.Bits())
+				if err != nil {
+					return fmt.Errorf("parse slice int %q: %w", s, err)
+				}
+				elemVal.SetInt(iv)
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				uv, err := strconv.ParseUint(s, 10, elemType.Bits())
+				if err != nil {
+					return fmt.Errorf("parse slice uint %q: %w", s, err)
+				}
+				elemVal.SetUint(uv)
+			case reflect.Bool:
+				bv, err := strconv.ParseBool(s)
+				if err != nil {
+					return fmt.Errorf("parse slice bool %q: %w", s, err)
+				}
+				elemVal.SetBool(bv)
+			case reflect.Float32, reflect.Float64:
+				fv, err := strconv.ParseFloat(s, elemType.Bits())
+				if err != nil {
+					return fmt.Errorf("parse slice float %q: %w", s, err)
+				}
+				elemVal.SetFloat(fv)
+			default:
+				return fmt.Errorf("unsupported slice element type %s", elemType.Kind())
 			}
+			newSlice = reflect.Append(newSlice, elemVal)
 		}
-		// 创建新的指针并设置值
+		field.Set(newSlice)
+
+	case reflect.Pointer:
+		elemType := field.Type().Elem()
 		newPtr := reflect.New(elemType)
 		elemField := newPtr.Elem()
-
-		// 递归设置元素值
-		if err := setFieldValue(elemField, tag, getter); err != nil {
+		if err := setFieldValue(elemField, vals); err != nil {
 			return fmt.Errorf("pointer field: %w", err)
 		}
-
 		field.Set(newPtr)
+
 	default:
 		return fmt.Errorf("unsupported field type %s", field.Kind())
 	}
