@@ -15,7 +15,7 @@ import (
 	"github.com/chris-liu-zh/qiao/tools"
 )
 
-const Select = "select ${field} from ${table} ${where} ${order} ${group}"
+const Select = "select ${field} from ${table} ${where} ${group} ${order} "
 
 /*
 查询最大值
