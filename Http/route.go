@@ -64,14 +64,20 @@ type gzipResponseWriter struct {
 }
 
 func (grw *gzipResponseWriter) Write(b []byte) (int, error) {
+	// 增加nil保护，防止gz为空直接panic
+	if grw.gz == nil {
+		return grw.ResponseWriter.Write(b)
+	}
 	grw.Header().Set("Content-Encoding", "gzip")
 	grw.Header().Set("Vary", "Accept-Encoding")
 	return grw.gz.Write(b)
 }
 
 func (grw *gzipResponseWriter) WriteHeader(statusCode int) {
-	grw.Header().Set("Content-Encoding", "gzip")
-	grw.Header().Set("Vary", "Accept-Encoding")
+	if grw.gz != nil {
+		grw.Header().Set("Content-Encoding", "gzip")
+		grw.Header().Set("Vary", "Accept-Encoding")
+	}
 	grw.ResponseWriter.WriteHeader(statusCode)
 }
 
@@ -119,11 +125,19 @@ func (router *RouterHandle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if router.m.contextSetter != nil {
 		r = router.m.contextSetter(r)
 	}
-
+	var gz *gzip.Writer
 	// 检查客户端是否支持gzip压缩
 	if slices.Contains(r.Header.Values("Accept-Encoding"), "gzip") && router.GzipEnable {
-		gz := gzip.NewWriter(lw)
-		defer gz.Close()
+		gz = gzip.NewWriter(lw)
+		// defer 放到函数级别，退出ServeHTTP才执行Close
+		defer func() {
+			if gz != nil {
+				// 保护：Close前判断是否写入过数据，避免空写入panic
+				if err := gz.Close(); err != nil {
+					LogError(r, lw.status, lw.bytesWritten, fmt.Sprintf("gzip close err: %v", err))
+				}
+			}
+		}()
 		lw.ResponseWriter = &gzipResponseWriter{ResponseWriter: lw.ResponseWriter, gz: gz}
 	}
 
